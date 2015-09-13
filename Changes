@@ -1,0 +1,6 @@
+Revision history for Perl extension Algorithm::CP::IZ.
+
+0.01  Thu Sep 10 01:31:13 2015
+	- original version; created by h2xs 1.23 with options
+		iz.h -n Algorithm::CP::IZ
+

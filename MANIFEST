@@ -1,0 +1,10 @@
+Changes
+IZ.xs
+Makefile.PL
+MANIFEST
+ppport.h
+README
+t/Algorithm-CP-IZ.t
+fallback/const-c.inc
+fallback/const-xs.inc
+lib/Algorithm/CP/IZ.pm
