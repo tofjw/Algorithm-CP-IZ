@@ -53,6 +53,16 @@ sub is_instantiated {
     return Algorithm::CP::IZ::cs_isInstantiated($self->{_ptr});
 }
 
+sub eq {
+    my $self = shift;
+    my $val = shift;
+    if (ref $val && $val->isa(__PACKAGE__)) {
+	return Algorithm::CP::IZ::cs_Eq($self->{_ptr}, $val->{_ptr});
+    }
+
+    return Algorithm::CP::IZ::cs_EQ($self->{_ptr}, int($val + 0));
+}
+
 sub le {
     my $self = shift;
     my $val = shift;

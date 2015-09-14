@@ -194,11 +194,10 @@ sub search_test {
     return Algorithm::CP::IZ::cs_search_findFreeVar($array, $func, -1);
 }
 
-sub _create_registered_var_array {
+sub _push_object {
     my $self = shift;
-    my $var_array = shift;;
+    my $obj = shift;
 
-    my $parray = Algorithm::CP::IZ::RefVarArray->new($var_array);
     my $cxt = $self->{_cxt};
     my $cur_cxt = $self->{_cxt0};
 
@@ -206,9 +205,52 @@ sub _create_registered_var_array {
 	$cur_cxt = $cxt->[(scalar @$cxt) - 1];
     }
 
-    push(@$cur_cxt, $parray);
+    push(@$cur_cxt, $obj);
+}
+
+sub _create_registered_var_array {
+    my $self = shift;
+    my $var_array = shift;;
+
+    my $parray = Algorithm::CP::IZ::RefVarArray->new($var_array);
+    $self->_push_object($parray);
 
     return $parray;
+}
+
+#####################################################
+# Demon
+#####################################################
+
+sub event_all_known {
+    my $self = shift;
+    my ($var_array, $handler, $ext) = @_;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $h = sub {
+	return &$handler($var_array, $ext) ? 1 : 0;
+    };
+
+    $self->_push_object($h);
+
+    return Algorithm::CP::IZ::cs_eventAllKnown($$parray, scalar(@$var_array), $h);
+}
+
+sub event_known {
+    my $self = shift;
+    my ($var_array, $handler, $ext) = @_;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $h = sub {
+	my ($val, $index) = @_;
+	return &$handler($val, $index, $var_array, $ext) ? 1 : 0;
+    };
+
+    $self->_push_object($h);
+
+    return Algorithm::CP::IZ::cs_eventKnown($$parray, scalar(@$var_array), $h);
 }
 
 #####################################################
@@ -220,7 +262,6 @@ sub AllNeq {
     my $var_array = shift;;
 
     my $parray = $self->_create_registered_var_array($var_array);
-    print STDERR "parray = $parray\n";
 
     return Algorithm::CP::IZ::cs_AllNeq($$parray, scalar(@$var_array));
 }

@@ -64,6 +64,60 @@ array2index* findFreeVarTbl[] = {
   findFreeVarDefault,
 };
 
+
+static IZBOOL eventAllKnownPerlWrapper(CSint **tint, int size, void *ext)
+{
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(sp);
+
+  PUTBACK;
+  int count = call_sv((SV*)ext, G_SCALAR);
+  SPAGAIN;
+  int ret = -1;
+
+  if (count == 0) {
+    croak("eventAllKnownPerlWrapper: error");
+  }
+  ret = POPi;
+
+  FREETMPS;
+  LEAVE;
+
+  return (IZBOOL)ret;
+}
+
+static IZBOOL eventKnownPerlWrapper(int val, int index, CSint **tint, int size, void *ext)
+{
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(sp);
+
+  XPUSHs(sv_2mortal(newSViv(val)));
+  XPUSHs(sv_2mortal(newSViv(index)));
+
+  PUTBACK;
+  int count = call_sv((SV*)ext, G_SCALAR);
+  SPAGAIN;
+  int ret = -1;
+
+  if (count == 0) {
+    croak("eventKnownPerlWrapper: error");
+  }
+  ret = POPi;
+
+  FREETMPS;
+  LEAVE;
+
+  return (IZBOOL)ret;
+}
+
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ		
 
 INCLUDE: const-xs.inc
@@ -192,6 +246,27 @@ OUTPUT:
     RETVAL
 
 
+int
+cs_eventAllKnown(tint, size, handler)
+    void* tint
+    int size
+    SV* handler
+CODE:
+    RETVAL = cs_eventAllKnown(tint, size,
+			      eventAllKnownPerlWrapper, SvRV(handler));
+OUTPUT:
+    RETVAL
+
+int
+cs_eventKnown(tint, size, handler)
+    void* tint
+    int size
+    SV* handler
+CODE:
+    RETVAL = cs_eventKnown(tint, size,
+			   eventKnownPerlWrapper, SvRV(handler));
+OUTPUT:
+    RETVAL
 
 int
 cs_getNbElements(vint)
@@ -262,6 +337,23 @@ CODE:
 OUTPUT:
     RETVAL
 
+int
+cs_EQ(vint, val)
+    void* vint
+    int val
+CODE:
+    RETVAL = cs_EQ(vint, val);
+OUTPUT:
+    RETVAL
+
+int
+cs_Eq(vint1, vint2)
+    void* vint1
+    void* vint2
+CODE:
+    RETVAL = cs_Eq(vint1, vint2);
+OUTPUT:
+    RETVAL
 
 int
 cs_LE(vint, val)
