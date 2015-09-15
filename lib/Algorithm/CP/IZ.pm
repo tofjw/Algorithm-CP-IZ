@@ -11,6 +11,7 @@ use AutoLoader;
 
 use Algorithm::CP::IZ::Int;
 use Algorithm::CP::IZ::RefVarArray;
+use Algorithm::CP::IZ::RefIntArray;
 
 our @ISA = qw(Exporter);
 
@@ -219,6 +220,16 @@ sub _create_registered_var_array {
     return $parray;
 }
 
+sub _create_registered_int_array {
+    my $self = shift;
+    my $int_array = shift;;
+
+    my $parray = Algorithm::CP::IZ::RefIntArray->new($int_array);
+    $self->_push_object($parray);
+
+    return $parray;
+}
+
 sub _const_var {
     my $self = shift;
     my $val = shift;
@@ -286,6 +297,30 @@ sub Add {
 
     my $vars = $self->{_vars};
     push(@$vars, $ret);
+
+    return $ret;
+}
+
+sub ScalProd {
+    my $self = shift;
+    my $vars = shift;
+    my $coeffs = shift;
+
+    if (@$coeffs != @$vars) {
+	croak 'usage: $iz->ScalProd([ceoffs], [vars])';
+    }
+
+    @$vars = map { ref $_ ? $_ : $self->_const_var($_ + 0) } @$vars;
+
+    my $p1 = $self->_create_registered_var_array($vars);
+    my $p2 = $self->_create_registered_int_array($coeffs);
+    my $n = @$coeffs;
+
+    my $ptr = Algorithm::CP::IZ::cs_ScalProd($$p1, $$p2, $n);
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    my $myvars = $self->{_vars};
+    push(@$myvars, $ret);
 
     return $ret;
 }

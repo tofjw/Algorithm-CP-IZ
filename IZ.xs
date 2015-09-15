@@ -141,6 +141,25 @@ CODE:
 OUTPUT:
     RETVAL
 
+void*
+alloc_int_array(av)
+    AV *av;
+PREINIT:
+    int* array;
+    SSize_t alen;
+    SSize_t i;
+CODE:
+    alen = av_len(av) + 1;
+    Newx(array, alen, int);
+    RETVAL = array;
+
+    for (i = 0; i<alen; i++) {
+      SV** pptr = av_fetch(av, i, 0);
+      array[i] = SvIV(*pptr);
+    }
+OUTPUT:
+    RETVAL
+
 
 void
 free_array(ptr)
@@ -379,5 +398,15 @@ cs_Add(vint1, vint2)
     void* vint2
 CODE:
     RETVAL = cs_Add(vint1, vint2);
+OUTPUT:
+    RETVAL
+
+void*
+cs_ScalProd(vars, coeffs, n)
+    void* vars
+    void* coeffs
+    int n
+CODE:
+    RETVAL = cs_ScalProd(vars, coeffs, n);
 OUTPUT:
     RETVAL
