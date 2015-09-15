@@ -74,6 +74,7 @@ sub new {
 	_vars => [],
 	_cxt0 => [],
 	_cxt => [],
+	_const_vars => {},
     }, $class;
 }
 
@@ -218,6 +219,20 @@ sub _create_registered_var_array {
     return $parray;
 }
 
+sub _const_var {
+    my $self = shift;
+    my $val = shift;
+
+    my $hash = $self->{_const_vars};
+
+    return $hash->{$val} if (exists($hash->{$val}));
+
+    my $v = $self->create_int($val, $val);
+    $hash->{$val} = $v;
+
+    return $v;
+}
+
 #####################################################
 # Demon
 #####################################################
@@ -256,6 +271,24 @@ sub event_known {
 #####################################################
 # Global constraints
 #####################################################
+
+sub Add {
+    my $self = shift;
+    my @params = @_;
+
+    if (@params != 2) {
+	croak 'usage: $iz->Add(v1, v2)';
+    }
+
+    my @v = map { ref $_ ? $_ : $self->_const_var($_ + 0) } @params;
+    my $ptr = Algorithm::CP::IZ::cs_Add($v[0]->{_ptr}, $v[1]->{_ptr});
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    my $vars = $self->{_vars};
+    push(@$vars, $ret);
+
+    return $ret;
+}
 
 sub AllNeq {
     my $self = shift;

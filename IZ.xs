@@ -372,3 +372,12 @@ CODE:
     RETVAL = cs_Le(vint1, vint2);
 OUTPUT:
     RETVAL
+
+void*
+cs_Add(vint1, vint2)
+    void* vint1
+    void* vint2
+CODE:
+    RETVAL = cs_Add(vint1, vint2);
+OUTPUT:
+    RETVAL
