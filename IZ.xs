@@ -118,6 +118,34 @@ static IZBOOL eventKnownPerlWrapper(int val, int index, CSint **tint, int size, 
   return (IZBOOL)ret;
 }
 
+static IZBOOL eventNewMinMaxPerlWrapper(CSint* vint, int index, int oldValue, CSint **tint, int size, void *ext)
+{
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(sp);
+
+  XPUSHs(sv_2mortal(newSViv(index)));
+  XPUSHs(sv_2mortal(newSViv(oldValue)));
+
+  PUTBACK;
+  int count = call_sv((SV*)ext, G_SCALAR);
+  SPAGAIN;
+  int ret = -1;
+
+  if (count == 0) {
+    croak("eventNewMinMaxPerlWrapper: error");
+  }
+  ret = POPi;
+
+  FREETMPS;
+  LEAVE;
+
+  return (IZBOOL)ret;
+}
+
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ		
 
 INCLUDE: const-xs.inc
@@ -287,6 +315,24 @@ CODE:
 OUTPUT:
     RETVAL
 
+void
+cs_eventNewMin(tint, size, handler)
+    void* tint
+    int size
+    SV* handler
+CODE:
+    cs_eventNewMin(tint, size,
+		   eventNewMinMaxPerlWrapper, SvRV(handler));
+
+void
+cs_eventNewMax(tint, size, handler)
+    void* tint
+    int size
+    SV* handler
+CODE:
+    cs_eventNewMax(tint, size,
+		   eventNewMinMaxPerlWrapper, SvRV(handler));
+
 int
 cs_getNbElements(vint)
     void* vint
@@ -389,6 +435,24 @@ cs_Le(vint1, vint2)
     void* vint2
 CODE:
     RETVAL = cs_Le(vint1, vint2);
+OUTPUT:
+    RETVAL
+
+int
+cs_GE(vint, val)
+    void* vint
+    int val
+CODE:
+    RETVAL = cs_GE(vint, val);
+OUTPUT:
+    RETVAL
+
+int
+cs_Ge(vint1, vint2)
+    void* vint1
+    void* vint2
+CODE:
+    RETVAL = cs_Ge(vint1, vint2);
 OUTPUT:
     RETVAL
 

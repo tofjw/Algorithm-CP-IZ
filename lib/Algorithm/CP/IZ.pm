@@ -279,6 +279,38 @@ sub event_known {
     return Algorithm::CP::IZ::cs_eventKnown($$parray, scalar(@$var_array), $h);
 }
 
+sub event_new_min {
+    my $self = shift;
+    my ($var_array, $handler, $ext) = @_;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $h = sub {
+	my ($index, $old_min) = @_;
+	return &$handler($var_array->[$index], $index, $old_min, $var_array, $ext) ? 1 : 0;
+    };
+
+    $self->_push_object($h);
+
+    return Algorithm::CP::IZ::cs_eventNewMin($$parray, scalar(@$var_array), $h);
+}
+
+sub event_new_max {
+    my $self = shift;
+    my ($var_array, $handler, $ext) = @_;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $h = sub {
+	my ($index, $old_min) = @_;
+	return &$handler($var_array->[$index], $index, $old_min, $var_array, $ext) ? 1 : 0;
+    };
+
+    $self->_push_object($h);
+
+    return Algorithm::CP::IZ::cs_eventNewMax($$parray, scalar(@$var_array), $h);
+}
+
 #####################################################
 # Global constraints
 #####################################################

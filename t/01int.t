@@ -10,9 +10,9 @@ my $v = $iz->create_int(0, 10);
 is($v->nb_elements, 11);
 
 # my $l1 = $iz->save_context;
-print STDERR "cs_le: ", $v->le(5), "\n";
+print STDERR "cs_le: ", $v->Le(5), "\n";
 $iz->save_context;
-print STDERR "cs_le: ", $v->le(3), "\n";
+print STDERR "cs_le: ", $v->Le(3), "\n";
 
 my $v2 = $iz->create_int(-40, -2, "test");
 

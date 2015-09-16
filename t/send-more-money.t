@@ -21,7 +21,7 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     my $v2 = $iz->ScalProd([$m, $o, $r, $e], [1000, 100, 10, 1]);
     my $v3 = $iz->ScalProd([$m, $o, $n, $e, $y], [10000, 1000, 100, 10, 1]);
     my $v4 = $iz->Add($v1, $v2);
-    $v3->eq($v4);
+    $v3->Eq($v4);
 
     my $rc = $iz->search([$s, $e, $n, $d, $m, $o, $r, $y]);
     is($rc, 1);

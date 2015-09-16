@@ -53,7 +53,7 @@ sub is_instantiated {
     return Algorithm::CP::IZ::cs_isInstantiated($self->{_ptr});
 }
 
-sub eq {
+sub Eq {
     my $self = shift;
     my $val = shift;
     if (ref $val && $val->isa(__PACKAGE__)) {
@@ -63,7 +63,7 @@ sub eq {
     return Algorithm::CP::IZ::cs_EQ($self->{_ptr}, int($val + 0));
 }
 
-sub le {
+sub Le {
     my $self = shift;
     my $val = shift;
     if (ref $val && $val->isa(__PACKAGE__)) {
@@ -71,6 +71,16 @@ sub le {
     }
 
     return Algorithm::CP::IZ::cs_LE($self->{_ptr}, int($val + 0));
+}
+
+sub Ge {
+    my $self = shift;
+    my $val = shift;
+    if (ref $val && $val->isa(__PACKAGE__)) {
+	return Algorithm::CP::IZ::cs_Ge($self->{_ptr}, $val->{_ptr});
+    }
+
+    return Algorithm::CP::IZ::cs_GE($self->{_ptr}, int($val + 0));
 }
 
 sub invalidate {
