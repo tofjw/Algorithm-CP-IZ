@@ -1,13 +1,24 @@
 use strict;
 use warnings;
 
-use Test::More tests => 2;
+use Test::More tests => 13;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
+# create
 my $iz = Algorithm::CP::IZ->new();
 my $v = $iz->create_int(0, 10);
 
+# nb_elements
 is($v->nb_elements, 11);
+
+# domain
+{
+  my $dom = $v->domain;
+  is(@$dom, 11);
+  for my $i (0..9) {
+    is($dom->[$i], $i);
+  }
+}
 
 # my $l1 = $iz->save_context;
 print STDERR "cs_le: ", $v->Le(5), "\n";

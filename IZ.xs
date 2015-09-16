@@ -393,6 +393,20 @@ CODE:
 OUTPUT:
     RETVAL
 
+void
+cs_domain(vint, av)
+    void* vint
+    AV *av
+PREINIT:
+    int i;
+    int* dom = cs_getDomain(vint);
+    int n = cs_getNbElements(vint);
+CODE:
+    for (i = 0; i < n; i++) {
+      av_store(av, i, newSViv(dom[i]));
+    }
+    free(dom);    
+
 int
 cs_AllNeq(tint, size)
     void* tint

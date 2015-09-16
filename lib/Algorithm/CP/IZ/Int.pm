@@ -53,6 +53,15 @@ sub is_instantiated {
     return Algorithm::CP::IZ::cs_isInstantiated($self->{_ptr});
 }
 
+sub domain {
+    my $self = shift;
+    my @ret;
+
+    Algorithm::CP::IZ::cs_domain($self->{_ptr}, \@ret);
+
+    return \@ret;
+}
+
 sub Eq {
     my $self = shift;
     my $val = shift;
