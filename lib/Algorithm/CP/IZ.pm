@@ -311,6 +311,22 @@ sub event_new_max {
     return Algorithm::CP::IZ::cs_eventNewMax($$parray, scalar(@$var_array), $h);
 }
 
+sub event_neq {
+    my $self = shift;
+    my ($var_array, $handler, $ext) = @_;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $h = sub {
+	my ($index, $val) = @_;
+	return &$handler($var_array->[$index], $index, $val, $var_array, $ext) ? 1 : 0;
+    };
+
+    $self->_push_object($h);
+
+    return Algorithm::CP::IZ::cs_eventNeq($$parray, scalar(@$var_array), $h);
+}
+
 #####################################################
 # Global constraints
 #####################################################

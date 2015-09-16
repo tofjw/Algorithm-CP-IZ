@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 37;
+use Test::More tests => 49;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # event_all_known
@@ -155,6 +155,51 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($handler_max, 10);
     is($handler_index, 1);
     is($var_max, 3);
+    is($var_name, "v2");
+
+}
+
+# event_neq
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $v1 = $iz->create_int(0, 10, "v1");
+    my $v2 = $iz->create_int(0, 10, "v2");
+
+    my $fire = '';
+    my $handler_index = 99;
+    my $handler_neq = 99;
+    my $var_domain = "?";
+    my $var_name = "?";
+
+    sub neq_handler {
+	my ($var, $index, $neq_val, $array, $ext) = @_;
+
+	$fire = $ext;
+	$handler_index = $index;
+	$handler_neq = $neq_val;
+	$var_domain = join(",", @{$var->domain});
+	$var_name = $var->name;
+	
+	# called later 2 times
+	is($array->[$index]->name, $var->name);
+
+	return 1;
+    }
+
+    $iz->event_neq([$v1, $v2], \&neq_handler, "abc");
+
+    $v1->Neq(4);
+    is($fire, 'abc');
+    is($handler_neq, 4);
+    is($handler_index, 0);
+    is($var_domain, "0,1,2,3,5,6,7,8,9,10");
+    is($var_name, "v1");
+
+    $v2->Neq(3);
+    is($fire, 'abc');
+    is($handler_neq, 3);
+    is($handler_index, 1);
+    is($var_domain, "0,1,2,4,5,6,7,8,9,10");
     is($var_name, "v2");
 
 }

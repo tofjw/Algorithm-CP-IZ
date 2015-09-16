@@ -72,6 +72,16 @@ sub Eq {
     return Algorithm::CP::IZ::cs_EQ($self->{_ptr}, int($val + 0));
 }
 
+sub Neq {
+    my $self = shift;
+    my $val = shift;
+    if (ref $val && $val->isa(__PACKAGE__)) {
+	return Algorithm::CP::IZ::cs_Neq($self->{_ptr}, $val->{_ptr});
+    }
+
+    return Algorithm::CP::IZ::cs_NEQ($self->{_ptr}, int($val + 0));
+}
+
 sub Le {
     my $self = shift;
     my $val = shift;

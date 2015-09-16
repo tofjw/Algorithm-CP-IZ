@@ -118,7 +118,7 @@ static IZBOOL eventKnownPerlWrapper(int val, int index, CSint **tint, int size, 
   return (IZBOOL)ret;
 }
 
-static IZBOOL eventNewMinMaxPerlWrapper(CSint* vint, int index, int oldValue, CSint **tint, int size, void *ext)
+static IZBOOL eventNewMinMaxNeqPerlWrapper(CSint* vint, int index, int oldValue, CSint **tint, int size, void *ext)
 {
   dTHX;
   dSP;
@@ -136,7 +136,7 @@ static IZBOOL eventNewMinMaxPerlWrapper(CSint* vint, int index, int oldValue, CS
   int ret = -1;
 
   if (count == 0) {
-    croak("eventNewMinMaxPerlWrapper: error");
+    croak("eventNewMinMaxNeqPerlWrapper: error");
   }
   ret = POPi;
 
@@ -322,7 +322,7 @@ cs_eventNewMin(tint, size, handler)
     SV* handler
 CODE:
     cs_eventNewMin(tint, size,
-		   eventNewMinMaxPerlWrapper, SvRV(handler));
+		   eventNewMinMaxNeqPerlWrapper, SvRV(handler));
 
 void
 cs_eventNewMax(tint, size, handler)
@@ -331,7 +331,16 @@ cs_eventNewMax(tint, size, handler)
     SV* handler
 CODE:
     cs_eventNewMax(tint, size,
-		   eventNewMinMaxPerlWrapper, SvRV(handler));
+		   eventNewMinMaxNeqPerlWrapper, SvRV(handler));
+
+void
+cs_eventNeq(tint, size, handler)
+    void* tint
+    int size
+    SV* handler
+CODE:
+    cs_eventNeq(tint, size,
+		eventNewMinMaxNeqPerlWrapper, SvRV(handler));
 
 int
 cs_getNbElements(vint)
@@ -431,6 +440,24 @@ cs_Eq(vint1, vint2)
     void* vint2
 CODE:
     RETVAL = cs_Eq(vint1, vint2);
+OUTPUT:
+    RETVAL
+
+int
+cs_NEQ(vint, val)
+    void* vint
+    int val
+CODE:
+    RETVAL = cs_NEQ(vint, val);
+OUTPUT:
+    RETVAL
+
+int
+cs_Neq(vint1, vint2)
+    void* vint1
+    void* vint2
+CODE:
+    RETVAL = cs_Neq(vint1, vint2);
 OUTPUT:
     RETVAL
 
