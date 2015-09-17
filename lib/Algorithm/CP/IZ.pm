@@ -388,12 +388,27 @@ __END__
 
 =head1 NAME
 
-Algorithm::CP::IZ - Perl extension for blah blah blah
+Algorithm::CP::IZ - Perl interface for iZ-C library
 
 =head1 SYNOPSIS
 
   use Algorithm::CP::IZ;
-  blah blah blah
+
+  my $iz = Algorithm::CP::IZ->new();
+
+  my $v1 = $iz->create_int(1, 9);
+  my $v2 = $iz->create_int(1, 9);
+  $iz->Add($v1, $v2)->Eq(12);
+  my $rc = $iz->search([$v1, $v2]);
+
+  if ($rc) {
+    print "ok\n";
+    print "v1 = ", $v1->value, "\n";
+    print "v2 = ", $v2->value, "\n";
+  }
+  else {
+    print "ng\n";
+  }
 
 =head1 DESCRIPTION
 
