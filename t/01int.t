@@ -1,10 +1,10 @@
 use strict;
 use warnings;
 
-use Test::More tests => 15;
+use Test::More tests => 36;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
-# create
+# create(min, max)
 my $iz = Algorithm::CP::IZ->new();
 my $v = $iz->create_int(0, 10);
 
@@ -20,7 +20,10 @@ is($v->nb_elements, 11);
   }
 }
 
-# neq
+my $vdom = $iz->create_int([2, 4, 6, 8, 10], "vdom");
+is(join(",", @{$vdom->domain}), "2,4,6,8,10");
+
+# Neq
 {
   $iz->save_context;
 
@@ -37,10 +40,81 @@ is($v->nb_elements, 11);
   $iz->restore_context;
 }
 
-# my $l1 = $iz->save_context;
-print STDERR "cs_le: ", $v->Le(5), "\n";
-$iz->save_context;
-print STDERR "cs_le: ", $v->Le(3), "\n";
+# Le
+{
+  $iz->save_context;
+  is($v->Le(5), 1);
+  is(join(",", @{$v->domain}), "0,1,2,3,4,5");
+  $iz->restore_context;
+
+  my $v2 = $iz->create_int(8, 8);
+
+  $iz->save_context;
+  is($v->Le($v2), 1);
+  is(join(",", @{$v->domain}), "0,1,2,3,4,5,6,7,8");
+  $iz->restore_context;
+
+  $iz->save_context;
+  is($v->Le(-1), 0);
+  $iz->restore_context;
+}
+
+# Lt
+{
+  $iz->save_context;
+  is($v->Lt(5), 1);
+  is(join(",", @{$v->domain}), "0,1,2,3,4");
+  $iz->restore_context;
+
+  my $v2 = $iz->create_int(8, 8);
+
+  $iz->save_context;
+  is($v->Lt($v2), 1);
+  is(join(",", @{$v->domain}), "0,1,2,3,4,5,6,7");
+  $iz->restore_context;
+
+  $iz->save_context;
+  is($v->Lt(0), 0);
+  $iz->restore_context;
+}
+
+# Ge
+{
+  $iz->save_context;
+  is($v->Ge(5), 1);
+  is(join(",", @{$v->domain}), "5,6,7,8,9,10");
+  $iz->restore_context;
+
+  my $v2 = $iz->create_int(8, 8);
+
+  $iz->save_context;
+  is($v->Ge($v2), 1);
+  is(join(",", @{$v->domain}), "8,9,10");
+  $iz->restore_context;
+
+  $iz->save_context;
+  is($v->Ge(11), 0);
+  $iz->restore_context;
+}
+
+# Gt
+{
+  $iz->save_context;
+  is($v->Gt(5), 1);
+  is(join(",", @{$v->domain}), "6,7,8,9,10");
+  $iz->restore_context;
+
+  my $v2 = $iz->create_int(8, 8);
+
+  $iz->save_context;
+  is($v->Gt($v2), 1);
+  is(join(",", @{$v->domain}), "9,10");
+  $iz->restore_context;
+
+  $iz->save_context;
+  is($v->Gt(10), 0);
+  $iz->restore_context;
+}
 
 my $v2 = $iz->create_int(-40, -2, "test");
 

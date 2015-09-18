@@ -139,7 +139,17 @@ sub restore_all {
 
 sub _create_int_from_min_max {
     my ($self, $min, $max) = @_;
-    return Algorithm::CP::IZ::cs_createCSint($min, $max);
+    return Algorithm::CP::IZ::cs_createCSint($min + 0, $max + 0);
+}
+
+sub _create_int_from_domain {
+	my ($self, $int_array) = @_;
+
+    my $parray = Algorithm::CP::IZ::alloc_int_array([map { $_+0 } @$int_array]);
+	my $ptr = Algorithm::CP::IZ::cs_createCSintFromDomain($parray, scalar @$int_array);
+	Algorithm::CP::IZ::free_array($parray);
+
+	return $ptr;
 }
 
 sub create_int {

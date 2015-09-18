@@ -92,6 +92,16 @@ sub Le {
     return Algorithm::CP::IZ::cs_LE($self->{_ptr}, int($val + 0));
 }
 
+sub Lt {
+    my $self = shift;
+    my $val = shift;
+    if (ref $val && $val->isa(__PACKAGE__)) {
+	return Algorithm::CP::IZ::cs_Lt($self->{_ptr}, $val->{_ptr});
+    }
+
+    return Algorithm::CP::IZ::cs_LT($self->{_ptr}, int($val + 0));
+}
+
 sub Ge {
     my $self = shift;
     my $val = shift;
@@ -100,6 +110,16 @@ sub Ge {
     }
 
     return Algorithm::CP::IZ::cs_GE($self->{_ptr}, int($val + 0));
+}
+
+sub Gt {
+    my $self = shift;
+    my $val = shift;
+    if (ref $val && $val->isa(__PACKAGE__)) {
+	return Algorithm::CP::IZ::cs_Gt($self->{_ptr}, $val->{_ptr});
+    }
+
+    return Algorithm::CP::IZ::cs_GT($self->{_ptr}, int($val + 0));
 }
 
 sub invalidate {

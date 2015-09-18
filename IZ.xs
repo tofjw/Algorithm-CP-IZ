@@ -231,6 +231,17 @@ CODE:
 OUTPUT:
     RETVAL
 
+void*
+cs_createCSintFromDomain(parray, size)
+    void* parray
+    int size
+PREINIT:
+	int i;
+CODE:
+    RETVAL = cs_createCSintFromDomain(parray, size);
+OUTPUT:
+    RETVAL
+
 int
 cs_search_preset(av, func_id, fail_max)
     AV *av;
@@ -480,6 +491,24 @@ OUTPUT:
     RETVAL
 
 int
+cs_LT(vint, val)
+    void* vint
+    int val
+CODE:
+    RETVAL = cs_LT(vint, val);
+OUTPUT:
+    RETVAL
+
+int
+cs_Lt(vint1, vint2)
+    void* vint1
+    void* vint2
+CODE:
+    RETVAL = cs_Lt(vint1, vint2);
+OUTPUT:
+    RETVAL
+
+int
 cs_GE(vint, val)
     void* vint
     int val
@@ -494,6 +523,24 @@ cs_Ge(vint1, vint2)
     void* vint2
 CODE:
     RETVAL = cs_Ge(vint1, vint2);
+OUTPUT:
+    RETVAL
+
+int
+cs_GT(vint, val)
+    void* vint
+    int val
+CODE:
+    RETVAL = cs_GT(vint, val);
+OUTPUT:
+    RETVAL
+
+int
+cs_Gt(vint1, vint2)
+    void* vint1
+    void* vint2
+CODE:
+    RETVAL = cs_Gt(vint1, vint2);
 OUTPUT:
     RETVAL
 
