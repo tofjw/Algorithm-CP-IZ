@@ -5,6 +5,56 @@ use warnings;
 
 use UNIVERSAL;
 
+use overload '""' => \&format;
+
+sub format {
+    my $self = shift;
+    my @list;
+
+
+    my $cur = $self->min;
+    my $head = $cur;
+    my $max = $self->max;
+
+    while ($cur != $max) {
+	my $next = $self->get_next_value($cur);
+	if ($next != $cur + 1) {
+	    if ($head == $cur) {
+		push(@list, $cur);
+	    }
+	    else {
+		push(@list, "$head..$cur");
+	    }
+
+	    $head = $next;
+	}
+	$cur = $next;
+    }
+
+    # $cur == $max
+    if ($head == $max) {
+	push(@list, $max);
+    }
+    else {
+	push(@list, "$head..$cur");
+    }
+
+    my $vals;
+    if ($self->is_instantiated) {
+	$vals = $list[0];
+    }
+    else {
+	$vals = join("", "{" . join(", ", @list) . "}");
+    }
+
+    if ($self->{_name}) {
+	return $self->{_name} . ": " . $vals;
+    }
+    else {
+	return $vals;
+    }
+}
+
 sub new {
     my $class = shift;
     my $ptr = shift;
@@ -60,6 +110,27 @@ sub domain {
     Algorithm::CP::IZ::cs_domain($self->{_ptr}, \@ret);
 
     return \@ret;
+}
+
+sub get_next_value {
+    my $self = shift;
+    my $val = shift;
+
+    return Algorithm::CP::IZ::cs_getNextValue($self->{_ptr}, $val + 0);
+}
+
+sub get_previous_value {
+    my $self = shift;
+    my $val = shift;
+
+    return Algorithm::CP::IZ::cs_getPreviousValue($self->{_ptr}, $val + 0);
+}
+
+sub is_in {
+    my $self = shift;
+    my $val = shift;
+
+    return Algorithm::CP::IZ::cs_is_in($self->{_ptr}, $val + 0);
 }
 
 sub Eq {

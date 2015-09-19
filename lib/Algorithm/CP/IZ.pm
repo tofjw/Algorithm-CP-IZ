@@ -159,7 +159,10 @@ sub create_int {
     my $ptr;
     my $name;
 
-    if (ref $p1 && ref $p1 eq 'ARRAY') {
+    if (!ref $p1 && @_ == 0) {
+	return $self->_const_var($p1);
+    }
+    elsif (ref $p1 && ref $p1 eq 'ARRAY') {
 	$name = shift;
 	$ptr = $self->_create_int_from_domain($p1);
     }

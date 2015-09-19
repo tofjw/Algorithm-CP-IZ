@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 36;
+use Test::More tests => 46;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # create(min, max)
@@ -22,6 +22,26 @@ is($v->nb_elements, 11);
 
 my $vdom = $iz->create_int([2, 4, 6, 8, 10], "vdom");
 is(join(",", @{$vdom->domain}), "2,4,6,8,10");
+
+my $cvar1 = $iz->create_int(33);
+is($cvar1->value, 33);
+my $cvar2 = $iz->create_int(33);
+is($cvar2->value, 33);
+is("$cvar1", "33");
+is("$vdom", "vdom: {2, 4, 6, 8, 10}");
+is("$v", "{0..10}");
+{
+    $iz->save_context;
+    $v->Neq(5);
+    is("$v", "{0..4, 6..10}");
+    $iz->restore_context;
+}
+
+is($vdom->get_next_value(4), 6);
+is($vdom->get_previous_value(10), 8);
+
+is($vdom->is_in(8), 1);
+is($vdom->is_in(7), 0);
 
 # Neq
 {

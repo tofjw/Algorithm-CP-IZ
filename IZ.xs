@@ -428,6 +428,33 @@ CODE:
     free(dom);    
 
 int
+cs_getNextValue(vint, val)
+    void* vint
+    int val
+CODE:
+    RETVAL = cs_getNextValue(vint, val);
+OUTPUT:
+    RETVAL
+
+int
+cs_getPreviousValue(vint, val)
+    void* vint
+    int val
+CODE:
+    RETVAL = cs_getPreviousValue(vint, val);
+OUTPUT:
+    RETVAL
+
+int
+cs_is_in(vint, val)
+    void* vint
+    int val
+CODE:
+    RETVAL = cs_isIn(vint, val);
+OUTPUT:
+    RETVAL
+
+int
 cs_AllNeq(tint, size)
     void* tint
     int size
