@@ -303,6 +303,18 @@ cs_restoreAll()
 CODE:
     cs_restoreAll();
 
+int cs_getNbFails()
+CODE:
+    RETVAL = cs_getNbFails();
+OUTPUT:
+    RETVAL
+
+int cs_getNbChoicePoints()
+CODE:
+    RETVAL = cs_getNbChoicePoints();
+OUTPUT:
+    RETVAL
+
 void*
 cs_createCSint(min, max)
     int min

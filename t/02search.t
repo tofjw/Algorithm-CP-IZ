@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 42;
+use Test::More tests => 45;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -124,6 +124,11 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
   $iz->save_context;
   my $rc1 = $iz->search([$s, $e, $n, $d, $m, $o, $r, $y],
 			{ MaxFail => 1});
+
+
+  # 1 or 2?
+  ok($iz->get_nb_fails >= 1 && $iz->get_nb_fails < 3);
+
   is($rc1, 0);
 
   $iz->restore_context;
@@ -131,6 +136,9 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
   my $rc = $iz->search([$s, $e, $n, $d, $m, $o, $r, $y],
 		      { MaxFail => 10000});
   is($rc, 1);
+
+  ok($iz->get_nb_fails < 10000);
+  ok($iz->get_nb_choice_points > 0);
 }
 
 # search with Criteria

@@ -137,6 +137,18 @@ sub restore_all {
     $self->{_cxt} = [];
 }
 
+sub get_nb_fails {
+    my $self = shift;
+
+    return Algorithm::CP::IZ::cs_getNbFails();
+}
+
+sub get_nb_choice_points {
+    my $self = shift;
+
+    return Algorithm::CP::IZ::cs_getNbChoicePoints();
+}
+
 sub _create_int_from_min_max {
     my ($self, $min, $max) = @_;
     return Algorithm::CP::IZ::cs_createCSint($min + 0, $max + 0);
