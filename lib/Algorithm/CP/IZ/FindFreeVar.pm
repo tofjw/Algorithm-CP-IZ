@@ -1,7 +1,10 @@
 package Algorithm::CP::IZ::FindFreeVar;
 
-sub default {
-}
+use constant {
+    Default => 0,
+    NbElements => 1,
+    NbElementsMin => 2,
+};
 
 sub wrap {
     my ($func, $array) = @_;

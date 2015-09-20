@@ -60,8 +60,26 @@ static int findFreeVarDefault(CSint **allVars, int nbVars)
   return -1;
 }
 
+static int findFreeVarNbElements(CSint **allVars, int nbVars)
+{
+  int i;
+  int ret = -1;
+  int minElem = INT_MAX;
+
+  for (i=0; i<nbVars; i++) {
+    int nElem = cs_getNbElements(allVars[i]);
+    if (nElem > 1 && nElem < minElem) {
+      ret = i;
+      minElem = nElem;
+    }
+  }
+
+  return ret;
+}
+
 array2index* findFreeVarTbl[] = {
   findFreeVarDefault,
+  findFreeVarNbElements,
 };
 
 
@@ -243,10 +261,11 @@ OUTPUT:
     RETVAL
 
 int
-cs_search_preset(av, func_id, fail_max)
-    AV *av;
-    int func_id;
-    int fail_max;
+cs_search(av, func_id, func_ref, fail_max)
+    AV *av
+    int func_id
+    SV* func_ref
+    int fail_max
 PREINIT:
     void** array;
     SSize_t alen;
@@ -260,16 +279,31 @@ CODE:
       array[i] = SvRV(*pptr);
     }
 
-    if (func_id < 0 || func_id >= sizeof(findFreeVarTbl)/sizeof(findFreeVarTbl[0]))
-      croak("bad fundFreeVar func_id");
+    currentArray2IndexFunc = 0;
 
-    currentArray2IndexFunc = findFreeVarTbl[func_id];
-    if (fail_max < 0)
-      fail_max = INT_MAX;
+    if (func_id < 0) {
+      findFreeVarPerlFunc = SvRV(func_ref);
+      currentArray2IndexFunc = findFreeVarPerlWrapper;
+    }
+    else {
+      if (func_id >= sizeof(findFreeVarTbl)/sizeof(findFreeVarTbl[0])) {
+	Safefree(array);
+	croak("search: Bad FindFreeVar value");
+	RETVAL = -1;
+      }
+      else {
+	currentArray2IndexFunc = findFreeVarTbl[func_id];
+      }
+    }
 
-    RETVAL = cs_searchFail((CSint**)array,
-			   (int)alen, findFreeVarWrapper, fail_max);
-    Safefree(array);
+    if (currentArray2IndexFunc) {
+      if (fail_max < 0)
+	fail_max = INT_MAX;
+
+      RETVAL = cs_searchFail((CSint**)array,
+			     (int)alen, findFreeVarWrapper, fail_max);
+      Safefree(array);
+    }
 OUTPUT:
     RETVAL
 

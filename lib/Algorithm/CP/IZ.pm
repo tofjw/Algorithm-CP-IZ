@@ -192,7 +192,32 @@ sub search {
     my $params = shift;
 
     my $array = [map { $_->{_ptr } } @$var_array];
-    return Algorithm::CP::IZ::cs_search_preset($array, 0, -1);
+
+    my $find_free_var_id = 0;
+    my $find_free_var_func = sub { die "search: Internal error"; };
+
+    if ($params->{FindFreeVar}) {
+	my $ffv = $params->{FindFreeVar};
+
+	if (ref $ffv) {
+	    unless (ref $ffv eq 'CODE') {
+		croak "search: FindFreeVar must be number or coderef";
+	    }
+
+	    $find_free_var_id = -1;
+	    $find_free_var_func = sub {
+		return &$ffv($var_array);
+	    };
+	}
+	else {
+	    $find_free_var_id = $ffv + 0;
+	}
+    }
+
+    return Algorithm::CP::IZ::cs_search($array,
+					$find_free_var_id,
+					$find_free_var_func,
+					-1);
 }
 
 sub search_test {
