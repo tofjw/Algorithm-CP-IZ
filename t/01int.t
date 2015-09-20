@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 46;
+use Test::More tests => 49;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # create(min, max)
@@ -47,7 +47,7 @@ is($vdom->is_in(7), 0);
 {
   $iz->save_context;
 
-  $v->Neq(5);
+  is($v->Neq(5), 1);
   is(join(",", @{$v->domain}), "0,1,2,3,4,6,7,8,9,10");
   $iz->restore_context;
 
@@ -55,8 +55,13 @@ is($vdom->is_in(7), 0);
 
   $iz->save_context;
 
-  $v->Neq($v2);
+  is($v->Neq($v2), 1);
   is(join(",", @{$v->domain}), "1,2,3,4,5,6,7,8,9,10");
+  $iz->restore_context;
+
+  $iz->save_context;
+
+  is ($v2->Neq(0), 0);
   $iz->restore_context;
 }
 

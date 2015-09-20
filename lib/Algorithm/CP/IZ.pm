@@ -66,10 +66,17 @@ XSLoader::load('Algorithm::CP::IZ', $VERSION);
 
 # Autoload methods go after =cut, and are processed by the autosplit program.
 
+my $Instances = 0;
+
 sub new {
     my $class = shift;
 
+    if ($Instances > 0) {
+	croak __PACKAGE__ . ": another instance is working.";
+    }
+
     Algorithm::CP::IZ::cs_init();
+    $Instances++;
 
     bless {
 	_vars => [],
@@ -84,10 +91,11 @@ sub DESTROY {
     my $vars = $self->{_vars};
 
     for my $v (@$vars) {
-	Algorithm::CP::IZ::InvalidInt->invalidate($v);
+	$v->_invalidate($v);
     }
 
     Algorithm::CP::IZ::cs_end();
+    $Instances--;
 }
 
 sub save_context {

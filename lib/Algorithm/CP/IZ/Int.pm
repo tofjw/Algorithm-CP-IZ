@@ -193,16 +193,163 @@ sub Gt {
     return Algorithm::CP::IZ::cs_GT($self->{_ptr}, int($val + 0));
 }
 
-sub invalidate {
-    Algorithm::CP::IZ::InvalidInt->invalidate(shift);
-}
-
-package Algorithm::CP::IZ::InvalidInt;
-
-sub invalidate {
-    my $class = shift;
-    my $var = shift;
-    bless $var, $class;
+sub _invalidate {
+    my $self = shift;
+    bless $self, __PACKAGE__ . "::InvalidInt";
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Algorithm::CP::IZ::Int - Domain variable for Algorithm::CP::IZ
+
+=head1 SYNOPSIS
+
+  use Algorithm::CP::IZ;
+
+  my $iz = Algorithm::CP::IZ->new();
+
+  # create instances of Algorithm::CP::IZ::Int
+  # contains domain {0..9}
+  my $v1 = $iz->create_int(1, 9);
+  my $v2 = $iz->create_int(1, 9);
+
+  # add constraint
+  $iz->Add($v1, $v2)->Eq(12);
+
+  # get current status
+  print $v1->nb_elements, "\n2;
+
+  # print domain
+  print "$v1\n";
+
+=head1 DESCRIPTION
+
+Stub documentation for Algorithm::CP::IZ, created by h2xs. It looks like the
+author of the extension was negligent enough to leave the stub
+unedited.
+
+Blah blah blah.
+
+All constraint method returns 1 (OK) or 0 (constraint violation occured).
+
+=head1 METHODS
+
+=over 2
+
+=item format
+
+Create string representation of this variable.
+('""' operator has overloaded to this method.)
+
+=item name
+
+Get name of this variable.
+
+=item name(NAME)
+
+Set name of this variable.
+
+=item nb_elements
+
+Returns count of values in domain.
+
+=item min
+
+Returns minimum value of domain.
+
+=item max
+
+Returns maximum value of domain.
+
+=item value
+
+Returns instantiated value of this variable.
+
+If this method called for not instancited variable, exception will be thrown.
+
+=item is_free
+
+Returns 1 (domain has more than 1 value) or 0 (domain has 1 only value).
+
+=item is_instantiated
+
+Returns 1 (instantiated, it means domain has only 1 value)
+or 0 (domain has more than 1 value).
+
+=item domain
+
+Returns array reference of domain values.
+
+=item get_next_value(X)
+
+Returns a value next value of X in domain. (If domain is {0, 1, 2, 3} and
+X is 1, next value is 2)
+
+X must be integer value.
+
+=item get_previous_value
+
+Returns a value previous value of X in domain. (If domain is {0, 1, 2, 3} and
+X is 2, next value is 1)
+
+X must be integer value.
+
+=item is_in(X)
+
+Returns 1 (X is in domain) or 0 (X is not in domain)
+
+X must be integer value.
+
+=item Eq(X)
+
+Constraints this variable "equal to X".
+X must be int or instance of Algorithm::CP::IZ::Int.
+
+=item Neq(X)
+
+Constraints this variable "not equal to X".
+X must be int or instance of Algorithm::CP::IZ::Int.
+
+=item Le(X)
+
+Constraints this variable "less or equal to X".
+X must be int or instance of Algorithm::CP::IZ::Int.
+
+=item Lt(X)
+
+Constraints this variable "less than X".
+X must be int or instance of Algorithm::CP::IZ::Int.
+
+=item Ge(X)
+
+Constraints this variable "greater or equal to X".
+X must be int or instance of Algorithm::CP::IZ::Int.
+
+=item Gt(X)
+
+Constraints this variable "greater than X".
+X must be int or instance of Algorithm::CP::IZ::Int.
+
+=back
+
+=head1 SEE ALSO
+
+L<Algorithm::CP::IZ>
+
+=head1 AUTHOR
+
+Toshimitsu FUJIWARA, E<lt>tttfjw at gmail.comE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2015 by Toshimitsu FUJIWARA
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the the Artistic License (2.0). You may obtain a
+copy of the full license at:
+
+L<http://www.perlfoundation.org/artistic_license_2_0>
