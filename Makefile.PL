@@ -1,5 +1,16 @@
-use 5.016001;
+use 5.009000; # need Newx in XS
 use ExtUtils::MakeMaker;
+
+use Getopt::Std;
+
+my $DEFAULT_IZ_LIB_PATH = "../izC_v3_3_1_linux/src";
+my $DEFAULT_IZ_INCLUDE_PATH = "../izC_v3_3_1_linux/src";
+
+our $opt_L = $DEFAULT_IZ_LIB_PATH;
+our $opt_I = $DEFAULT_IZ_INCLUDE_PATH;
+
+getopts('L:I:');
+
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 WriteMakefile(
@@ -11,9 +22,9 @@ WriteMakefile(
     #LICENSE           => 'perl',
     #Value must be from legacy list of licenses here
     #http://search.cpan.org/perldoc?Module%3A%3ABuild%3A%3AAPI
-    LIBS              => ['-L. -liz'], # e.g., '-lm'
+    LIBS              => ["-L$opt_L -liz"], # e.g., '-lm'
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
-    INC               => '-I.', # e.g., '-I. -I/usr/include/other'
+    INC               => "-I$opt_I", # e.g., '-I. -I/usr/include/other'
 	# Un-comment this if you add C files to link with later:
     # OBJECT            => '$(O_FILES)', # link all the C files too
 );
