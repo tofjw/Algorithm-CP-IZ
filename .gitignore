@@ -3,3 +3,5 @@
 iz.h
 libiz.so
 libiz.a
+const-c.inc
+const-xs.inc
