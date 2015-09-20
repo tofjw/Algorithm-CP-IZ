@@ -33,12 +33,11 @@ constant (pTHX_ const char *name, STRLEN len, IV *iv_return) {
      Regenerate these constant functions by feeding this entire source file to
      perl -x
 
-#!C:\Strawberry\perl\bin\perl.exe -w
+#!#!perl -w
 use ExtUtils::Constant qw (constant_types C_constant XS_constant);
 
 my $types = {map {($_, 1)} qw(IV)};
-my @names = (qw(CS_ERR_GETVALUE CS_ERR_NONE CS_INT_MAX CS_INT_MIN FALSE TRUE
-	       __izwindllexport));
+my @names = (qw(CS_INT_MAX CS_INT_MIN));
 
 print constant_types(), "\n"; # macro defs
 foreach (C_constant ("Algorithm::CP::IZ", 'constant', 'IV', $types, undef, 3, @names) ) {
@@ -50,26 +49,6 @@ __END__
    */
 
   switch (len) {
-  case 4:
-    if (memEQ(name, "TRUE", 4)) {
-#ifdef TRUE
-      *iv_return = TRUE;
-      return PERL_constant_ISIV;
-#else
-      return PERL_constant_NOTDEF;
-#endif
-    }
-    break;
-  case 5:
-    if (memEQ(name, "FALSE", 5)) {
-#ifdef FALSE
-      *iv_return = FALSE;
-      return PERL_constant_ISIV;
-#else
-      return PERL_constant_NOTDEF;
-#endif
-    }
-    break;
   case 10:
     /* Names all of length 10.  */
     /* CS_INT_MAX CS_INT_MIN */
@@ -97,36 +76,6 @@ __END__
 #endif
       }
       break;
-    }
-    break;
-  case 11:
-    if (memEQ(name, "CS_ERR_NONE", 11)) {
-#ifdef CS_ERR_NONE
-      *iv_return = CS_ERR_NONE;
-      return PERL_constant_ISIV;
-#else
-      return PERL_constant_NOTDEF;
-#endif
-    }
-    break;
-  case 15:
-    if (memEQ(name, "CS_ERR_GETVALUE", 15)) {
-#ifdef CS_ERR_GETVALUE
-      *iv_return = CS_ERR_GETVALUE;
-      return PERL_constant_ISIV;
-#else
-      return PERL_constant_NOTDEF;
-#endif
-    }
-    break;
-  case 16:
-    if (memEQ(name, "__izwindllexport", 16)) {
-#ifdef __izwindllexport
-      *iv_return = __izwindllexport;
-      return PERL_constant_ISIV;
-#else
-      return PERL_constant_NOTDEF;
-#endif
     }
     break;
   }
