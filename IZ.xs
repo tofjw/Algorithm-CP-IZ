@@ -82,6 +82,36 @@ array2index* findFreeVarTbl[] = {
   findFreeVarNbElements,
 };
 
+static SV* criteriaPerlFunc;
+
+static int criteriaPerlWrapper(int index, int val)
+{
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(sp);
+
+  XPUSHs(sv_2mortal(newSViv(index)));
+  XPUSHs(sv_2mortal(newSViv(val)));
+
+  PUTBACK;
+  int count = call_sv(criteriaPerlFunc, G_SCALAR);
+  SPAGAIN;
+  int ret = -1;
+
+  if (count == 0) {
+    croak("criteriaPerlWrapper: error");
+  }
+  ret = POPi;
+
+  FREETMPS;
+  LEAVE;
+
+  return ret;
+}
+
 
 static IZBOOL eventAllKnownPerlWrapper(CSint **tint, int size, void *ext)
 {
@@ -280,6 +310,7 @@ CODE:
     }
 
     currentArray2IndexFunc = 0;
+    findFreeVarPerlFunc = 0;
 
     if (func_id < 0) {
       findFreeVarPerlFunc = SvRV(func_ref);
@@ -307,12 +338,13 @@ CODE:
 OUTPUT:
     RETVAL
 
-
 int
-cs_search_findFreeVar(av, func_ref, fail_max)
-    AV *av;
-    SV* func_ref;
-    int fail_max;
+cs_searchCriteria(av, findvar_id, findvar_ref, criteria_ref, fail_max)
+    AV *av
+    int findvar_id
+    SV* findvar_ref
+    SV* criteria_ref
+    int fail_max
 PREINIT:
     void** array;
     SSize_t alen;
@@ -326,17 +358,38 @@ CODE:
       array[i] = SvRV(*pptr);
     }
 
-    findFreeVarPerlFunc = SvRV(func_ref);
-    currentArray2IndexFunc = findFreeVarPerlWrapper;
-    if (fail_max < 0)
-      fail_max = INT_MAX;
+    currentArray2IndexFunc = 0;
+    findFreeVarPerlFunc = 0;
+    criteriaPerlFunc = SvRV(criteria_ref);
 
-    RETVAL = cs_searchFail((CSint**)array,
-			   (int)alen, findFreeVarWrapper, fail_max);
-    Safefree(array);
+    if (findvar_id < 0) {
+      findFreeVarPerlFunc = SvRV(findvar_ref);
+      currentArray2IndexFunc = findFreeVarPerlWrapper;
+    }
+    else {
+      if (findvar_id >= sizeof(findFreeVarTbl)/sizeof(findFreeVarTbl[0])) {
+	Safefree(array);
+	croak("search: Bad FindFreeVar value");
+	RETVAL = -1;
+      }
+      else {
+	currentArray2IndexFunc = findFreeVarTbl[findvar_id];
+      }
+    }
+
+    if (currentArray2IndexFunc) {
+      if (fail_max < 0)
+	fail_max = INT_MAX;
+
+      RETVAL = cs_searchCriteriaFail((CSint**)array,
+				     (int)alen,
+				     currentArray2IndexFunc,
+				     criteriaPerlWrapper,
+				     fail_max);
+      Safefree(array);
+    }
 OUTPUT:
     RETVAL
-
 
 int
 cs_eventAllKnown(tint, size, handler)

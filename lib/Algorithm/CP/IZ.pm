@@ -196,6 +196,7 @@ sub search {
     my $max_fail = -1;
     my $find_free_var_id = 0;
     my $find_free_var_func = sub { die "search: Internal error"; };
+    my $criteria_func = undef;
 
     if ($params->{FindFreeVar}) {
 	my $ffv = $params->{FindFreeVar};
@@ -215,14 +216,32 @@ sub search {
 	}
     }
 
+    if ($params->{Criteria}) {
+	my $cr = $params->{Criteria};
+	unless (ref $cr && ref $cr eq 'CODE') {
+	    croak "search: Criteria must be coderef";
+	}
+
+	$criteria_func = $cr;
+    }
+
     if ($params->{MaxFail}) {
 	$max_fail = $params->{MaxFail} + 0;
     }
 
-    return Algorithm::CP::IZ::cs_search($array,
-					$find_free_var_id,
-					$find_free_var_func,
-					$max_fail);
+    if ($criteria_func) {
+	return Algorithm::CP::IZ::cs_searchCriteria($array,
+						    $find_free_var_id,
+						    $find_free_var_func,
+						    $criteria_func,
+						    $max_fail);
+    }
+    else {
+ 	return Algorithm::CP::IZ::cs_search($array,
+					    $find_free_var_id,
+					    $find_free_var_func,
+					    $max_fail);
+   }
 }
 
 sub search_test {
