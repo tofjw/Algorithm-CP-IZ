@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 24;
+use Test::More tests => 42;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -49,7 +49,7 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($v2->value, 1);
 }
 
-# default search (use NbElements)
+# default search (using NbElements)
 {
     use Algorithm::CP::IZ::FindFreeVar;
     my $iz = Algorithm::CP::IZ->new();
@@ -162,4 +162,94 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($func_used, 1);
     is($v1->value, 4);
     is($v2->value, 5);
+}
+
+# find_all
+{
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $v1 = $iz->create_int(1, 3);
+    my $v2 = $iz->create_int(1, 3);
+    $iz->AllNeq([$v1, $v2]);
+
+    my @r;
+    my $callback = sub {
+      my $var_array = shift;
+      push(@r, [map { $_->value } @$var_array]);
+    };
+
+    my $rc = $iz->find_all([$v1, $v2], $callback);
+
+    is($rc, 1);
+    is_deeply($r[0], [1, 2]);
+    is_deeply($r[1], [1, 3]);
+    is_deeply($r[2], [2, 1]);
+    is_deeply($r[3], [2, 3]);
+    is_deeply($r[4], [3, 1]);
+    is_deeply($r[5], [3, 2]);
+}
+
+# find_all using (using NbElements)
+{
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $v1 = $iz->create_int(1, 3);
+    my $v2 = $iz->create_int(1, 2);
+    $iz->AllNeq([$v1, $v2]);
+
+    my @r;
+    my $callback = sub {
+      my $var_array = shift;
+      push(@r, [map { $_->value } @$var_array]);
+    };
+
+    my $rc = $iz->find_all([$v1, $v2], $callback,
+			   { FindFreeVar
+			    => Algorithm::CP::IZ::FindFreeVar::NbElements, });
+
+    is($rc, 1);
+    is_deeply($r[0], [2, 1]);
+    is_deeply($r[1], [3, 1]);
+    is_deeply($r[2], [1, 2]);
+    is_deeply($r[3], [3, 2]);
+}
+
+# find_all using (using NbElements)
+{
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $v1 = $iz->create_int(1, 3);
+    my $v2 = $iz->create_int(1, 2);
+    $iz->AllNeq([$v1, $v2]);
+
+    my $func_used = 0;
+
+    my $func = sub {
+	my $array = shift;
+	my $n = scalar @$array;
+
+	for my $i (0..$n-1) {
+	    return $i if ($array->[$i]->is_free);
+	}
+
+	$func_used = 1;
+
+	return -1;
+    };
+
+    my @r;
+    my $callback = sub {
+      my $var_array = shift;
+      push(@r, [map { $_->value } @$var_array]);
+    };
+
+    my $rc = $iz->find_all([$v1, $v2], $callback,
+			   { FindFreeVar => $func });
+
+    is($rc, 1);
+    is($func_used, 1);
+    is_deeply($r[0], [1, 2]);
+    is_deeply($r[1], [2, 1]);
+    is_deeply($r[2], [3, 1]);
+    is_deeply($r[3], [3, 2]);
 }

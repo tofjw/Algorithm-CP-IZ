@@ -244,18 +244,47 @@ sub search {
    }
 }
 
-sub search_test {
+sub find_all {
     my $self = shift;
     my $var_array = shift;
+    my $found_func = shift;
     my $params = shift;
+
+    unless (ref $found_func eq 'CODE') {
+	croak "find_all: usage: find_all([vars], &callback_func, {params})";
+    }
 
     my $array = [map { $_->{_ptr } } @$var_array];
 
-    my $func = sub {
-	return &$params($var_array);
+    my $find_free_var_id = 0;
+    my $find_free_var_func = sub { die "find_all: Internal error"; };
+
+    if ($params->{FindFreeVar}) {
+	my $ffv = $params->{FindFreeVar};
+
+	if (ref $ffv) {
+	    unless (ref $ffv eq 'CODE') {
+		croak "find_all: FindFreeVar must be number or coderef";
+	    }
+
+	    $find_free_var_id = -1;
+	    $find_free_var_func = sub {
+		return &$ffv($var_array);
+	    };
+	}
+	else {
+	    $find_free_var_id = $ffv + 0;
+	}
+    }
+
+    my $call_back = sub {
+	&$found_func($var_array);
     };
 
-    return Algorithm::CP::IZ::cs_search_findFreeVar($array, $func, -1);
+    return Algorithm::CP::IZ::cs_findAll($array,
+					 $find_free_var_id,
+					 $find_free_var_func,
+					 $call_back);
 }
 
 sub _push_object {

@@ -9,6 +9,10 @@
 
 #include "const-c.inc"
 
+/*
+ * Helper functinos for cs_search, cs_searchCriteria, cs_findAll
+ */
+
 typedef int array2index(CSint **allVars, int nbVars);
 
 static array2index* currentArray2IndexFunc;
@@ -112,6 +116,35 @@ static int criteriaPerlWrapper(int index, int val)
   return ret;
 }
 
+/*
+ * Helper functinos for cs_findAll
+ */
+
+typedef void foundCallback(CSint **allVars, int nbVars);
+
+static SV* foundPerlFunc;
+
+static void foundPerlWrapper(CSint **allVars, int nbVars)
+{
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(sp);
+
+  PUTBACK;
+  int count = call_sv(foundPerlFunc, G_SCALAR);
+  SPAGAIN;
+  int ret = -1;
+
+  FREETMPS;
+  LEAVE;
+}
+
+/*
+ * Helper functinos for demon funcrions
+ */
 
 static IZBOOL eventAllKnownPerlWrapper(CSint **tint, int size, void *ext)
 {
@@ -386,6 +419,53 @@ CODE:
 				     currentArray2IndexFunc,
 				     criteriaPerlWrapper,
 				     fail_max);
+      Safefree(array);
+    }
+OUTPUT:
+    RETVAL
+
+int
+cs_findAll(av, findvar_id, findvar_ref, found_ref)
+    AV *av
+    int findvar_id
+    SV* findvar_ref
+    SV* found_ref
+PREINIT:
+    void** array;
+    SSize_t alen;
+    SSize_t i;
+CODE:
+    alen = av_len(av) + 1;
+    Newx(array, alen, void*);
+
+    for (i = 0; i<alen; i++) {
+      SV** pptr = av_fetch(av, i, 0);
+      array[i] = SvRV(*pptr);
+    }
+
+    currentArray2IndexFunc = 0;
+    findFreeVarPerlFunc = 0;
+
+    foundPerlFunc = SvRV(found_ref);
+
+    if (findvar_id < 0) {
+      findFreeVarPerlFunc = SvRV(findvar_ref);
+      currentArray2IndexFunc = findFreeVarPerlWrapper;
+    }
+    else {
+      if (findvar_id >= sizeof(findFreeVarTbl)/sizeof(findFreeVarTbl[0])) {
+	Safefree(array);
+	croak("findAll: Bad FindFreeVar value");
+	RETVAL = -1;
+      }
+      else {
+	currentArray2IndexFunc = findFreeVarTbl[findvar_id];
+      }
+    }
+
+    if (currentArray2IndexFunc) {
+      RETVAL = cs_findAll((CSint**)array, (int)alen,
+			  findFreeVarWrapper, foundPerlWrapper);
       Safefree(array);
     }
 OUTPUT:
