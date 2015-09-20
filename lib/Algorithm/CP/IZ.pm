@@ -193,6 +193,7 @@ sub search {
 
     my $array = [map { $_->{_ptr } } @$var_array];
 
+    my $max_fail = -1;
     my $find_free_var_id = 0;
     my $find_free_var_func = sub { die "search: Internal error"; };
 
@@ -214,10 +215,14 @@ sub search {
 	}
     }
 
+    if ($params->{MaxFail}) {
+	$max_fail = $params->{MaxFail} + 0;
+    }
+
     return Algorithm::CP::IZ::cs_search($array,
 					$find_free_var_id,
 					$find_free_var_func,
-					-1);
+					$max_fail);
 }
 
 sub search_test {

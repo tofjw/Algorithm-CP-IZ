@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 22;
+use Test::More tests => 24;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -102,3 +102,36 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($v1->value, 0);
     is($v1->nb_elements, 1);
 }
+
+# test MaxFail uinsg send more money
+{
+  my $iz = Algorithm::CP::IZ->new();
+  my $s = $iz->create_int(1, 9);
+  my $e = $iz->create_int(0, 9);
+  my $n = $iz->create_int(0, 9);
+  my $d = $iz->create_int(0, 9);
+  my $m = $iz->create_int(1, 9);
+  my $o = $iz->create_int(0, 9);
+  my $r = $iz->create_int(0, 9);
+  my $y = $iz->create_int(0, 9);
+
+  $iz->AllNeq([$s, $e, $n, $d, $m, $o, $r, $y]);
+
+  my $v1 = $iz->ScalProd([$s, $e, $n, $d], [1000, 100, 10, 1]);
+  my $v2 = $iz->ScalProd([$m, $o, $r, $e], [1000, 100, 10, 1]);
+  my $v3 = $iz->ScalProd([$m, $o, $n, $e, $y], [10000, 1000, 100, 10, 1]);
+  my $v4 = $iz->Add($v1, $v2);
+  $v3->Eq($v4);
+
+  $iz->save_context;
+  my $rc1 = $iz->search([$s, $e, $n, $d, $m, $o, $r, $y],
+			{ MaxFail => 1});
+  is($rc1, 0);
+
+  $iz->restore_context;
+
+  my $rc = $iz->search([$s, $e, $n, $d, $m, $o, $r, $y],
+		      { MaxFail => 10000});
+  is($rc, 1);
+}
+
