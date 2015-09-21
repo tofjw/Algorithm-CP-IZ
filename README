@@ -30,7 +30,7 @@ Makefile.PL takes following command line options to specify path to iZ-C.
 
 DEPENDENCIES
 
-This module requires iZ-C library. This library canb be downloaded from:
+This module requires iZ-C library. This library can be downloaded from:
 
   http://www.constraint.org/ja/izc_download.html
 

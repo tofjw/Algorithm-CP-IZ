@@ -125,22 +125,22 @@ sub domain {
 sub get_next_value {
     my $self = shift;
     my $val = shift;
-
-    return Algorithm::CP::IZ::cs_getNextValue($self->{_ptr}, $val + 0);
+    
+    return Algorithm::CP::IZ::cs_getNextValue($self->{_ptr}, int($val));
 }
 
 sub get_previous_value {
     my $self = shift;
     my $val = shift;
 
-    return Algorithm::CP::IZ::cs_getPreviousValue($self->{_ptr}, $val + 0);
+    return Algorithm::CP::IZ::cs_getPreviousValue($self->{_ptr}, int($val));
 }
 
 sub is_in {
     my $self = shift;
     my $val = shift;
 
-    return Algorithm::CP::IZ::cs_is_in($self->{_ptr}, $val + 0);
+    return Algorithm::CP::IZ::cs_is_in($self->{_ptr}, int($val));
 }
 
 sub Eq {
@@ -150,7 +150,7 @@ sub Eq {
 	return Algorithm::CP::IZ::cs_Eq($self->{_ptr}, $val->{_ptr});
     }
 
-    return Algorithm::CP::IZ::cs_EQ($self->{_ptr}, int($val + 0));
+    return Algorithm::CP::IZ::cs_EQ($self->{_ptr}, int($val));
 }
 
 sub Neq {
@@ -160,7 +160,7 @@ sub Neq {
 	return Algorithm::CP::IZ::cs_Neq($self->{_ptr}, $val->{_ptr});
     }
 
-    return Algorithm::CP::IZ::cs_NEQ($self->{_ptr}, int($val + 0));
+    return Algorithm::CP::IZ::cs_NEQ($self->{_ptr}, int($val));
 }
 
 sub Le {
@@ -170,7 +170,7 @@ sub Le {
 	return Algorithm::CP::IZ::cs_Le($self->{_ptr}, $val->{_ptr});
     }
 
-    return Algorithm::CP::IZ::cs_LE($self->{_ptr}, int($val + 0));
+    return Algorithm::CP::IZ::cs_LE($self->{_ptr}, int($val));
 }
 
 sub Lt {
@@ -180,7 +180,7 @@ sub Lt {
 	return Algorithm::CP::IZ::cs_Lt($self->{_ptr}, $val->{_ptr});
     }
 
-    return Algorithm::CP::IZ::cs_LT($self->{_ptr}, int($val + 0));
+    return Algorithm::CP::IZ::cs_LT($self->{_ptr}, int($val));
 }
 
 sub Ge {
@@ -190,7 +190,7 @@ sub Ge {
 	return Algorithm::CP::IZ::cs_Ge($self->{_ptr}, $val->{_ptr});
     }
 
-    return Algorithm::CP::IZ::cs_GE($self->{_ptr}, int($val + 0));
+    return Algorithm::CP::IZ::cs_GE($self->{_ptr}, int($val));
 }
 
 sub Gt {
@@ -200,7 +200,7 @@ sub Gt {
 	return Algorithm::CP::IZ::cs_Gt($self->{_ptr}, $val->{_ptr});
     }
 
-    return Algorithm::CP::IZ::cs_GT($self->{_ptr}, int($val + 0));
+    return Algorithm::CP::IZ::cs_GT($self->{_ptr}, int($val));
 }
 
 sub _invalidate {
@@ -239,25 +239,49 @@ Algorithm::CP::IZ::Int - Domain variable for Algorithm::CP::IZ
 =head1 DESCRIPTION
 
 Algorithm::CP::IZ::Int is perl representation of CSint object in iZ-C library.
-This class has integer set called 'domain'. Domain is a set of solution
-candidate values which can specify current constraint setting.
+This class is called also 'domain variable'.
 
-You can declare range of variable when creating variable.
-Variable can take values 1..9 in following example.
+=head2 DOMAIN
+
+Domain is a set of candidate values of solution which can satisfy current
+constraint setting.
+
+You can declare range of domain (which integer is in domain) when
+creating variable.
+Variable can take values 1..9 (1..9 is in domain) in following example.
 
   my $var = $iz->create_int(1, 9);
 
 Values will be removed by applying constraint.
 For example, After applying constraint $var->Le(3) to above example variable,
-$var has domain 1..3.
+domain of $var is 1..3.
 
-  $var->Le(3);
+  $var->Le(3);     # $var <= 3 (6..9 is removed from domain)
   print "$var\n";  # Output will be "{1..3}".
 
-If All integers are removed from domain, it is assumed as "fail".
-(no solution is found in current model)
+=head2 FREE AND INSTANTIATED
+
+If domain variable has more than one value, it is calld 'free'.
+
+  my $rc = $var->is_free;  # $rc is 1
+
+If domain has just one value, it is calld 'instantiated'.
+
+  $rc = $var->is_instantiated;  # $rc is 1
+
+If all domain variables are instantiated satisfing constraints,
+variables represent solution of input problem.
+
+=head2 FAIL
+
+If All values are removed from domain, it is assumed as "fail".
+(no solution is found under current constraint setting)
 
 All constraint method returns 1 (OK) or 0 (fail).
+
+  $rc = $var->Le(0); # fail
+  print "$rc\n";        # Output will be 0.
+
 
 =head1 METHODS
 

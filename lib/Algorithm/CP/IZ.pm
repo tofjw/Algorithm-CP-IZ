@@ -159,17 +159,17 @@ sub get_nb_choice_points {
 
 sub _create_int_from_min_max {
     my ($self, $min, $max) = @_;
-    return Algorithm::CP::IZ::cs_createCSint($min + 0, $max + 0);
+    return Algorithm::CP::IZ::cs_createCSint(int($min), int($max));
 }
 
 sub _create_int_from_domain {
-	my ($self, $int_array) = @_;
+    my ($self, $int_array) = @_;
 
-    my $parray = Algorithm::CP::IZ::alloc_int_array([map { $_+0 } @$int_array]);
-	my $ptr = Algorithm::CP::IZ::cs_createCSintFromDomain($parray, scalar @$int_array);
-	Algorithm::CP::IZ::free_array($parray);
+    my $parray = Algorithm::CP::IZ::alloc_int_array([map { int($_) } @$int_array]);
+    my $ptr = Algorithm::CP::IZ::cs_createCSintFromDomain($parray, scalar @$int_array);
+    Algorithm::CP::IZ::free_array($parray);
 
-	return $ptr;
+    return $ptr;
 }
 
 sub create_int {
@@ -232,7 +232,7 @@ sub search {
 	    };
 	}
 	else {
-	    $find_free_var_id = $ffv + 0;
+	    $find_free_var_id = int($ffv);
 	}
     }
 
@@ -246,7 +246,7 @@ sub search {
     }
 
     if ($params->{MaxFail}) {
-	$max_fail = $params->{MaxFail} + 0;
+	$max_fail = int($params->{MaxFail});
     }
 
     if ($criteria_func) {
@@ -293,7 +293,7 @@ sub find_all {
 	    };
 	}
 	else {
-	    $find_free_var_id = $ffv + 0;
+	    $find_free_var_id = int($ffv);
 	}
     }
 
@@ -442,6 +442,13 @@ sub event_neq {
 # Global constraints
 #####################################################
 
+sub _register_variable {
+    my ($self, $var) = @_;
+
+    my $vars = $self->{_vars};
+    push(@$vars, $var);
+}
+
 sub Add {
     my $self = shift;
     my @params = @_;
@@ -450,12 +457,11 @@ sub Add {
 	croak 'usage: $iz->Add(v1, v2)';
     }
 
-    my @v = map { ref $_ ? $_ : $self->_const_var($_ + 0) } @params;
+    my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
     my $ptr = Algorithm::CP::IZ::cs_Add($v[0]->{_ptr}, $v[1]->{_ptr});
     my $ret = Algorithm::CP::IZ::Int->new($ptr);
 
-    my $vars = $self->{_vars};
-    push(@$vars, $ret);
+    $self->_register_variable($ret);
 
     return $ret;
 }
@@ -469,7 +475,7 @@ sub ScalProd {
 	croak 'usage: $iz->ScalProd([ceoffs], [vars])';
     }
 
-    @$vars = map { ref $_ ? $_ : $self->_const_var($_ + 0) } @$vars;
+    @$vars = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$vars;
 
     my $p1 = $self->_create_registered_var_array($vars);
     my $p2 = $self->_create_registered_int_array($coeffs);
@@ -478,8 +484,7 @@ sub ScalProd {
     my $ptr = Algorithm::CP::IZ::cs_ScalProd($$p1, $$p2, $n);
     my $ret = Algorithm::CP::IZ::Int->new($ptr);
 
-    my $myvars = $self->{_vars};
-    push(@$myvars, $ret);
+    $self->_register_variable($ret);
 
     return $ret;
 }
@@ -495,7 +500,6 @@ sub AllNeq {
 
 1;
 __END__
-# Below is stub documentation for your module. You'd better edit it!
 
 =head1 NAME
 
@@ -518,43 +522,57 @@ Algorithm::CP::IZ - Perl interface for iZ-C library
     print "v2 = ", $v2->value, "\n";
   }
   else {
-    print "ng\n";
+    print "fail\n";
   }
 
 =head1 DESCRIPTION
 
-Stub documentation for Algorithm::CP::IZ, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
+Algorithm::CP::IZ is a simple interface of iZ-C constraint programming library.
 
-Blah blah blah.
+Functions declared in iz.h are mapped to:
 
-=head2 EXPORT
+=over 2
 
-None by default.
+=item methods of Algorithm::CP::IZ
 
-=head2 Exportable constants
+initialize, variable constructor, most of constraints
+and search related functions
 
-  CS_ERR_GETVALUE
-  CS_ERR_NONE
-  CS_INT_MAX
-  CS_INT_MIN
-  FALSE
-  TRUE
-  __izwindllexport
+=item methods of Algorithm::CP::IZ::Int
 
+accessors of variable attributes and some constraints
 
+=back
+
+=head2 SIMPLE CASE
+
+In most simple case, this library will be used like following steps:
+
+  # initialize
+  use Algorithm::CP::IZ;
+  my $iz = Algorithm::CP::IZ->new();
+
+  # construct variables
+  my $v1 = $iz->create_int(1, 9);
+  my $v2 = $iz->create_int(1, 9);
+
+  # add constraints ("v1 + v2 = 12" in this case)
+  $iz->Add($v1, $v2)->Eq(12);
+
+  # search solution
+  my $rc = $iz->search([$v1, $v2]);
+
+  # you may get "v1 = 3, v2 = 9"
+  print "v1 = $v1, v2 = $v2\n";
+
+=head1 CONSTRUCTOR
+
+=head1 METHODS
 
 =head1 SEE ALSO
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
-
-If you have a mailing list set up for your module, mention it here.
-
-If you have a web site set up for your module, mention it here.
+L<Algorithm::CP::IZ::Int>
+L<Algorithm::CP::IZ::FindFreeVar>
 
 =head1 AUTHOR
 
