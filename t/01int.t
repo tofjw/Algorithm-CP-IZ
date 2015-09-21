@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 49;
+use Test::More tests => 55;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # create(min, max)
@@ -35,6 +35,15 @@ is("$v", "{0..10}");
     $v->Neq(5);
     is("$v", "{0..4, 6..10}");
     $iz->restore_context;
+}
+
+{
+  is($cvar1->key, $cvar1->key);
+  is($v->key, $v->key);
+  is($vdom->key, $vdom->key);
+  ok($cvar1->key ne $v->key);
+  ok($cvar1->key ne $vdom->key);
+  ok($v->key ne $vdom->key);
 }
 
 is($vdom->get_next_value(4), 6);
@@ -140,15 +149,3 @@ is($vdom->is_in(7), 0);
   is($v->Gt(10), 0);
   $iz->restore_context;
 }
-
-my $v2 = $iz->create_int(-40, -2, "test");
-
-print STDERR "name: ", $v2->name, "\n";
-
-Algorithm::CP::IZ::RefVarArray->new([$v, $v2]);
-use Data::Dumper;
-print STDERR Dumper($v), Dumper($v2);
-
-
-$iz->restore_all;
-print STDERR "v: ", $v->min, "-", $v->max, "\n";

@@ -5,9 +5,9 @@ use warnings;
 
 use UNIVERSAL;
 
-use overload '""' => \&format;
+use overload '""' => \&stringify;
 
-sub format {
+sub stringify {
     my $self = shift;
     my @list;
 
@@ -53,6 +53,16 @@ sub format {
     else {
 	return $vals;
     }
+}
+
+sub key {
+    my $self = shift;
+
+    # reference to element of hash
+    # (pointer is hidden from usr)
+    my $ret = \$self->{_ptr};
+
+    return "$ret";
 }
 
 sub new {
@@ -228,22 +238,46 @@ Algorithm::CP::IZ::Int - Domain variable for Algorithm::CP::IZ
 
 =head1 DESCRIPTION
 
-Stub documentation for Algorithm::CP::IZ, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
+Algorithm::CP::IZ::Int is perl representation of CSint object in iZ-C library.
+This class has integer set called 'domain'. Domain is a set of solution
+candidate values which can specify current constraint setting.
 
-Blah blah blah.
+You can declare range of variable when creating variable.
+Variable can take values 1..9 in following example.
 
-All constraint method returns 1 (OK) or 0 (constraint violation occured).
+  my $var = $iz->create_int(1, 9);
+
+Values will be removed by applying constraint.
+For example, After applying constraint $var->Le(3) to above example variable,
+$var has domain 1..3.
+
+  $var->Le(3);
+  print "$var\n";  # Output will be "{1..3}".
+
+If All integers are removed from domain, it is assumed as "fail".
+(no solution is found in current model)
+
+All constraint method returns 1 (OK) or 0 (fail).
 
 =head1 METHODS
 
 =over 2
 
-=item format
+=item stringify
 
 Create string representation of this variable.
-('""' operator has overloaded to this method.)
+('""' operator has overloaded to call this method.)
+
+=item keys
+
+Returns string to use hash key.
+Don't use following code. (stringify-ed string is not unique!)
+
+  %hash{$v} = "something";
+
+Use this:
+
+  %hash{$v->key} = "something";
 
 =item name
 
