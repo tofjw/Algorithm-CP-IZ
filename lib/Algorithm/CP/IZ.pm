@@ -83,6 +83,7 @@ sub new {
 	_cxt0 => [],
 	_cxt => [],
 	_const_vars => {},
+	_backtracks => {},
     }, $class;
 }
 
@@ -116,9 +117,10 @@ sub restore_context {
 	croak "restore_context: bottom of context stack";
     }
 
-    pop(@$cxt);
-
     Algorithm::CP::IZ::cs_restoreContext();
+
+    # pop must be after cs_restoreContext to save cs_backtrack context.
+    pop(@$cxt);
 }
 
 sub restore_context_until {
@@ -133,6 +135,8 @@ sub restore_context_until {
 
     while (@$cxt >= $label) {
 	Algorithm::CP::IZ::cs_restoreContext();
+
+	# pop must be after cs_restoreContext to save cs_backtrack context.
 	pop(@$cxt);
     }
 }
@@ -142,7 +146,34 @@ sub restore_all {
     my $label = shift;
 
     Algorithm::CP::IZ::cs_restoreAll();
+
+    # pop must be after cs_restoreContext to save cs_backtrack context.
     $self->{_cxt} = [];
+}
+
+my $Backtrack_id = 0;
+
+sub backtrack {
+    my $self = shift;
+    my ($var, $index, $handler) = @_;
+
+    my $id = $Backtrack_id++;
+    my $backtrack_obj = [$var, $index, $handler];
+
+    $self->{_backtracks}->{$id} = $backtrack_obj;
+
+    my $h = sub {
+	my $bid = shift;
+	my $r = $self->{_backtracks}->{$bid};
+	my $bh = $r->[2];
+	&$bh($r->[0], $r->[1]);
+
+	delete $self->{_backtracks}->{$bid};
+    };
+
+    $self->{_backtrack_code_ref} = $h;
+
+    Algorithm::CP::IZ::cs_backtrack($var->{_ptr }, $id, $h);
 }
 
 sub get_nb_fails {

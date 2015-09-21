@@ -119,9 +119,6 @@ static int criteriaPerlWrapper(int index, int val)
 /*
  * Helper functinos for cs_findAll
  */
-
-typedef void foundCallback(CSint **allVars, int nbVars);
-
 static SV* foundPerlFunc;
 
 static void foundPerlWrapper(CSint **allVars, int nbVars)
@@ -135,6 +132,35 @@ static void foundPerlWrapper(CSint **allVars, int nbVars)
 
   PUTBACK;
   int count = call_sv(foundPerlFunc, G_SCALAR);
+  SPAGAIN;
+  int ret = -1;
+
+  FREETMPS;
+  LEAVE;
+}
+
+/*
+ * Helper functinos for cs_backtrack
+ */
+
+typedef void backtrackCallback(CSint *vint, int index);
+
+static SV* backtrackPerlFunc;
+
+static void backtrackPerlWrapper(CSint *vint, int index)
+{
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(sp);
+
+  /* index is pointing to context in perl code */
+  XPUSHs(sv_2mortal(newSViv(index)));
+
+  PUTBACK;
+  int count = call_sv(backtrackPerlFunc, G_SCALAR);
   SPAGAIN;
   int ret = -1;
 
@@ -482,6 +508,15 @@ CODE:
     }
 OUTPUT:
     RETVAL
+
+void
+cs_backtrack(vint, index, handler)
+  void* vint
+  int index
+  SV* handler
+CODE:
+  backtrackPerlFunc = SvRV(handler);
+  cs_backtrack(vint, index, backtrackPerlWrapper);
 
 int
 cs_eventAllKnown(tint, size, handler)

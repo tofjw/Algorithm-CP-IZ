@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 45;
+use Test::More tests => 53;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -260,4 +260,51 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is_deeply($r[1], [2, 1]);
     is_deeply($r[2], [3, 1]);
     is_deeply($r[3], [3, 2]);
+}
+
+# backtrack
+if (1) {
+    my $iz = Algorithm::CP::IZ->new();
+    my $v1 = $iz->create_int(1, 3);
+    my $v2 = $iz->create_int(1, 3);
+
+    my $b1called = 0;
+    my $b2called = 0;
+
+    my $btvar = undef;
+    my $btindex = -999;
+
+    my $b1 = sub {
+      my ($v, $i) = @_;
+      $b1called = 1;
+      $btvar = $v;
+      $btindex = $i;
+    };
+
+    my $b2 = sub {
+      my ($v, $i) = @_;
+      $b2called = 1;
+      $btvar = $v;
+      $btindex = $i;
+    };
+
+    $iz->save_context;
+    $iz->backtrack($v1, 123, $b1);
+
+    $iz->save_context;
+    $iz->backtrack($v2, 456, $b2);
+
+
+    is($b1called, 0);
+    is($b2called, 0);
+
+    $iz->restore_context;
+    is($b2called, 1);
+    is($v2->key, $btvar->key);
+    is($btindex, 456);
+
+    $iz->restore_context;
+    is($b1called, 1);
+    is($v1->key, $btvar->key);
+    is($btindex, 123);
 }
