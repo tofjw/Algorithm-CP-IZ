@@ -203,6 +203,50 @@ sub Gt {
     return Algorithm::CP::IZ::cs_GT($self->{_ptr}, int($val));
 }
 
+sub InArray {
+    my $self = shift;
+    my $int_array = shift;
+    unless (ref $int_array && ref $int_array eq 'ARRAY') {
+	croak('InArray: usage: $v->InArray([array_ref]');
+    }
+
+    my $parray = Algorithm::CP::IZ::alloc_int_array([map { int($_) } @$int_array]);
+    my $ret = Algorithm::CP::IZ::cs_InArray($self->{_ptr}, $parray, scalar @$int_array);
+
+    Algorithm::CP::IZ::free_array($parray);
+
+    return $ret;
+}
+
+sub NotInArray {
+    my $self = shift;
+    my $int_array = shift;
+    unless (ref $int_array && ref $int_array eq 'ARRAY') {
+	croak('InArray: usage: $v->NotInArray([array_ref]');
+    }
+
+    my $parray = Algorithm::CP::IZ::alloc_int_array([map { int($_) } @$int_array]);
+    my $ret = Algorithm::CP::IZ::cs_NotInArray($self->{_ptr}, $parray, scalar @$int_array);
+
+    Algorithm::CP::IZ::free_array($parray);
+
+    return $ret;
+}
+
+sub InInterval {
+    my $self = shift;
+    my ($min, $max) = @_;
+
+    return Algorithm::CP::IZ::cs_InInterval($self->{_ptr}, int($min), int($max));
+}
+
+sub NotInInterval {
+    my $self = shift;
+    my ($min, $max) = @_;
+
+    return Algorithm::CP::IZ::cs_NotInInterval($self->{_ptr}, int($min), int($max));
+}
+
 sub _invalidate {
     my $self = shift;
     bless $self, __PACKAGE__ . "::InvalidInt";
@@ -391,6 +435,23 @@ X must be int or instance of Algorithm::CP::IZ::Int.
 
 Constraints this variable "greater than X".
 X must be int or instance of Algorithm::CP::IZ::Int.
+
+=item InArray(ARRAYREF_OF_INT)
+
+Constraints this variable to be element of arrayref.
+
+=item NotInArray(ARRAYREF_OF_INT)
+
+Constraints this variable not to be element of arrayref.
+
+=item InInterval(MIN, MAX)
+
+Constraints this variable to be range MIN to MAX.
+
+=item NotInInterval(MIN, MAX)
+
+Constraints this variable not to be range MIN to MAX.
+
 
 =back
 

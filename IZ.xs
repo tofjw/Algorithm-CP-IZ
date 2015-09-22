@@ -256,7 +256,10 @@ static IZBOOL eventNewMinMaxNeqPerlWrapper(CSint* vint, int index, int oldValue,
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ		
 
 INCLUDE: const-xs.inc
+
 INCLUDE: cs_vadd.inc
+INCLUDE: cs_vmul.inc
+INCLUDE: cs_reif2.inc
 
 void*
 alloc_var_array(av)
@@ -786,6 +789,46 @@ CODE:
 OUTPUT:
     RETVAL
 
+int
+cs_InArray(vint, array, size)
+    void* vint
+    void* array
+    int size
+CODE:
+    RETVAL = cs_InArray(vint, array, size);
+OUTPUT:
+    RETVAL
+
+int
+cs_NotInArray(vint, array, size)
+    void* vint
+    void* array
+    int size
+CODE:
+    RETVAL = cs_NotInArray(vint, array, size);
+OUTPUT:
+    RETVAL
+
+int
+cs_InInterval(vint, minVal, maxVal)
+    void* vint
+    int minVal
+    int maxVal
+CODE:
+    RETVAL = cs_InInterval(vint, minVal, maxVal);
+OUTPUT:
+    RETVAL
+
+int
+cs_NotInInterval(vint, minVal, maxVal)
+    void* vint
+    int minVal
+    int maxVal
+CODE:
+    RETVAL = cs_NotInInterval(vint, minVal, maxVal);
+OUTPUT:
+    RETVAL
+
 void*
 cs_Add(vint1, vint2)
     void* vint1
@@ -796,11 +839,137 @@ OUTPUT:
     RETVAL
 
 void*
+cs_Mul(vint1, vint2)
+    void* vint1
+    void* vint2
+CODE:
+    RETVAL = cs_Mul(vint1, vint2);
+OUTPUT:
+    RETVAL
+
+void*
+cs_Sub(vint1, vint2)
+    void* vint1
+    void* vint2
+CODE:
+    RETVAL = cs_Sub(vint1, vint2);
+OUTPUT:
+    RETVAL
+
+void*
+cs_Div(vint1, vint2)
+    void* vint1
+    void* vint2
+CODE:
+    RETVAL = cs_Div(vint1, vint2);
+OUTPUT:
+    RETVAL
+
+void*
+cs_Sigma(tint, size)
+    void* tint
+    int size
+CODE:
+    RETVAL = cs_Sigma(tint, size);
+OUTPUT:
+    RETVAL
+
+void*
 cs_ScalProd(vars, coeffs, n)
     void* vars
     void* coeffs
     int n
 CODE:
     RETVAL = cs_ScalProd(vars, coeffs, n);
+OUTPUT:
+    RETVAL
+
+void*
+cs_Abs(vint)
+    void* vint
+CODE:
+    RETVAL = cs_Abs(vint);
+OUTPUT:
+    RETVAL
+
+void*
+cs_Min(tint, size)
+    void* tint
+    int size
+CODE:
+    RETVAL = cs_Min(tint, size);
+OUTPUT:
+    RETVAL
+
+void*
+cs_Max(tint, size)
+    void* tint
+    int size
+CODE:
+    RETVAL = cs_Max(tint, size);
+OUTPUT:
+    RETVAL
+
+int
+cs_IfEq(vint1, vint2, val1, val2)
+    void* vint1
+    void* vint2
+    int val1
+    int val2
+CODE:
+    RETVAL = cs_IfEq(vint1, vint2, val1, val2);
+OUTPUT:
+    RETVAL
+
+int
+cs_IfNeq(vint1, vint2, val1, val2)
+    void* vint1
+    void* vint2
+    int val1
+    int val2
+CODE:
+    RETVAL = cs_IfNeq(vint1, vint2, val1, val2);
+OUTPUT:
+    RETVAL
+
+void*
+cs_OccurDomain(val, array, size)
+    int val
+    void* array
+    int size
+CODE:
+    RETVAL = cs_OccurDomain(val, array, size);
+OUTPUT:
+    RETVAL
+
+int
+cs_OccurConstraints(vint, val, array, size)
+    void* vint
+    int val
+    void* array
+    int size
+CODE:
+    RETVAL = cs_OccurConstraints(vint, val, array, size);
+OUTPUT:
+    RETVAL
+
+void*
+cs_Index(array, size, val)
+    void* array
+    int size
+    int val
+CODE:
+    RETVAL = cs_Index(array, size, val);
+OUTPUT:
+    RETVAL
+
+void*
+cs_Element(index, values, size)
+    void* index
+    void* values
+    int size
+CODE:
+    
+    RETVAL = cs_Element(index, values, size);
 OUTPUT:
     RETVAL

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 55;
+use Test::More tests => 67;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # create(min, max)
@@ -147,5 +147,53 @@ is($vdom->is_in(7), 0);
 
   $iz->save_context;
   is($v->Gt(10), 0);
+  $iz->restore_context;
+}
+
+# InArray
+{
+  $iz->save_context;
+
+  is($v->InArray([2, 3]), 1);
+  is(join(",", @{$v->domain}), "2,3");
+
+  is($v->InArray([100,200]), 0);
+
+  $iz->restore_context;
+}
+
+# InArray
+{
+  $iz->save_context;
+
+  is($v->NotInArray([2, 5]), 1);
+  is(join(",", @{$v->domain}), "0,1,3,4,6,7,8,9,10");
+
+  is($v->NotInArray([0..10]), 0);
+
+  $iz->restore_context;
+}
+
+# InInterval
+{
+  $iz->save_context;
+
+  is($v->InInterval(5, 8), 1);
+  is(join(",", @{$v->domain}), "5,6,7,8");
+
+  is($v->InInterval(100, 200), 0);
+
+  $iz->restore_context;
+}
+
+# NotInInterval
+{
+  $iz->save_context;
+
+  is($v->NotInInterval(5, 8), 1);
+  is(join(",", @{$v->domain}), "0,1,2,3,4,9,10");
+
+  is($v->NotInInterval(0, 200), 0);
+
   $iz->restore_context;
 }

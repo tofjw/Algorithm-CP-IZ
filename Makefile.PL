@@ -54,7 +54,7 @@ else {
 
 # VAdd
 unless (-f "cs_vadd.inc") {
-    open (my $fh, ">", "cs_vadd.inc") or die "cs_vadd_.inc: cannot create: $!";
+    open (my $fh, ">", "cs_vadd.inc") or die "cs_vadd.inc: cannot create: $!";
 
     for my $i (3..10) {
 	print $fh "void*\n";
@@ -73,5 +73,62 @@ unless (-f "cs_vadd.inc") {
 	print $fh "OUTPUT:\n";
 	print $fh "    RETVAL\n\n";
     }
+    close($fh);
+}
+
+# VMul
+unless (-f "cs_vmul.inc") {
+    open (my $fh, ">", "cs_vmul.inc") or die "cs_vmul.inc: cannot create: $!";
+
+    for my $i (3..10) {
+	print $fh "void*\n";
+	print $fh "cs_VMul$i(";
+
+	print $fh join(", ", map { "vint$_" } (1..$i));
+
+	print $fh ")\n";
+
+	print $fh map { "    void* vint$_\n" } (1..$i);
+
+	print $fh "CODE:\n";
+	print $fh "    RETVAL = cs_VMul($i, ";
+	print $fh join(", ", map { "vint$_" } (1..$i));
+	print $fh ");\n";
+	print $fh "OUTPUT:\n";
+	print $fh "    RETVAL\n\n";
+    }
+    close($fh);
+}
+
+# Reif*
+unless (-f "cs_reif2.inc") {
+    open (my $fh, ">", "cs_reif2.inc") or die "cs_reif2.inc: cannot create: $!";
+
+    my @names = qw(Eq Neq Lt Le Gt Ge);
+
+    for my $name (@names) {
+	print $fh "void*\n";
+	print $fh "cs_Reif$name(vint1, vint2)\n";
+	print $fh "    void* vint1\n";
+	print $fh "    void* vint2\n";
+	print $fh "CODE:\n";
+	print $fh "    RETVAL = cs_Reif$name(vint1, vint2);\n";
+	print $fh "OUTPUT:\n";
+	print $fh "    RETVAL\n\n";
+    }
+
+    my @names2 = map { uc $_ } @names;
+
+    for my $name (@names2) {
+	print $fh "void*\n";
+	print $fh "cs_Reif$name(vint, val)\n";
+	print $fh "    void* vint\n";
+	print $fh "    int val\n";
+	print $fh "CODE:\n";
+	print $fh "    RETVAL = cs_Reif$name(vint, val);\n";
+	print $fh "OUTPUT:\n";
+	print $fh "    RETVAL\n\n";
+    }
+
     close($fh);
 }

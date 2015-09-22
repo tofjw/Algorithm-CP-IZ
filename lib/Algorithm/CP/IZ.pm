@@ -483,20 +483,23 @@ sub _register_variable {
     push(@$vars, $var);
 }
 
-sub _Add_fallback {
+sub _argv_func {
     my $v = shift;
-    my $N = 10;
+    my $N = shift;
+    my $arg2_func = shift;
+    my $argv_func = shift;
 
     if (@$v == 1) {
 	return $v;
     }
     elsif (@$v == 2) {
-	return Algorithm::CP::IZ::cs_Add(@$v);
+	no strict "refs";
+	return &$arg2_func(@$v);
     }
     elsif (@$v <= $N) {
 	my $n = scalar @$v;
 	no strict "refs";
-	my $xs = "Algorithm::CP::IZ::cs_VAdd$n";
+	my $xs = "$argv_func$n";
 	return &$xs(@$v);
     }
 
@@ -507,14 +510,9 @@ sub _Add_fallback {
 	push(@ptrs, $p);
     }
 
+    push(@rest, _argv_func(\@ptrs, $N, $arg2_func, $argv_func));
 
-    my $xs = "Algorithm::CP::IZ::cs_VAdd$N";
-    no strict "refs";
-    my $part_add = &$xs(@ptrs);
-
-    push(@rest, $part_add);
-
-    return _Add_fallback(\@rest);
+    return _argv_func(\@rest, $N, $arg2_func, $argv_func);
 }
 
 sub Add {
@@ -522,29 +520,80 @@ sub Add {
     my @params = @_;
 
     if (@params < 1) {
-	croak 'usage: $iz->Add(v1, v2, ...)';
+	croak 'usage: Add(v1, v2, ...)';
     }
     if (@params == 1) {
-	return $params[0];
+	return $params[0] if (ref $params[0]);
+	return $self->_const_var(int($params[0]));
     }
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
-    my $ptr;
 
-    if (@params == 2) {
- 	$ptr = Algorithm::CP::IZ::cs_Add(map{$_->{_ptr}} @v);
-    }
-    elsif (3 <= @params && @params <= 10) {
-	my $n = scalar @params;
-	no strict "refs";
-	my $xs = "Algorithm::CP::IZ::cs_VAdd$n";
-	$ptr = &$xs(map{$_->{_ptr}} @v);
-    }
-    else {
-	$ptr = _Add_fallback([map {$_->{_ptr}} @v]);
-    }
+    my $ptr = _argv_func([map { $_->{_ptr}} @v], 10,
+			 "Algorithm::CP::IZ::cs_Add",
+			 "Algorithm::CP::IZ::cs_VAdd");
 
     my $ret = Algorithm::CP::IZ::Int->new($ptr);
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub Mul {
+    my $self = shift;
+    my @params = @_;
+
+    if (@params < 1) {
+	croak 'usage: Mul(v1, v2, ...)';
+    }
+    if (@params == 1) {
+	return $params[0] if (ref $params[0]);
+	return $self->_const_var(int($params[0]));
+    }
+
+    my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
+
+    my $ptr = _argv_func([map { $_->{_ptr}} @v], 10,
+			 "Algorithm::CP::IZ::cs_Mul",
+			 "Algorithm::CP::IZ::cs_VMul");
+
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub Sub {
+    my $self = shift;
+    my @params = @_;
+
+    if (@params != 2) {
+	croak 'usage: Sub(v1, v2)';
+    }
+
+    my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
+    my $ptr = Algorithm::CP::IZ::cs_Sub(map {$_->{_ptr}} @v);
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub Div {
+    my $self = shift;
+    my @params = @_;
+
+    if (@params != 2) {
+	croak 'usage: Div(v1, v2)';
+    }
+
+    my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
+    my $ptr = Algorithm::CP::IZ::cs_Div(map {$_->{_ptr}} @v);
+
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
     $self->_register_variable($ret);
 
     return $ret;
@@ -556,7 +605,7 @@ sub ScalProd {
     my $coeffs = shift;
 
     if (@$coeffs != @$vars) {
-	croak 'usage: $iz->ScalProd([ceoffs], [vars])';
+	croak 'usage: ScalProd([ceoffs], [vars])';
     }
 
     @$vars = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$vars;
@@ -581,6 +630,246 @@ sub AllNeq {
 
     return Algorithm::CP::IZ::cs_AllNeq($$parray, scalar(@$var_array));
 }
+
+sub Sigma {
+    my $self = shift;
+    my $var_array = shift;;
+
+    unless (ref $var_array eq 'ARRAY') {
+	croak "Sigma: usage: Sigma([vars])";
+    }
+
+    @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $ptr = Algorithm::CP::IZ::cs_Sigma($$parray, scalar(@$var_array));
+
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub Abs {
+    my $self = shift;
+    my @params = @_;
+
+    if (@params != 1) {
+	croak 'usage: Abs(v)'
+    }
+
+    my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
+    my $ptr = Algorithm::CP::IZ::cs_Abs(map {$_->{_ptr}} @v);
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub Min {
+    my $self = shift;
+    my $var_array = shift;;
+
+    unless (ref $var_array eq 'ARRAY') {
+	croak "Min: usage: Min([vars])";
+    }
+
+    @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $ptr = Algorithm::CP::IZ::cs_Min($$parray, scalar(@$var_array));
+
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub Max {
+    my $self = shift;
+    my $var_array = shift;;
+
+    unless (ref $var_array eq 'ARRAY') {
+	croak "Min: usage: Min([vars])";
+    }
+
+    @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $ptr = Algorithm::CP::IZ::cs_Max($$parray, scalar(@$var_array));
+
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub IfEq {
+    my $self = shift;
+    unless (scalar @_ == 4 && ref $_[0] && ref $_[1]) {
+	croak "IfEq: usage: IfEq(vint1, vint2, val1, val2)";
+    }
+    my ($vint1, $vint2, $val1, $val2) = @_;
+
+    return Algorithm::CP::IZ::cs_IfEq($vint1->{_ptr}, $vint2->{_ptr},
+				      int($val1), int($val2));
+}
+
+sub IfNeq {
+    my $self = shift;
+    unless (scalar @_ == 4 && ref $_[0] && ref $_[1]) {
+	croak "IfEq: usage: IfNeq(vint1, vint2, val1, val2)";
+    }
+    my ($vint1, $vint2, $val1, $val2) = @_;
+
+    return Algorithm::CP::IZ::cs_IfNeq($vint1->{_ptr}, $vint2->{_ptr},
+				       $val1, $val2);
+}
+
+sub OccurDomain {
+    my $self = shift;
+
+    unless (scalar @_ == 2 && !ref $_[0] && ref $_[1] && ref $_[1] eq 'ARRAY') {
+	croak "OccurDomain: usage: OccurDomain(val, [array])";
+    }
+    my ($val, $var_array) = @_;
+
+    @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $ptr = Algorithm::CP::IZ::cs_OccurDomain(int($val),
+						$$parray, scalar(@$var_array));
+
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub OccurConstraints {
+    my $self = shift;
+
+    unless (scalar @_ == 3
+	    && !ref $_[1]
+	    && ref $_[2] && ref $_[2] eq 'ARRAY') {
+
+	croak "usage: OccurConstraints(vint, val, [array])";
+    }
+    my ($vint, $val, $var_array) = @_;
+
+    $vint = ref $vint ? $vint : $self->_const_var(int($vint));
+    @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $ret = Algorithm::CP::IZ::cs_OccurConstraints($vint->{_ptr}, int($val),
+						     $$parray,
+						     scalar(@$var_array));
+    return $ret;
+}
+
+sub Index {
+    my $self = shift;
+
+    unless (scalar @_ == 2
+	    && ref $_[0] && ref $_[0] eq 'ARRAY'
+	    && !ref $_[1]) {
+
+	croak "usage: Index([var_array], val)";
+    }
+    my ($var_array, $val) = @_;
+
+    @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $ptr = Algorithm::CP::IZ::cs_Index($$parray, scalar(@$var_array), $val);
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub Element {
+    my $self = shift;
+
+    unless (scalar @_ == 2
+	    && ref $_[0]
+	    && ref $_[1] && ref $_[1] eq 'ARRAY') {
+
+	croak "usage: Element(index, [value_array])";
+    }
+    my ($index, $val_array) = @_;
+
+    @$val_array = map { int($_) } @$val_array;
+
+    my $parray = $self->_create_registered_int_array($val_array);
+
+    my $ptr = Algorithm::CP::IZ::cs_Element($index->{_ptr},
+					    $$parray, scalar(@$val_array));
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+#
+# Create Reif* Methods
+#
+{
+    my @names = qw(Eq Neq Lt Le Gt Ge);
+    
+    for my $n (@names) {
+	my $meth_name = "Reif$n";
+	my $ucn = uc $n;
+
+	my $meth = sub {
+	    my $self = shift;
+	    unless (@_ == 2) {
+		carp "Usage: $meth_name(v1, v2)";
+	    }
+
+	    my ($v1, $v2) = @_;
+	    my $ptr;
+
+	    if (!ref $v1) {
+		$v1 = $self->_const_var(int($v1));
+	    }
+
+	    if (ref $v2) {
+		my $func = "Algorithm::CP::IZ::cs_Reif$n";
+
+		no strict "refs";
+		$ptr = &$func($v1->{_ptr}, $v2->{_ptr});
+	    }
+	    else {
+		my $func = "Algorithm::CP::IZ::cs_Reif$ucn";
+
+		no strict "refs";
+		$ptr = &$func($v1->{_ptr}, int($v2));
+	    }
+	    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+	    $self->_register_variable($ret);
+	    return $ret;
+	};
+
+	no strict "refs";
+	*$meth_name = $meth;
+    }
+}
+
 
 1;
 __END__
@@ -651,7 +940,271 @@ In most simple case, this library will be used like following steps:
 
 =head1 CONSTRUCTOR
 
+=over 2
+
+=item new
+
+Initialize iZ-C library (cs_init is called).
+For limitation of iZ-C, living instance of Algorithm::CP::IZ must be
+only one per process.
+
+=back
+
 =head1 METHODS
+
+=over 2
+
+=item create_int(INT)
+
+Create Algorithm::CP::IZ::Int instance. Its domain contains INT.
+
+=item create_int(VALUES [, NAME])
+
+Create Algorithm::CP::IZ::Int instance. Its domain contains values
+specified by VALUES(arrayref).
+
+=item create_int(MIN, MAX, [, NAME])
+
+Create Algorithm::CP::IZ::Int instance. Its domain is {MIN..MAX}.
+
+=item search(VARIABLES [, PARAMS])
+
+Try to instantiate all VARIABLES(arrayref).
+
+PARAMS will be hashref containning following keys.
+
+=over 2
+
+=item FindFreeVar
+
+FindFreeVar specifies variable selection strategy.
+Choose constants from Algorithm::CP::IZ::FindFreeVar or specify your own
+function as coderef here.
+
+Most simple function will be following. (select from first)
+
+    sub simple_find_free_var{
+	my $array = shift; # VARIABLES is in parameter
+	my $n = scalar @$array;
+
+	for my $i (0..$n-1) {
+	    return $i if ($array->[$i]->is_free);
+	}
+
+	return -1; # no free variable
+    };
+
+=item Criteria
+
+Criteria specifies value selection strategy.
+Specify your own function as coderef here.
+
+    sub sample_criteria {
+      # position in VARIABLES, and candidate value
+      my ($index, $val) = @_;
+
+      # first value used in search is
+      # minimum value returned by criteria.
+      return $val;
+    };
+
+
+=item MaxFail
+
+Upper limit of fail count while searching solutions.
+
+=back
+
+Returns 1 (success) or 0 (fail).
+
+=item find_all(VARIABLES, CALLBACK [, PARAMS])
+
+Find all solutions. CALLBACK(coderef) is called for each solution.
+(First parameter of CALLBACK is VARIABLE)
+
+    # this callback collects all solutions in @r
+    my @r;
+    sub callback {
+      my $var_array = shift;
+      push(@r, [map { $_->value } @$var_array]);
+    };
+
+PARAMS will be hashref containning following keys.
+
+=over 2
+
+=item FindFreeVar
+
+Same as search method.
+
+=back
+
+Returns 1 (success) or 0 (fail).
+
+=item get_nb_fails
+
+cs_getNbFails
+
+=item get_nb_choice_points
+
+cs_getNbChoicePoints
+
+=item save_context
+
+cs_saveContext
+
+=item restore_context
+
+cs_restoreContext
+
+=item restore_context_until(LABEL)
+
+cs_restoreContextUntil
+
+=item restore_all
+
+cs_restoreAll
+
+=item backtrack(VAR, INDEX, CALLBACK)
+
+cs_backtrack
+
+CALLBACK:
+
+  sub callback {
+      my ($var, $index) = @_;
+  }
+
+=item event_all_known(VARIABLES, CALLBACK, EXTRA)
+
+cs_eventAllKnown
+
+CALLBACK:
+
+  sub callback {
+      # $variables and $extra are same as parameter.
+      my ($variables, $extra) = @_;
+
+      # return 1(success) or 0(fail)
+      return 1;
+  }
+
+=item event_known(VARIABLES, CALLBACK, EXTRA)
+
+cs_eventKnown
+
+CALLBACK:
+
+  sub callback {
+      # $val is instantited now.
+      # $index is position in $variables.
+      # $variables and $extra are same as parameter.
+      my ($val, $index, $variables, $extra) = @_;
+
+      # return 1(success) or 0(fail)
+      return 1;
+  }
+
+=item event_new_min(VARIABLES, CALLBACK, EXTRA)
+
+cs_eventNewMin
+
+CALLBACK:
+
+  sub callback {
+      # minimum value of $var is changed from $old_min.
+      # $var is same as $variables[$index].
+      # $variables and $extra are same as parameter.
+      my ($var, $index, $old_min, $variables, $extra) = @_;
+
+      # return 1(success) or 0(fail)
+      return 1;
+  }
+
+=item event_new_max(VARIABLES, CALLBACK, EXTRA)
+
+cs_eventNewMax
+
+CALLBACK:
+
+  sub callback {
+      # maximum value of $var is changed from $old_max.
+      # $var is same as $variables[$index].
+      # $variables and $extra are same as parameter.
+      my ($var, $index, $old_max, $variables, $extra) = @_;
+
+      # return 1(success) or 0(fail)
+      return 1;
+  }
+
+=item event_neq(VARIABLES, CALLBACK, EXTRA)
+
+cs_eventNeq
+
+CALLBACK:
+
+  sub callback {
+      # $val is removed from $var.
+      # $var is same as $variables[$index].
+      # $variables and $extra are same as parameter.
+      my ($var, $index, $val, $variables, $extra) = @_;
+
+      # return 1(success) or 0(fail)
+      return 1;
+  }
+
+=back
+
+=head1 METHODS (Constraints)
+
+Please refer to iZ-C reference manual to see specific meaning of
+following constraints. (cs_* is corresponding function in iZ-C)
+
+=over 2
+
+=item Add(VAR1, VAR2 [, VAR3....])
+
+=item Mul(VAR1, VAR2 [, VAR3....])
+
+=item Sub(VAR1, VAR2)
+
+=item Div(VAR1, VAR2)
+
+=item ScalProd(VARIABLES, COEFFICIENTS)
+
+=item AllNeq(VARIABLES)
+
+=item Sigma(VARIABLES)
+
+=item Abs(VAR)
+
+=item Min(VARIABLES)
+
+=item Max(VARIABLES)
+
+=item IfEq(VAR1, VAR2, VAL1, VAL2)
+
+=item IfNeq(VAR1, VAR2, VAL1, VAL2)
+
+=item OccurDomain(VAL, VARIABLES)
+
+=item OccurConstraints(VAR, VAL, VARIABLES)
+
+=item Index(VARIABLES, VAL)
+
+=item Element(VAR, VALUES)
+
+=item ReifEq(VAR1, VAR2)
+
+=item ReifLt(VAR1, VAR2)
+
+=item ReifLe(VAR1, VAR2)
+
+=item ReifGt(VAR1, VAR2)
+
+=item ReifGe(VAR1, VAR2)
+
+=back
 
 =head1 SEE ALSO
 
