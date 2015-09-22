@@ -256,6 +256,7 @@ static IZBOOL eventNewMinMaxNeqPerlWrapper(CSint* vint, int index, int oldValue,
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ		
 
 INCLUDE: const-xs.inc
+INCLUDE: cs_vadd.inc
 
 void*
 alloc_var_array(av)

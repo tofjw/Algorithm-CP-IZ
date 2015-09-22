@@ -24,9 +24,6 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     $iz->AllNeq([$v1, $v2]);
     my $rc = $iz->search([$v1, $v2]);
 
-    print STDERR "v1 = ", $v1->value, "\n";
-    print STDERR "v2 = ", $v2->value, "\n";
-
     is($rc, 1);
     is($v1->value, 0);
     is($v2->value, 1);
@@ -263,11 +260,10 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
 }
 
 # backtrack
-if (1) {
+{
     my $iz = Algorithm::CP::IZ->new();
     my $v1 = $iz->create_int(1, 3);
     my $v2 = $iz->create_int(1, 3);
-
     my $b1called = 0;
     my $b2called = 0;
 

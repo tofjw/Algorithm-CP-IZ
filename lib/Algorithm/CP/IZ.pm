@@ -169,6 +169,9 @@ sub backtrack {
 	&$bh($r->[0], $r->[1]);
 
 	delete $self->{_backtracks}->{$bid};
+	if (scalar keys %{$self->{_backtracks}} == 0) {
+	    $self->{_backtrack_code_ref} = {};
+	}
     };
 
     $self->{_backtrack_code_ref} = $h;
@@ -480,18 +483,68 @@ sub _register_variable {
     push(@$vars, $var);
 }
 
+sub _Add_fallback {
+    my $v = shift;
+    my $N = 10;
+
+    if (@$v == 1) {
+	return $v;
+    }
+    elsif (@$v == 2) {
+	return Algorithm::CP::IZ::cs_Add(@$v);
+    }
+    elsif (@$v <= $N) {
+	my $n = scalar @$v;
+	no strict "refs";
+	my $xs = "Algorithm::CP::IZ::cs_VAdd$n";
+	return &$xs(@$v);
+    }
+
+    my @ptrs;
+    my @rest = @$v;
+    for my $i (1..$N) {
+	my $p = shift @rest;
+	push(@ptrs, $p);
+    }
+
+
+    my $xs = "Algorithm::CP::IZ::cs_VAdd$N";
+    no strict "refs";
+    my $part_add = &$xs(@ptrs);
+
+    push(@rest, $part_add);
+
+    return _Add_fallback(\@rest);
+}
+
 sub Add {
     my $self = shift;
     my @params = @_;
 
-    if (@params != 2) {
-	croak 'usage: $iz->Add(v1, v2)';
+    if (@params < 1) {
+	croak 'usage: $iz->Add(v1, v2, ...)';
+    }
+    if (@params == 1) {
+	return $params[0];
     }
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
-    my $ptr = Algorithm::CP::IZ::cs_Add($v[0]->{_ptr}, $v[1]->{_ptr});
-    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+    my $ptr;
 
+    if (@params == 2) {
+ 	$ptr = Algorithm::CP::IZ::cs_Add(map{$_->{_ptr}} @v);
+    }
+    elsif (3 <= @params && @params <= 10) {
+	my $n = scalar @params;
+	no strict "refs";
+	my $xs = "Algorithm::CP::IZ::cs_VAdd$n";
+	$ptr = &$xs(map{$_->{_ptr}} @v);
+    }
+    else {
+	$ptr = _Add_fallback([map {$_->{_ptr}} @v]);
+    }
+
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
     $self->_register_variable($ret);
 
     return $ret;

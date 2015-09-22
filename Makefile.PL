@@ -51,3 +51,27 @@ else {
     copy ($fallback, $file) or die "Can't copy $fallback to $file: $!";
   }
 }
+
+# VAdd
+unless (-f "cs_vadd.inc") {
+    open (my $fh, ">", "cs_vadd.inc") or die "cs_vadd_.inc: cannot create: $!";
+
+    for my $i (3..10) {
+	print $fh "void*\n";
+	print $fh "cs_VAdd$i(";
+
+	print $fh join(", ", map { "vint$_" } (1..$i));
+
+	print $fh ")\n";
+
+	print $fh map { "    void* vint$_\n" } (1..$i);
+
+	print $fh "CODE:\n";
+	print $fh "    RETVAL = cs_VAdd($i, ";
+	print $fh join(", ", map { "vint$_" } (1..$i));
+	print $fh ");\n";
+	print $fh "OUTPUT:\n";
+	print $fh "    RETVAL\n\n";
+    }
+    close($fh);
+}

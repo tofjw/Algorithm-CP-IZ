@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 5;
+use Test::More tests => 45;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # Add
@@ -42,4 +42,15 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     my $v1 = $iz->Add(123, 456);
 
     is($v1->value, 579);
+}
+
+{
+    for my $i (11..50) {
+      my $iz = Algorithm::CP::IZ->new();
+      my @vars = map{$iz->create_int($_, $_)} (1..$i);
+      my $sum = (($i + 1) * $i) / 2;
+      my $v = $iz->Add(@vars);
+
+      is($v->value, $sum);
+    }
 }
