@@ -391,50 +391,50 @@ Returns array reference of domain values.
 Returns a value next value of X in domain. (If domain is {0, 1, 2, 3} and
 X is 1, next value is 2)
 
-X must be integer value.
+X is an integer value.
 
 =item get_previous_value
 
 Returns a value previous value of X in domain. (If domain is {0, 1, 2, 3} and
 X is 2, next value is 1)
 
-X must be integer value.
+X is an integer value.
 
 =item is_in(X)
 
 Returns 1 (X is in domain) or 0 (X is not in domain)
 
-X must be integer value.
+X is an integer value.
 
 =item Eq(X)
 
 Constraints this variable "equal to X".
-X must be int or instance of Algorithm::CP::IZ::Int.
+X is an integer or an instance of Algorithm::CP::IZ::Int.
 
 =item Neq(X)
 
 Constraints this variable "not equal to X".
-X must be int or instance of Algorithm::CP::IZ::Int.
+X is an integer or an instance of Algorithm::CP::IZ::Int.
 
 =item Le(X)
 
 Constraints this variable "less or equal to X".
-X must be int or instance of Algorithm::CP::IZ::Int.
+X is an integer or an instance of Algorithm::CP::IZ::Int.
 
 =item Lt(X)
 
 Constraints this variable "less than X".
-X must be int or instance of Algorithm::CP::IZ::Int.
+X is an int or instance of Algorithm::CP::IZ::Int.
 
 =item Ge(X)
 
 Constraints this variable "greater or equal to X".
-X must be int or instance of Algorithm::CP::IZ::Int.
+X is an int or instance of Algorithm::CP::IZ::Int.
 
 =item Gt(X)
 
 Constraints this variable "greater than X".
-X must be int or instance of Algorithm::CP::IZ::Int.
+X is an int or an instance of Algorithm::CP::IZ::Int.
 
 =item InArray(ARRAYREF_OF_INT)
 

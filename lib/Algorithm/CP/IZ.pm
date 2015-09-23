@@ -1043,43 +1043,62 @@ Returns 1 (success) or 0 (fail).
 
 =item get_nb_fails
 
-cs_getNbFails
+Returns fail count while search solution.
 
 =item get_nb_choice_points
 
-cs_getNbChoicePoints
+Returns choice count while search solution.
 
 =item save_context
 
-cs_saveContext
+Save current status of variables and constraints.
+
+  my $v1 = $iz->create_int(1, 9);
+  $iz->save_context;    # current status is saved.
+  $v1->Le(5);           # $v1 is {1..5}
+  $iz->restore_context; # $v1 is restored to {1..9}
+
+Returns integer which will be used for restore_context_until.
 
 =item restore_context
 
-cs_restoreContext
+Restore status of variables and constraints to last point which
+'save_context' is called.
 
 =item restore_context_until(LABEL)
 
-cs_restoreContextUntil
+Restore status of variables and constraints to point of label
+which 'save_context' returns.
 
 =item restore_all
 
-cs_restoreAll
+Restore status of variables and constraints to point of first
+'save_context' call.
 
 =item backtrack(VAR, INDEX, CALLBACK)
 
-cs_backtrack
+Set a callback function which will be called when context is restored to
+current status.
 
-CALLBACK:
+VAR is an instance of Algorithm::CP::IZ::Int.
+
+INDEX is an integer value.
+
+CALLBACK is a coderef which takes parameters like:
 
   sub callback {
+      # $var = VAR, $index = INDEX
       my ($var, $index) = @_;
   }
 
 =item event_all_known(VARIABLES, CALLBACK, EXTRA)
 
-cs_eventAllKnown
+Set a callback function which will be called when all variables in VARIABLES are
+instantiated.
 
-CALLBACK:
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
+CALLBACK is a coderef and takes parameters and must return like:
 
   sub callback {
       # $variables and $extra are same as parameter.
@@ -1089,11 +1108,16 @@ CALLBACK:
       return 1;
   }
 
+EXTRA is a just a data passed to callbeck as parameter (it can be anything).
+
 =item event_known(VARIABLES, CALLBACK, EXTRA)
 
-cs_eventKnown
+Set a callback function which will be called when any variable in VARIABLES is
+instantiated.
 
-CALLBACK:
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
+CALLBACK is a coderef and takes parameters and must return like:
 
   sub callback {
       # $val is instantited now.
@@ -1105,11 +1129,16 @@ CALLBACK:
       return 1;
   }
 
+EXTRA is a just a data passed to callbeck as parameter (it can be anything).
+
 =item event_new_min(VARIABLES, CALLBACK, EXTRA)
 
-cs_eventNewMin
+Set a callback function which will be called when lower bound of any variable
+in VARIABLES is changed.
 
-CALLBACK:
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
+CALLBACK is a coderef and takes parameters and must return like:
 
   sub callback {
       # minimum value of $var is changed from $old_min.
@@ -1121,11 +1150,16 @@ CALLBACK:
       return 1;
   }
 
+EXTRA is a just a data passed to callbeck as parameter (it can be anything).
+
 =item event_new_max(VARIABLES, CALLBACK, EXTRA)
 
-cs_eventNewMax
+Set a callback function which will be called when upper bound of any variable
+in VARIABLES is changed.
 
-CALLBACK:
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
+CALLBACK is a coderef and takes parameters and must return like:
 
   sub callback {
       # maximum value of $var is changed from $old_max.
@@ -1137,11 +1171,16 @@ CALLBACK:
       return 1;
   }
 
+EXTRA is a just a data passed to callbeck as parameter (it can be anything).
+
 =item event_neq(VARIABLES, CALLBACK, EXTRA)
 
-cs_eventNeq
+Set a callback function which will be called when value of any variable is
+removed in VARIABLES is changed.
 
-CALLBACK:
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
+CALLBACK is a coderef and takes parameters and must return like:
 
   sub callback {
       # $val is removed from $var.
@@ -1152,6 +1191,8 @@ CALLBACK:
       # return 1(success) or 0(fail)
       return 1;
   }
+
+EXTRA is a just a data passed to callbeck as parameter (it can be anything).
 
 =back
 
@@ -1164,45 +1205,151 @@ following constraints. (cs_* is corresponding function in iZ-C)
 
 =item Add(VAR1, VAR2 [, VAR3....])
 
+Create new Algorithm::CP::IZ::Int instance constrainted to be:
+
+  CREATED = VAR1 + VAR2 + ....
+
 =item Mul(VAR1, VAR2 [, VAR3....])
+
+Create Algorithm::CP::IZ::Int instance constrainted to be:
+
+  CREATED = VAR1 * VAR2 * ....
 
 =item Sub(VAR1, VAR2)
 
+Create Algorithm::CP::IZ::Int instance constrainted to be:
+
+  CREATED = VAR1 - VAR2
+
 =item Div(VAR1, VAR2)
+
+Create Algorithm::CP::IZ::Int instance constrainted to be:
+
+  CREATED = VAR1 / VAR2
 
 =item ScalProd(VARIABLES, COEFFICIENTS)
 
+Create Algorithm::CP::IZ::Int instance constrainted to be:
+
+  CREATED = COEFFICIENTS[0]*VARIABLES[0] + COEFFICIENTS[1]*VARIABLES[1] + ...
+
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int,
+and COEFFICIENTS is an arreyref contains integer values.
+
 =item AllNeq(VARIABLES)
+
+Constraint all variables in VARIABLES to be different each other.
+
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
+Returns 1 (success) or 0 (fail).
 
 =item Sigma(VARIABLES)
 
+Create Algorithm::CP::IZ::Int instance constrainted to be:
+
+  CREATED = VARIABLES[0] + VARIABLES[1] + ...
+
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
 =item Abs(VAR)
+
+Create Algorithm::CP::IZ::Int instance constrainted to be:
+
+  CREATED = abs(VAR)
 
 =item Min(VARIABLES)
 
+Create Algorithm::CP::IZ::Int instance constrainted to be:
+
+  CREATED = minimum value of (VARIABLES[0], VARIABLES[1], ...)
+
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
 =item Max(VARIABLES)
+
+Create Algorithm::CP::IZ::Int instance constrainted to be:
+
+  CREATED = maximum value of (VARIABLES[0], VARIABLES[1], ...)
+
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
 
 =item IfEq(VAR1, VAR2, VAL1, VAL2)
 
+Constraint VAR1 and VAR2 to be:
+
+  VAR1 is instantiated to VAL1 and VAR2 is instantiated to VAL2.
+  VAR2 is instantiated to VAL2 and VAR1 is instantiated to VAL1.
+
+Returns 1 (success) or 0 (fail).
+
 =item IfNeq(VAR1, VAR2, VAL1, VAL2)
+
+Constraint VAR1 and VAR2 to be:
+
+  pair (VAR1, VAR2) != pair (VAL1, VAL2)
+
+Returns 1 (success) or 0 (fail).
 
 =item OccurDomain(VAL, VARIABLES)
 
+Create Algorithm::CP::IZ::Int instance represents count of VAL in VARIABLES.
+
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
 =item OccurConstraints(VAR, VAL, VARIABLES)
+
+Constraint VAR to represent count of VAL in VARIABLES.
+
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
+Returns 1 (success) or 0 (fail).
 
 =item Index(VARIABLES, VAL)
 
+Create Algorithm::CP::IZ::Int instance represents position of VAL in VARIABLES.
+
+  VAL = VARIABLES[CREATED]
+
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+
 =item Element(VAR, VALUES)
+
+Create Algorithm::CP::IZ::Int instance represents value at VAR in VARIABLES.
+
+  CREATED = VARIABLES[VAR]
+
+VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
 
 =item ReifEq(VAR1, VAR2)
 
+Create Algorithm::CP::IZ::Int instance represents VAR1 == VAR2.
+Created variable will be instantiated to 1 when VAR1 == VAR2 otherwise to 0.
+
+=item ReifNeq(VAR1, VAR2)
+
+Create Algorithm::CP::IZ::Int instance represents VAR1 != VAR2.
+Created variable will be instantiated to 1 when VAR1 != VAR2 otherwise to 0.
+
 =item ReifLt(VAR1, VAR2)
+
+Create Algorithm::CP::IZ::Int instance represents VAR1 < VAR2.
+Created variable will be instantiated to 1 when VAR1 < VAR2 otherwise to 0.
 
 =item ReifLe(VAR1, VAR2)
 
+Create Algorithm::CP::IZ::Int instance represents VAR1 <= VAR2.
+Created variable will be instantiated to 1 when VAR1 <= VAR2 otherwise to 0.
+
 =item ReifGt(VAR1, VAR2)
 
+Create Algorithm::CP::IZ::Int instance represents VAR1 > VAR2.
+Created variable will be instantiated to 1 when VAR1 > VAR2 otherwise to 0.
+
 =item ReifGe(VAR1, VAR2)
+
+Create Algorithm::CP::IZ::Int instance represents VAR1 >= VAR2.
+Created variable will be instantiated to 1 when VAR1 >= VAR2 otherwise to 0.
 
 =back
 
