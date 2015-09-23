@@ -117,7 +117,13 @@ sub domain {
     my $self = shift;
     my @ret;
 
-    Algorithm::CP::IZ::cs_domain($self->{_ptr}, \@ret);
+    my $val = $self->min;
+    my $max = $self->max;
+
+    do {
+	push(@ret, $val);
+	$val = Algorithm::CP::IZ::cs_getNextValue($self->{_ptr}, $val);
+    } while ($val <= $max);
 
     return \@ret;
 }
@@ -424,17 +430,17 @@ X is an integer or an instance of Algorithm::CP::IZ::Int.
 =item Lt(X)
 
 Constraints this variable "less than X".
-X is an int or instance of Algorithm::CP::IZ::Int.
+X is an integer or instance of Algorithm::CP::IZ::Int.
 
 =item Ge(X)
 
 Constraints this variable "greater or equal to X".
-X is an int or instance of Algorithm::CP::IZ::Int.
+X is an integer or instance of Algorithm::CP::IZ::Int.
 
 =item Gt(X)
 
 Constraints this variable "greater than X".
-X is an int or an instance of Algorithm::CP::IZ::Int.
+X is an integer or an instance of Algorithm::CP::IZ::Int.
 
 =item InArray(ARRAYREF_OF_INT)
 
