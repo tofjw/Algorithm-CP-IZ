@@ -917,6 +917,9 @@ accessors of variable attributes and some constraints
 
 =back
 
+Please refer to iZ-C reference manual to see specific meaning of methods.
+
+
 =head2 SIMPLE CASE
 
 In most simple case, this library will be used like following steps:
@@ -1197,9 +1200,6 @@ EXTRA is a just a data passed to callbeck as parameter (it can be anything).
 =back
 
 =head1 METHODS (Constraints)
-
-Please refer to iZ-C reference manual to see specific meaning of
-following constraints. (cs_* is corresponding function in iZ-C)
 
 =over 2
 
