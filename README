@@ -23,9 +23,15 @@ Makefile.PL takes following command line options to specify path to iZ-C.
 
     Used to specify path to "libiz.so"
 
-    (On Linux platform, libiz.so must be symblic link to libiz.so.3, and
-     libiz.so.3 must be symbolic link to libiz.so.3.x.x. Create these
-     links if not exists.)
+   On Linux platform, libiz.so must be symblic link to libiz.so.3, and
+   libiz.so.3 must be symbolic link to libiz.so.3.x.x. Create these
+   links if not exist.
+
+   On Windows platfrom (strawberry perl), you need two steps before make.
+     1. Remove CTRL-Z exists end of iz.h. (EOF character of good old CP/M)
+     2. Generate libiz.a from iz.dll.
+        (see http://www.mingw.org/wiki/msvc_and_mingw_dlls)
+   And use "dmake" instead of make command.
 
 
 DEPENDENCIES
