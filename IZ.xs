@@ -131,9 +131,8 @@ static void foundPerlWrapper(CSint **allVars, int nbVars)
   PUSHMARK(sp);
 
   PUTBACK;
-  int count = call_sv(foundPerlFunc, G_SCALAR);
+  call_sv(foundPerlFunc, G_VOID);
   SPAGAIN;
-  int ret = -1;
 
   FREETMPS;
   LEAVE;
@@ -160,9 +159,8 @@ static void backtrackPerlWrapper(CSint *vint, int index)
   XPUSHs(sv_2mortal(newSViv(index)));
 
   PUTBACK;
-  int count = call_sv(backtrackPerlFunc, G_SCALAR);
+  call_sv(backtrackPerlFunc, G_VOID);
   SPAGAIN;
-  int ret = -1;
 
   FREETMPS;
   LEAVE;
@@ -358,8 +356,6 @@ void*
 cs_createCSintFromDomain(parray, size)
     void* parray
     int size
-PREINIT:
-	int i;
 CODE:
     RETVAL = cs_createCSintFromDomain(parray, size);
 OUTPUT:
@@ -395,21 +391,16 @@ CODE:
       if (func_id >= sizeof(findFreeVarTbl)/sizeof(findFreeVarTbl[0])) {
 	Safefree(array);
 	croak("search: Bad FindFreeVar value");
-	RETVAL = -1;
       }
-      else {
-	currentArray2IndexFunc = findFreeVarTbl[func_id];
-      }
+      currentArray2IndexFunc = findFreeVarTbl[func_id];
     }
 
-    if (currentArray2IndexFunc) {
-      if (fail_max < 0)
-	fail_max = INT_MAX;
+    if (fail_max < 0)
+      fail_max = INT_MAX;
 
-      RETVAL = cs_searchFail((CSint**)array,
-			     (int)alen, findFreeVarWrapper, fail_max);
-      Safefree(array);
-    }
+    RETVAL = cs_searchFail((CSint**)array,
+			   (int)alen, findFreeVarWrapper, fail_max);
+    Safefree(array);
 OUTPUT:
     RETVAL
 
@@ -445,24 +436,19 @@ CODE:
       if (findvar_id >= sizeof(findFreeVarTbl)/sizeof(findFreeVarTbl[0])) {
 	Safefree(array);
 	croak("search: Bad FindFreeVar value");
-	RETVAL = -1;
       }
-      else {
-	currentArray2IndexFunc = findFreeVarTbl[findvar_id];
-      }
+      currentArray2IndexFunc = findFreeVarTbl[findvar_id];
     }
 
-    if (currentArray2IndexFunc) {
-      if (fail_max < 0)
-	fail_max = INT_MAX;
+    if (fail_max < 0)
+        fail_max = INT_MAX;
 
-      RETVAL = cs_searchCriteriaFail((CSint**)array,
-				     (int)alen,
-				     currentArray2IndexFunc,
-				     criteriaPerlWrapper,
-				     fail_max);
-      Safefree(array);
-    }
+    RETVAL = cs_searchCriteriaFail((CSint**)array,
+				   (int)alen,
+				   currentArray2IndexFunc,
+				   criteriaPerlWrapper,
+				   fail_max);
+    Safefree(array);
 OUTPUT:
     RETVAL
 
@@ -498,18 +484,14 @@ CODE:
       if (findvar_id >= sizeof(findFreeVarTbl)/sizeof(findFreeVarTbl[0])) {
 	Safefree(array);
 	croak("findAll: Bad FindFreeVar value");
-	RETVAL = -1;
       }
-      else {
-	currentArray2IndexFunc = findFreeVarTbl[findvar_id];
-      }
+
+      currentArray2IndexFunc = findFreeVarTbl[findvar_id];
     }
 
-    if (currentArray2IndexFunc) {
-      RETVAL = cs_findAll((CSint**)array, (int)alen,
-			  findFreeVarWrapper, foundPerlWrapper);
-      Safefree(array);
-    }
+    RETVAL = cs_findAll((CSint**)array, (int)alen,
+			findFreeVarWrapper, foundPerlWrapper);
+    Safefree(array);
 OUTPUT:
     RETVAL
 
@@ -969,7 +951,6 @@ cs_Element(index, values, size)
     void* values
     int size
 CODE:
-    
     RETVAL = cs_Element(index, values, size);
 OUTPUT:
     RETVAL
