@@ -331,6 +331,16 @@ cs_restoreAll()
 CODE:
     cs_restoreAll();
 
+void
+cs_acceptContext()
+CODE:
+    cs_acceptContext();
+
+void
+cs_acceptAll()
+CODE:
+    cs_acceptAll();
+
 int cs_getNbFails()
 CODE:
     RETVAL = cs_getNbFails();

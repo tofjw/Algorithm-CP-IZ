@@ -151,6 +151,49 @@ sub restore_all {
     $self->{_cxt} = [];
 }
 
+
+sub accept_context {
+    my $self = shift;
+
+    my $cxt = $self->{_cxt};
+    if (@$cxt == 0) {
+	croak "accept_context: bottom of context stack";
+    }
+
+    Algorithm::CP::IZ::cs_acceptContext();
+
+    # pop must be after cs_acceptContext to save cs_backtrack context.
+    pop(@$cxt);
+}
+
+sub accept_context_until {
+    my $self = shift;
+    my $label = shift;
+
+    my $cxt = $self->{_cxt};
+
+    unless (1 <= $label && $label <= @$cxt) {
+	croak "accept_context_until: invalid label";
+    }
+
+    while (@$cxt >= $label) {
+	Algorithm::CP::IZ::cs_acceptContext();
+
+	# pop must be after cs_acceptContext to save cs_backtrack context.
+	pop(@$cxt);
+    }
+}
+
+sub accept_all {
+    my $self = shift;
+    my $label = shift;
+
+    Algorithm::CP::IZ::cs_acceptAll();
+
+    # pop must be after cs_acceptContext to save cs_backtrack context.
+    $self->{_cxt} = [];
+}
+
 my $Backtrack_id = 0;
 
 sub backtrack {
