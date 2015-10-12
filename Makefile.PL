@@ -3,11 +3,11 @@ use ExtUtils::MakeMaker;
 
 use Getopt::Std;
 
-my $DEFAULT_IZ_LIB_PATH = "../izC_v3_3_1_linux/src";
-my $DEFAULT_IZ_INCLUDE_PATH = "../izC_v3_3_1_linux/src";
+my $DEFAULT_IZ_LIB_DIR = "../izC_v3_3_1_linux/src";
+my $DEFAULT_IZ_INC_DIR = "../izC_v3_3_1_linux/src";
 
-our $opt_L = $DEFAULT_IZ_LIB_PATH;
-our $opt_I = $DEFAULT_IZ_INCLUDE_PATH;
+our $opt_L = $ENV{IZ_LIB_DIR} || $DEFAULT_IZ_LIB_DIR;
+our $opt_I = $ENV{IZ_INC_DIR} || $DEFAULT_IZ_INC_DIR;
 
 getopts('L:I:');
 
