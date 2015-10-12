@@ -1,6 +1,4 @@
 Changes
-const-c.inc
-const-xs.inc
 cs_reif2.inc
 cs_vadd.inc
 cs_vmul.inc
