@@ -5,3 +5,5 @@ libiz.so
 libiz.a
 const-c.inc
 const-xs.inc
+MYMETA.json
+MYMETA.yml
