@@ -92,7 +92,8 @@ sub DESTROY {
     my $vars = $self->{_vars};
 
     for my $v (@$vars) {
-	$v->_invalidate($v);
+	# we must check existence of variable for global destruction.
+	$v->_invalidate($v) if ($v);
     }
 
     Algorithm::CP::IZ::cs_end();
