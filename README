@@ -42,6 +42,11 @@ Makefile.PL takes following command line options to specify path to iZ-C.
    And use "dmake" instead of make command.
 
 
+For more information:
+
+  L<https://github.com/tofjw/Algorithm-CP-IZ/wiki>
+
+
 DEPENDENCIES
 
 This module requires iZ-C library. This library can be downloaded from:
