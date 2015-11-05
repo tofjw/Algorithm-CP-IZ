@@ -1,15 +1,80 @@
+use strict;
+
 use 5.009000; # need Newx in XS
 use ExtUtils::MakeMaker;
 
 use Getopt::Std;
+use File::Spec;
+use Config;
 
-my $DEFAULT_IZ_LIB_DIR = "../izC_v3_3_1_linux/src";
-my $DEFAULT_IZ_INC_DIR = "../izC_v3_3_1_linux/src";
+my $DEFAULT_IZ_LIB_DIR = "../izC/lib";
+my $DEFAULT_IZ_INC_DIR = "../izC/include";
 
 our $opt_L = $ENV{IZ_LIB_DIR} || $DEFAULT_IZ_LIB_DIR;
 our $opt_I = $ENV{IZ_INC_DIR} || $DEFAULT_IZ_INC_DIR;
 
 getopts('L:I:');
+
+#
+# determine paths
+#
+
+sub get_izlib_name {
+    my $ext = $Config{'so'};
+    if ($ext =~ /^dll$/i) { # windows?
+	return "iz.$ext";
+    }
+
+    return "libiz.$ext";
+}
+
+sub show_how_to_path_set {
+    print "*** iZ-C not found. ***\n";
+    my $libname = get_izlib_name;
+
+    print "iz.h and $libname are needed to build this module.\n";
+    print "Specify -I<dir> and -L<dir> correctly.\n";
+    exit 2;
+}
+
+sub get_iz_lib_dir {
+    my @dirs = ($opt_L,
+		'/usr/local/lib', '/usr/lib',
+		"$ENV{HOME}/lib",
+		"$ENV{HOME}/izC", "$ENV{HOME}/izC/lib");
+
+    my $libname = get_izlib_name;
+
+    for my $d (@dirs) {
+	my $libiz = File::Spec->catfile($d, $libname);
+	if (length($d) > 0 && -d $d && -f $libiz) {
+	    print "library: $libiz\n";
+	    return $d;
+	}
+    }
+
+    show_how_to_path_set;
+}
+
+sub get_iz_inc_dir {
+    my @dirs = ($opt_I,
+		'/usr/local/include', '/usr/include',
+		"$ENV{HOME}/include",
+		"$ENV{HOME}/izC", "$ENV{HOME}/izC/include");
+
+    for my $d (@dirs) {
+	my $izh = File::Spec->catfile($d, "iz.h");
+	if (length($d) > 0 && -d $d && -f $izh) {
+	    print "header: $izh\n";
+	    return $d;
+	}
+    }
+
+    show_how_to_path_set;
+}
+
+my $iz_lib_dir = get_iz_lib_dir;
+my $iz_inc_dir = get_iz_inc_dir;
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
@@ -22,10 +87,10 @@ WriteMakefile(
     #LICENSE           => 'perl',
     #Value must be from legacy list of licenses here
     #http://search.cpan.org/perldoc?Module%3A%3ABuild%3A%3AAPI
-    LIBS              => ["-L$opt_L -liz"], # e.g., '-lm'
+    LIBS              => ["-L$iz_lib_dir -liz"], # e.g., '-lm'
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
-    INC               => "-I$opt_I", # e.g., '-I. -I/usr/include/other'
-	# Un-comment this if you add C files to link with later:
+    INC               => "-I$iz_inc_dir", # e.g., '-I. -I/usr/include/other'
+    # Un-comment this if you add C files to link with later:
     # OBJECT            => '$(O_FILES)', # link all the C files too
 );
 if  (eval {require ExtUtils::Constant; 1}) {
