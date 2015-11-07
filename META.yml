@@ -19,5 +19,5 @@ no_index:
     - inc
 requires:
   UNIVERSAL: '0'
-version: '0.01'
+version: '0.02'
 
