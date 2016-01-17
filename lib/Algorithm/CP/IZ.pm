@@ -4,7 +4,9 @@ package Algorithm::CP::IZ;
 use 5.009000; # need Newx in XS
 use strict;
 use warnings;
+
 use Carp;
+use Scalar::Util qw(weaken);
 
 require Exporter;
 use AutoLoader;
@@ -103,11 +105,14 @@ sub DESTROY {
 sub save_context {
     my $self = shift;
     
-    Algorithm::CP::IZ::cs_saveContext();
+    my $ret = Algorithm::CP::IZ::cs_saveContext();
+
     my $cxt = $self->{_cxt};
     push(@$cxt, []);
 
-    return scalar(@$cxt);
+    $self->backtrack(undef, 0, sub { pop(@$cxt) });
+
+    return $ret;
 }
 
 sub restore_context {
@@ -119,27 +124,13 @@ sub restore_context {
     }
 
     Algorithm::CP::IZ::cs_restoreContext();
-
-    # pop must be after cs_restoreContext to save cs_backtrack context.
-    pop(@$cxt);
 }
 
 sub restore_context_until {
     my $self = shift;
     my $label = shift;
 
-    my $cxt = $self->{_cxt};
-
-    unless (1 <= $label && $label <= @$cxt) {
-	croak "restore_context_until: invalid label";
-    }
-
-    while (@$cxt >= $label) {
-	Algorithm::CP::IZ::cs_restoreContext();
-
-	# pop must be after cs_restoreContext to save cs_backtrack context.
-	pop(@$cxt);
-    }
+    Algorithm::CP::IZ::cs_restoreContextUntil($label);
 }
 
 sub restore_all {
@@ -202,25 +193,24 @@ sub backtrack {
     my ($var, $index, $handler) = @_;
 
     my $id = $Backtrack_id++;
-    my $backtrack_obj = [$var, $index, $handler];
+    $self->{_backtracks}->{$id} = [$var, $index, $handler];
 
-    $self->{_backtracks}->{$id} = $backtrack_obj;
+    my $backtracks = $self->{_backtracks};
+    weaken($backtracks);
 
-    my $h = sub {
+    $self->{_backtrack_code_ref} ||= sub {
 	my $bid = shift;
-	my $r = $self->{_backtracks}->{$bid};
+	my $r = $backtracks->{$bid};
 	my $bh = $r->[2];
 	&$bh($r->[0], $r->[1]);
 
-	delete $self->{_backtracks}->{$bid};
-	if (scalar keys %{$self->{_backtracks}} == 0) {
-	    $self->{_backtrack_code_ref} = {};
-	}
+	delete $backtracks->{$bid};
     };
 
-    $self->{_backtrack_code_ref} = $h;
+    my $vptr = defined($var) ? $var->{_ptr} : 0;
 
-    Algorithm::CP::IZ::cs_backtrack($var->{_ptr }, $id, $h);
+    Algorithm::CP::IZ::cs_backtrack($vptr, $id,
+				    $self->{_backtrack_code_ref});
 }
 
 sub get_nb_fails {
