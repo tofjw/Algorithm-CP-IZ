@@ -86,6 +86,8 @@ sub new {
 	_cxt => [],
 	_const_vars => {},
 	_backtracks => {},
+	_ref_int_arrays => {},
+	_ref_var_arrays => {},
     }, $class;
 }
 
@@ -393,8 +395,12 @@ sub _create_registered_var_array {
     my $self = shift;
     my $var_array = shift;;
 
+    my $key = join(",", map { sprintf("%x", $_->{_ptr}) } @$var_array);
+    my $r = $self->{_ref_var_arrays}->{$key};
+    return $r if ($r);
+
     my $parray = Algorithm::CP::IZ::RefVarArray->new($var_array);
-    $self->_push_object($parray);
+    $self->{_ref_var_arrays}->{$key} = $parray;
 
     return $parray;
 }
@@ -403,8 +409,12 @@ sub _create_registered_int_array {
     my $self = shift;
     my $int_array = shift;;
 
+    my $key = join(",", map { sprintf("%x", $_) } @$int_array);
+    my $r = $self->{_ref_int_arrays}->{$key};
+    return $r if ($r);
+
     my $parray = Algorithm::CP::IZ::RefIntArray->new($int_array);
-    $self->_push_object($parray);
+    $self->{_ref_int_arrays}->{$key} = $parray;
 
     return $parray;
 }
