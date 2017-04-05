@@ -739,7 +739,7 @@ sub Max {
     my $var_array = shift;;
 
     unless (ref $var_array eq 'ARRAY') {
-	croak "Min: usage: Min([vars])";
+	croak "Max: usage: Max([vars])";
     }
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
@@ -769,7 +769,7 @@ sub IfEq {
 sub IfNeq {
     my $self = shift;
     unless (scalar @_ == 4 && ref $_[0] && ref $_[1]) {
-	croak "IfEq: usage: IfNeq(vint1, vint2, val1, val2)";
+	croak "IfNeq: usage: IfNeq(vint1, vint2, val1, val2)";
     }
     my ($vint1, $vint2, $val1, $val2) = @_;
 
