@@ -39,7 +39,7 @@ Makefile.PL takes following command line options to specify path to iZ-C.
         $ pexports iz.dll > libiz.def
         $ dlltool -d libiz.def -l libiz.a
 
-   And use "dmake" instead of make command.
+   And use "gmake" instead of make command.
 
 
 For more information:
