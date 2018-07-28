@@ -14,6 +14,7 @@ use AutoLoader;
 use Algorithm::CP::IZ::Int;
 use Algorithm::CP::IZ::RefVarArray;
 use Algorithm::CP::IZ::RefIntArray;
+use Algorithm::CP::IZ::ParamValidator qw(validate);
 
 our @ISA = qw(Exporter);
 
@@ -36,7 +37,7 @@ our @EXPORT = qw(
 	CS_INT_MIN
 );
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()
@@ -70,11 +71,16 @@ XSLoader::load('Algorithm::CP::IZ', $VERSION);
 
 my $Instances = 0;
 
+sub _report_error {
+    my $msg = shift;
+    croak __PACKAGE__ . ": ". $msg;
+}
+
 sub new {
     my $class = shift;
 
     if ($Instances > 0) {
-	croak __PACKAGE__ . ": another instance is working.";
+	_report_error("another instance is working.");
     }
 
     Algorithm::CP::IZ::cs_init();
@@ -122,7 +128,7 @@ sub restore_context {
 
     my $cxt = $self->{_cxt};
     if (@$cxt == 0) {
-	croak "restore_context: bottom of context stack";
+	_report_error("restore_context: bottom of context stack");
     }
 
     Algorithm::CP::IZ::cs_restoreContext();
@@ -132,12 +138,19 @@ sub restore_context_until {
     my $self = shift;
     my $label = shift;
 
+    validate([$label], ["I"],
+	     "Usage: restore_context_until(int_label)");
+
+    my $cxt = $self->{_cxt};
+    unless (1 <= $label && $label <= @$cxt) {
+	_report_error("restore_context_until: invalid label");
+    }
+
     Algorithm::CP::IZ::cs_restoreContextUntil($label);
 }
 
 sub restore_all {
     my $self = shift;
-    my $label = shift;
 
     Algorithm::CP::IZ::cs_restoreAll();
 
@@ -151,7 +164,7 @@ sub accept_context {
 
     my $cxt = $self->{_cxt};
     if (@$cxt == 0) {
-	croak "accept_context: bottom of context stack";
+	_report_error("accept_context: bottom of context stack");
     }
 
     Algorithm::CP::IZ::cs_acceptContext();
@@ -164,10 +177,13 @@ sub accept_context_until {
     my $self = shift;
     my $label = shift;
 
+    validate([$label], ["I"],
+	     "Usage: accept_context_until(int_label)");
+
     my $cxt = $self->{_cxt};
 
     unless (1 <= $label && $label <= @$cxt) {
-	croak "accept_context_until: invalid label";
+	_report_error("accept_context_until: invalid label");
     }
 
     while (@$cxt >= $label) {
@@ -194,6 +210,11 @@ sub backtrack {
     my $self = shift;
     my ($var, $index, $handler) = @_;
 
+    validate([$var, $index, $handler], ["oV", "I", "C"],
+	     "Usage: backtrack(variable, index, code_ref)");
+
+    $var = _safe_var($var) if (defined($var));
+    
     my $id = $Backtrack_id++;
     $self->{_backtracks}->{$id} = [$var, $index, $handler];
 
@@ -255,6 +276,10 @@ sub create_int {
     elsif (ref $p1 && ref $p1 eq 'ARRAY') {
 	$name = shift;
 	$ptr = $self->_create_int_from_domain($p1);
+	unless ($ptr) {
+	    my $param_str = join(", ", @$p1);
+	    _report_error("cannot create variable from [$param_str]");
+	}
     }
     else {
 	my $min = $p1;
@@ -262,6 +287,10 @@ sub create_int {
 	$name = shift;
 
 	$ptr = $self->_create_int_from_min_max($min, $max);
+	unless ($ptr) {
+	    my $param_str = join(", ", $min, $max);
+	    _report_error("cannot create variable from ($param_str)");
+	}
     }
 
     my $ret = Algorithm::CP::IZ::Int->new($ptr);
@@ -276,10 +305,24 @@ sub create_int {
     return $ret;
 }
 
+sub _search_params {
+    my $params = shift;
+    return 1 unless (defined($params));
+    return 0 unless (ref $params eq 'HASH');
+
+    if ($params->{FindFreeVar}) {
+    }
+
+    return 1;
+}
+
 sub search {
     my $self = shift;
     my $var_array = shift;
     my $params = shift;
+
+    validate([$var_array, $params], ["vA", \&_search_params],
+	     "Usage: search([variables], {key=>value,...}");
 
     my $array = [map { $_->{_ptr } } @$var_array];
 
@@ -431,6 +474,14 @@ sub _const_var {
     $hash->{$val} = $v;
 
     return $v;
+}
+
+sub _safe_var {
+    my ($vc) = @_;
+    confess "undef cannot be used as variable" unless (defined($vc));
+
+    return $vc if (ref $vc);
+    return _const_var($vc);
 }
 
 #####################################################
