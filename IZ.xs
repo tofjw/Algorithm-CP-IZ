@@ -373,7 +373,10 @@ cs_createCSintFromDomain(parray, size)
     void* parray
     int size
 CODE:
-    RETVAL = cs_createCSintFromDomain(parray, size);
+    if (size <= 0)
+        RETVAL = 0;
+    else
+        RETVAL = cs_createCSintFromDomain(parray, size);
 OUTPUT:
     RETVAL
 
