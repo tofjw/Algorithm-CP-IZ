@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 12;
+use Test::More tests => 20;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -79,6 +79,54 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     };
 
     my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+}
+
+#
+# bad Min
+#
+{
+    my $iz =  Algorithm::CP::IZ->new();
+    my $err = 1;
+
+    eval {
+	my $v = $iz->Min("a");
+	$err = 0;
+    };
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+
+    eval {
+	my $v = $iz->Min(3);
+	$err = 0;
+    };
+    $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+}
+
+#
+# bad Max
+#
+{
+    my $iz =  Algorithm::CP::IZ->new();
+    my $err = 1;
+
+    eval {
+	my $v = $iz->Max("a");
+	$err = 0;
+    };
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+
+    eval {
+	my $v = $iz->Max(3);
+	$err = 0;
+    };
+    $msg = $@;
     is($err, 1);
     ok($msg =~ /^Algorithm::CP::IZ:/);
 }

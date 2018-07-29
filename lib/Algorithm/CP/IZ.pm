@@ -768,9 +768,8 @@ sub Min {
     my $self = shift;
     my $var_array = shift;;
 
-    unless (ref $var_array eq 'ARRAY') {
-	croak "Min: usage: Min([vars])";
-    }
+    validate([$var_array], ["vA"],
+	     "Usage: Min([array_of_variable])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
 
@@ -789,9 +788,8 @@ sub Max {
     my $self = shift;
     my $var_array = shift;;
 
-    unless (ref $var_array eq 'ARRAY') {
-	croak "Max: usage: Max([vars])";
-    }
+    validate([$var_array], ["vA"],
+	     "Usage: Max([array_of_variable])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
 
