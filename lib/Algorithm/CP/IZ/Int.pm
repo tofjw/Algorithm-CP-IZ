@@ -13,31 +13,21 @@ sub stringify {
 
 
     my $cur = $self->min;
-    my $head = $cur;
     my $max = $self->max;
+    my $end;
 
-    while ($cur != $max) {
-	my $next = $self->get_next_value($cur);
-	if ($next != $cur + 1) {
-	    if ($head == $cur) {
-		push(@list, $cur);
-	    }
-	    else {
-		push(@list, "$head..$cur");
-	    }
-
-	    $head = $next;
+    do {
+	$end = Algorithm::CP::IZ::iz_getEndValue($self->{_ptr}, $cur);
+	if ($end == $cur) {
+	    push(@list, "$cur");
 	}
-	$cur = $next;
-    }
+	else {
+	    push(@list, "$cur..$end");
+	}
 
-    # $cur == $max
-    if ($head == $max) {
-	push(@list, $max);
-    }
-    else {
-	push(@list, "$head..$cur");
-    }
+	$cur = Algorithm::CP::IZ::cs_getNextValue($self->{_ptr}, $end);
+
+    } while ($end < $max);
 
     my $vals;
     if ($self->is_instantiated) {

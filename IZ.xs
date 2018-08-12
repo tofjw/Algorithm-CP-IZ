@@ -973,3 +973,39 @@ CODE:
     RETVAL = cs_Element(index, values, size);
 OUTPUT:
     RETVAL
+
+int
+iz_getEndValue(vint, val)
+    void* vint
+    int val
+PREINIT:
+    int maxValue;
+    int prev;
+    int cur;
+CODE:
+    maxValue = cs_getMax(vint);
+    if (val >= maxValue) {
+        RETVAL = maxValue;
+    }
+    else if (cs_isIn(vint, val)) {
+        cur = val;
+
+	while (1) {
+	    if (cur == maxValue) {
+	        RETVAL = maxValue;
+		break;
+	    }
+
+	    prev = cur;
+	    cur++;
+	    if (!cs_isIn(vint, cur)) {
+	        RETVAL = prev;
+		break;
+	    }
+	}
+    }
+    else {
+        RETVAL = cs_getNextValue(vint, val);
+    }
+OUTPUT:
+    RETVAL
