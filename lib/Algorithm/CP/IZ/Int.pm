@@ -91,66 +91,6 @@ sub domain {
     return \@ret;
 }
 
-sub Eq {
-    my $self = shift;
-    my $val = shift;
-    if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Eq($$self, $$val);
-    }
-
-    return Algorithm::CP::IZ::cs_EQ($$self, int($val));
-}
-
-sub Neq {
-    my $self = shift;
-    my $val = shift;
-    if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Neq($$self, $$val);
-    }
-
-    return Algorithm::CP::IZ::cs_NEQ($$self, int($val));
-}
-
-sub Le {
-    my $self = shift;
-    my $val = shift;
-    if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Le($$self, $$val);
-    }
-
-    return Algorithm::CP::IZ::cs_LE($$self, int($val));
-}
-
-sub Lt {
-    my $self = shift;
-    my $val = shift;
-    if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Lt($$self, $$val);
-    }
-
-    return Algorithm::CP::IZ::cs_LT($$self, int($val));
-}
-
-sub Ge {
-    my $self = shift;
-    my $val = shift;
-    if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Ge($$self, $$val);
-    }
-
-    return Algorithm::CP::IZ::cs_GE($$self, int($val));
-}
-
-sub Gt {
-    my $self = shift;
-    my $val = shift;
-    if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Gt($$self, $$val);
-    }
-
-    return Algorithm::CP::IZ::cs_GT($$self, int($val));
-}
-
 sub InArray {
     my $self = shift;
     my $int_array = shift;

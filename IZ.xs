@@ -251,6 +251,8 @@ static IZBOOL eventNewMinMaxNeqPerlWrapper(CSint* vint, int index, int oldValue,
   return (IZBOOL)ret;
 }
 
+static const char* PACKAGE_INT = "Algorithm::CP::IZ::Int";
+
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ		
 
 INCLUDE: const-xs.inc
@@ -1077,5 +1079,119 @@ PREINIT:
 CODE:
     vint = (void*)SvUV(SvRV(rv));
     RETVAL = cs_isIn(vint, val);
+OUTPUT:
+    RETVAL
+
+int
+Eq(rv, val)
+    SV* rv;
+    SV* val;
+PREINIT:
+    void* vint1;
+    void* vint2;
+CODE:
+    vint1 = (void*)SvUV(SvRV(rv));
+    if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
+        vint2 = (void*)SvUV(SvRV(val));
+        RETVAL = cs_Eq(vint1, vint2);
+    }
+    else {
+        RETVAL = cs_EQ(vint1, (int)SvIV(val));
+    }
+OUTPUT:
+    RETVAL
+
+int
+Neq(rv, val)
+    SV* rv;
+    SV* val;
+PREINIT:
+    void* vint1;
+    void* vint2;
+CODE:
+    vint1 = (void*)SvUV(SvRV(rv));
+    if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
+        vint2 = (void*)SvUV(SvRV(val));
+        RETVAL = cs_Neq(vint1, vint2);
+    }
+    else {
+        RETVAL = cs_NEQ(vint1, (int)SvIV(val));
+    }
+OUTPUT:
+    RETVAL
+
+int
+Le(rv, val)
+    SV* rv;
+    SV* val;
+PREINIT:
+    void* vint1;
+    void* vint2;
+CODE:
+    vint1 = (void*)SvUV(SvRV(rv));
+    if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
+        vint2 = (void*)SvUV(SvRV(val));
+        RETVAL = cs_Le(vint1, vint2);
+    }
+    else {
+        RETVAL = cs_LE(vint1, (int)SvIV(val));
+    }
+OUTPUT:
+    RETVAL
+
+int
+Lt(rv, val)
+    SV* rv;
+    SV* val;
+PREINIT:
+    void* vint1;
+    void* vint2;
+CODE:
+    vint1 = (void*)SvUV(SvRV(rv));
+    if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
+        vint2 = (void*)SvUV(SvRV(val));
+        RETVAL = cs_Lt(vint1, vint2);
+    }
+    else {
+        RETVAL = cs_LT(vint1, (int)SvIV(val));
+    }
+OUTPUT:
+    RETVAL
+
+int
+Ge(rv, val)
+    SV* rv;
+    SV* val;
+PREINIT:
+    void* vint1;
+    void* vint2;
+CODE:
+    vint1 = (void*)SvUV(SvRV(rv));
+    if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
+        vint2 = (void*)SvUV(SvRV(val));
+        RETVAL = cs_Ge(vint1, vint2);
+    }
+    else {
+        RETVAL = cs_GE(vint1, (int)SvIV(val));
+    }
+OUTPUT:
+    RETVAL
+
+int
+Gt(rv, val)
+    SV* rv;
+    SV* val;
+PREINIT:
+    void* vint1;
+    void* vint2;
+CODE:
+    vint1 = (void*)SvUV(SvRV(rv));
+    if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
+        vint2 = (void*)SvUV(SvRV(val));
+        RETVAL = cs_Gt(vint1, vint2);
+    }
+    else {
+        RETVAL = cs_GT(vint1, (int)SvIV(val));
+    }
 OUTPUT:
     RETVAL
