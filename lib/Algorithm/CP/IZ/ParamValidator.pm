@@ -38,7 +38,6 @@ sub _is_optional_var {
 
 sub _is_array_of_var_or_int {
     my ($x) = @_;
-    use Data::Dumper;
     return 0 unless (ref $x eq 'ARRAY');
 
     my $bad = first {
