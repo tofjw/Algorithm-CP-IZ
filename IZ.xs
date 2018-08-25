@@ -1195,3 +1195,27 @@ CODE:
     }
 OUTPUT:
     RETVAL
+
+AV *
+domain(rv)
+    SV* rv;
+PREINIT:
+    void* vint;
+    int i;
+    int val;
+    int maxVal;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+
+    RETVAL = newAV();
+    av_extend(RETVAL, cs_getNbElements(vint));
+
+    maxVal = cs_getMax(vint);
+    i = 0;
+    for (val = cs_getMin(vint); val <= maxVal; val++) {
+        if (!cs_isIn(vint, val)) continue;
+        av_store(RETVAL, i++, newSViv(val));
+    }
+OUTPUT:
+    RETVAL
+

@@ -76,21 +76,6 @@ sub name {
     $Names{$key} = $_[1];
 }
 
-sub domain {
-    my $self = shift;
-    my @ret;
-
-    my $val = $self->min;
-    my $max = $self->max;
-
-    do {
-	push(@ret, $val);
-	$val = Algorithm::CP::IZ::cs_getNextValue($$self, $val);
-    } while ($val <= $max);
-
-    return \@ret;
-}
-
 sub InArray {
     my $self = shift;
     my $int_array = shift;
