@@ -17,7 +17,7 @@ sub stringify {
     my $end;
 
     do {
-	$end = Algorithm::CP::IZ::iz_getEndValue($self->{_ptr}, $cur);
+	$end = Algorithm::CP::IZ::iz_getEndValue($$self, $cur);
 	if ($end == $cur) {
 	    push(@list, "$cur");
 	}
@@ -25,7 +25,7 @@ sub stringify {
 	    push(@list, "$cur..$end");
 	}
 
-	$cur = Algorithm::CP::IZ::cs_getNextValue($self->{_ptr}, $end);
+	$cur = Algorithm::CP::IZ::cs_getNextValue($$self, $end);
 
     } while ($end < $max);
 
@@ -37,8 +37,9 @@ sub stringify {
 	$vals = join("", "{" . join(", ", @list) . "}");
     }
 
-    if ($self->{_name}) {
-	return $self->{_name} . ": " . $vals;
+    my $name = $self->name;
+    if (defined($name)) {
+	return $name . ": " . $vals;
     }
     else {
 	return $vals;
@@ -50,7 +51,7 @@ sub key {
 
     # reference to element of hash
     # (pointer is hidden from usr)
-    my $ret = \$self->{_ptr};
+    my $ret = $$self;
 
     return "$ret";
 }
@@ -59,48 +60,20 @@ sub new {
     my $class = shift;
     my $ptr = shift;
 
-    bless {
-	_ptr => $ptr,
-    }, $class;
+    bless \$ptr, $class;
 }
+
+my %Names;
 
 sub name {
     my $self = $_[0];
+    my $key = $self->key;
+
     if (@_ == 1) {
-	return $self->{_name};
+	return $Names{$key};
     }
 
-    $self->{_name} = $_[1];
-}
-
-sub nb_elements {
-    my $self = shift;
-    return Algorithm::CP::IZ::cs_getNbElements($self->{_ptr});
-}
-
-sub min {
-    my $self = shift;
-    return Algorithm::CP::IZ::cs_getMin($self->{_ptr});
-}
-
-sub max {
-    my $self = shift;
-    return Algorithm::CP::IZ::cs_getMax($self->{_ptr});
-}
-
-sub value {
-    my $self = shift;
-    return Algorithm::CP::IZ::cs_getValue($self->{_ptr});
-}
-
-sub is_free {
-    my $self = shift;
-    return Algorithm::CP::IZ::cs_isFree($self->{_ptr});
-}
-
-sub is_instantiated {
-    my $self = shift;
-    return Algorithm::CP::IZ::cs_isInstantiated($self->{_ptr});
+    $Names{$key} = $_[1];
 }
 
 sub domain {
@@ -112,91 +85,70 @@ sub domain {
 
     do {
 	push(@ret, $val);
-	$val = Algorithm::CP::IZ::cs_getNextValue($self->{_ptr}, $val);
+	$val = Algorithm::CP::IZ::cs_getNextValue($$self, $val);
     } while ($val <= $max);
 
     return \@ret;
-}
-
-sub get_next_value {
-    my $self = shift;
-    my $val = shift;
-    
-    return Algorithm::CP::IZ::cs_getNextValue($self->{_ptr}, int($val));
-}
-
-sub get_previous_value {
-    my $self = shift;
-    my $val = shift;
-
-    return Algorithm::CP::IZ::cs_getPreviousValue($self->{_ptr}, int($val));
-}
-
-sub is_in {
-    my $self = shift;
-    my $val = shift;
-
-    return Algorithm::CP::IZ::cs_is_in($self->{_ptr}, int($val));
 }
 
 sub Eq {
     my $self = shift;
     my $val = shift;
     if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Eq($self->{_ptr}, $val->{_ptr});
+	return Algorithm::CP::IZ::cs_Eq($$self, $$val);
     }
 
-    return Algorithm::CP::IZ::cs_EQ($self->{_ptr}, int($val));
+    return Algorithm::CP::IZ::cs_EQ($$self, int($val));
 }
 
 sub Neq {
     my $self = shift;
     my $val = shift;
     if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Neq($self->{_ptr}, $val->{_ptr});
+	return Algorithm::CP::IZ::cs_Neq($$self, $$val);
     }
 
-    return Algorithm::CP::IZ::cs_NEQ($self->{_ptr}, int($val));
+    return Algorithm::CP::IZ::cs_NEQ($$self, int($val));
 }
 
 sub Le {
     my $self = shift;
     my $val = shift;
     if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Le($self->{_ptr}, $val->{_ptr});
+	return Algorithm::CP::IZ::cs_Le($$self, $$val);
     }
 
-    return Algorithm::CP::IZ::cs_LE($self->{_ptr}, int($val));
+    return Algorithm::CP::IZ::cs_LE($$self, int($val));
 }
 
 sub Lt {
     my $self = shift;
     my $val = shift;
     if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Lt($self->{_ptr}, $val->{_ptr});
+	return Algorithm::CP::IZ::cs_Lt($$self, $$val);
     }
 
-    return Algorithm::CP::IZ::cs_LT($self->{_ptr}, int($val));
+    return Algorithm::CP::IZ::cs_LT($$self, int($val));
 }
 
 sub Ge {
     my $self = shift;
     my $val = shift;
     if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Ge($self->{_ptr}, $val->{_ptr});
+	return Algorithm::CP::IZ::cs_Ge($$self, $$val);
     }
 
-    return Algorithm::CP::IZ::cs_GE($self->{_ptr}, int($val));
+    return Algorithm::CP::IZ::cs_GE($$self, int($val));
 }
 
 sub Gt {
     my $self = shift;
     my $val = shift;
     if (ref $val && $val->isa(__PACKAGE__)) {
-	return Algorithm::CP::IZ::cs_Gt($self->{_ptr}, $val->{_ptr});
+	return Algorithm::CP::IZ::cs_Gt($$self, $$val);
     }
 
-    return Algorithm::CP::IZ::cs_GT($self->{_ptr}, int($val));
+    return Algorithm::CP::IZ::cs_GT($$self, int($val));
 }
 
 sub InArray {
@@ -207,7 +159,7 @@ sub InArray {
     }
 
     my $parray = Algorithm::CP::IZ::alloc_int_array([map { int($_) } @$int_array]);
-    my $ret = Algorithm::CP::IZ::cs_InArray($self->{_ptr}, $parray, scalar @$int_array);
+    my $ret = Algorithm::CP::IZ::cs_InArray($$self, $parray, scalar @$int_array);
 
     Algorithm::CP::IZ::free_array($parray);
 
@@ -222,7 +174,7 @@ sub NotInArray {
     }
 
     my $parray = Algorithm::CP::IZ::alloc_int_array([map { int($_) } @$int_array]);
-    my $ret = Algorithm::CP::IZ::cs_NotInArray($self->{_ptr}, $parray, scalar @$int_array);
+    my $ret = Algorithm::CP::IZ::cs_NotInArray($$self, $parray, scalar @$int_array);
 
     Algorithm::CP::IZ::free_array($parray);
 
@@ -233,18 +185,20 @@ sub InInterval {
     my $self = shift;
     my ($min, $max) = @_;
 
-    return Algorithm::CP::IZ::cs_InInterval($self->{_ptr}, int($min), int($max));
+    return Algorithm::CP::IZ::cs_InInterval($$self, int($min), int($max));
 }
 
 sub NotInInterval {
     my $self = shift;
     my ($min, $max) = @_;
 
-    return Algorithm::CP::IZ::cs_NotInInterval($self->{_ptr}, int($min), int($max));
+    return Algorithm::CP::IZ::cs_NotInInterval($$self, int($min), int($max));
 }
 
 sub _invalidate {
     my $self = shift;
+
+    delete $Names{$self->key};
     bless $self, __PACKAGE__ . "::InvalidInt";
 }
 

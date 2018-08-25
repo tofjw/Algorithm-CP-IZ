@@ -8,7 +8,7 @@ sub new {
     my $class = shift;
     my $array = shift;
 
-    my $ptr = Algorithm::CP::IZ::alloc_var_array([map { $_->{_ptr } } @$array]);
+    my $ptr = Algorithm::CP::IZ::alloc_var_array([map { $$_ } @$array]);
     bless \$ptr, $class;
 }
 

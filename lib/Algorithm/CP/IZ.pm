@@ -230,7 +230,7 @@ sub backtrack {
 	delete $backtracks->{$bid};
     };
 
-    my $vptr = defined($var) ? $var->{_ptr} : 0;
+    my $vptr = defined($var) ? $$var : 0;
 
     Algorithm::CP::IZ::cs_backtrack($vptr, $id,
 				    $self->{_backtrack_code_ref});
@@ -324,8 +324,7 @@ sub search {
     validate([$var_array, $params], ["vA", \&_search_params],
 	     "Usage: search([variables], {key=>value,...}");
 
-    my $array = [map { $_->{_ptr } } @$var_array];
-
+    my $array = [map { $$_ } @$var_array];
     my $max_fail = -1;
     my $find_free_var_id = 0;
     my $find_free_var_func = sub { die "search: Internal error"; };
@@ -387,7 +386,7 @@ sub find_all {
 	croak "find_all: usage: find_all([vars], &callback_func, {params})";
     }
 
-    my $array = [map { $_->{_ptr } } @$var_array];
+    my $array = [map { $$_ } @$var_array];
 
     my $find_free_var_id = 0;
     my $find_free_var_func = sub { die "find_all: Internal error"; };
@@ -438,7 +437,7 @@ sub _create_registered_var_array {
     my $self = shift;
     my $var_array = shift;;
 
-    my $key = join(",", map { sprintf("%x", $_->{_ptr}) } @$var_array);
+    my $key = join(",", map { sprintf("%x", $$_) } @$var_array);
     my $r = $self->{_ref_var_arrays}->{$key};
     return $r if ($r);
 
@@ -624,7 +623,7 @@ sub Add {
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
 
-    my $ptr = _argv_func([map { $_->{_ptr}} @v], 10,
+    my $ptr = _argv_func([map { $$_} @v], 10,
 			 "Algorithm::CP::IZ::cs_Add",
 			 "Algorithm::CP::IZ::cs_VAdd");
 
@@ -648,7 +647,7 @@ sub Mul {
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
 
-    my $ptr = _argv_func([map { $_->{_ptr}} @v], 10,
+    my $ptr = _argv_func([map { $$_ } @v], 10,
 			 "Algorithm::CP::IZ::cs_Mul",
 			 "Algorithm::CP::IZ::cs_VMul");
 
@@ -668,7 +667,7 @@ sub Sub {
     }
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
-    my $ptr = Algorithm::CP::IZ::cs_Sub(map {$_->{_ptr}} @v);
+    my $ptr = Algorithm::CP::IZ::cs_Sub(map { $$_ } @v);
     my $ret = Algorithm::CP::IZ::Int->new($ptr);
 
     $self->_register_variable($ret);
@@ -685,7 +684,7 @@ sub Div {
     }
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
-    my $ptr = Algorithm::CP::IZ::cs_Div(map {$_->{_ptr}} @v);
+    my $ptr = Algorithm::CP::IZ::cs_Div(map { $$_ } @v);
 
     my $ret = Algorithm::CP::IZ::Int->new($ptr);
 
@@ -756,7 +755,7 @@ sub Abs {
     }
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
-    my $ptr = Algorithm::CP::IZ::cs_Abs(map {$_->{_ptr}} @v);
+    my $ptr = Algorithm::CP::IZ::cs_Abs(map { $$_ } @v);
     my $ret = Algorithm::CP::IZ::Int->new($ptr);
 
     $self->_register_variable($ret);
@@ -811,7 +810,7 @@ sub IfEq {
     }
     my ($vint1, $vint2, $val1, $val2) = @_;
 
-    return Algorithm::CP::IZ::cs_IfEq($vint1->{_ptr}, $vint2->{_ptr},
+    return Algorithm::CP::IZ::cs_IfEq($$vint1, $$vint2,
 				      int($val1), int($val2));
 }
 
@@ -822,7 +821,7 @@ sub IfNeq {
     }
     my ($vint1, $vint2, $val1, $val2) = @_;
 
-    return Algorithm::CP::IZ::cs_IfNeq($vint1->{_ptr}, $vint2->{_ptr},
+    return Algorithm::CP::IZ::cs_IfNeq($$vint1, $$vint2,
 				       $val1, $val2);
 }
 
@@ -864,7 +863,7 @@ sub OccurConstraints {
 
     my $parray = $self->_create_registered_var_array($var_array);
 
-    my $ret = Algorithm::CP::IZ::cs_OccurConstraints($vint->{_ptr}, int($val),
+    my $ret = Algorithm::CP::IZ::cs_OccurConstraints($$vint, int($val),
 						     $$parray,
 						     scalar(@$var_array));
     return $ret;
@@ -908,7 +907,7 @@ sub Element {
 
     my $parray = $self->_create_registered_int_array($val_array);
 
-    my $ptr = Algorithm::CP::IZ::cs_Element($index->{_ptr},
+    my $ptr = Algorithm::CP::IZ::cs_Element($$index,
 					    $$parray, scalar(@$val_array));
     my $ret = Algorithm::CP::IZ::Int->new($ptr);
 
@@ -944,13 +943,13 @@ sub Element {
 		my $func = "Algorithm::CP::IZ::cs_Reif$n";
 
 		no strict "refs";
-		$ptr = &$func($v1->{_ptr}, $v2->{_ptr});
+		$ptr = &$func($$v1, $$v2);
 	    }
 	    else {
 		my $func = "Algorithm::CP::IZ::cs_Reif$ucn";
 
 		no strict "refs";
-		$ptr = &$func($v1->{_ptr}, int($v2));
+		$ptr = &$func($$v1, $v2);
 	    }
 	    my $ret = Algorithm::CP::IZ::Int->new($ptr);
 

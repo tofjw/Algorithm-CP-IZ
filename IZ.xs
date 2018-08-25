@@ -273,7 +273,7 @@ CODE:
 
     for (i = 0; i<alen; i++) {
       SV** pptr = av_fetch(av, i, 0);
-      array[i] = SvRV(*pptr);
+      array[i] = (void*)SvUV(*pptr);
     }
 OUTPUT:
     RETVAL
@@ -396,7 +396,7 @@ CODE:
 
     for (i = 0; i<alen; i++) {
       SV** pptr = av_fetch(av, i, 0);
-      array[i] = SvRV(*pptr);
+      array[i] = (void*)SvUV(*pptr);
     }
 
     currentArray2IndexFunc = 0;
@@ -440,7 +440,7 @@ CODE:
 
     for (i = 0; i<alen; i++) {
       SV** pptr = av_fetch(av, i, 0);
-      array[i] = SvRV(*pptr);
+      array[i] = (void*)SvUV(*pptr);
     }
 
     currentArray2IndexFunc = 0;
@@ -487,7 +487,7 @@ CODE:
 
     for (i = 0; i<alen; i++) {
       SV** pptr = av_fetch(av, i, 0);
-      array[i] = SvRV(*pptr);
+      array[i] = (void*)SvUV(*pptr);
     }
 
     currentArray2IndexFunc = 0;
@@ -607,31 +607,6 @@ CODE:
 OUTPUT:
     RETVAL
 
-int
-cs_isIn(vint, val)
-    void* vint
-    int val
-CODE:
-    RETVAL = cs_isIn(vint, val);
-OUTPUT:
-    RETVAL
-
-int
-cs_isFree(vint)
-    void* vint
-CODE:
-    RETVAL = cs_isFree(vint);
-OUTPUT:
-    RETVAL
-
-int
-cs_isInstantiated(vint)
-    void* vint
-CODE:
-    RETVAL = cs_isInstantiated(vint);
-OUTPUT:
-    RETVAL
-
 void
 cs_domain(vint, av)
     void* vint
@@ -661,15 +636,6 @@ cs_getPreviousValue(vint, val)
     int val
 CODE:
     RETVAL = cs_getPreviousValue(vint, val);
-OUTPUT:
-    RETVAL
-
-int
-cs_is_in(vint, val)
-    void* vint
-    int val
-CODE:
-    RETVAL = cs_isIn(vint, val);
 OUTPUT:
     RETVAL
 
@@ -1007,5 +973,109 @@ CODE:
     else {
         RETVAL = cs_getNextValue(vint, val);
     }
+OUTPUT:
+    RETVAL
+
+MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ::Int
+
+int
+nb_elements(rv)
+    SV* rv;
+PREINIT:
+    void* vint;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+    RETVAL = cs_getNbElements(vint);
+OUTPUT:
+    RETVAL
+
+int
+min(rv)
+    SV* rv;
+PREINIT:
+    void* vint;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+    RETVAL = cs_getMin(vint);
+OUTPUT:
+    RETVAL
+
+int
+max(rv)
+    SV* rv;
+PREINIT:
+    void* vint;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+    RETVAL = cs_getMax(vint);
+OUTPUT:
+    RETVAL
+
+int
+value(rv)
+    SV* rv;
+PREINIT:
+    void* vint;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+    RETVAL = cs_getValue(vint);
+OUTPUT:
+    RETVAL
+
+int
+is_free(rv)
+    SV* rv;
+PREINIT:
+    void* vint;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+    RETVAL = cs_isFree(vint);
+OUTPUT:
+    RETVAL
+
+int
+is_instantiated(rv)
+    SV* rv;
+PREINIT:
+    void* vint;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+    RETVAL = cs_isInstantiated(vint);
+OUTPUT:
+    RETVAL
+
+int
+get_next_value(rv, val)
+    SV* rv;
+    int val;
+PREINIT:
+    void* vint;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+    RETVAL = cs_getNextValue(vint, val);
+OUTPUT:
+    RETVAL
+
+int
+get_previous_value(rv, val)
+    SV* rv;
+    int val;
+PREINIT:
+    void* vint;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+    RETVAL = cs_getPreviousValue(vint, val);
+OUTPUT:
+    RETVAL
+
+int
+is_in(rv, val)
+    SV* rv;
+    int val;
+PREINIT:
+    void* vint;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+    RETVAL = cs_isIn(vint, val);
 OUTPUT:
     RETVAL
