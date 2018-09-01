@@ -7,6 +7,8 @@ use UNIVERSAL;
 
 use overload '""' => \&stringify;
 
+use Algorithm::CP::IZ::ParamValidator qw(validate);
+
 sub stringify {
     my $self = shift;
     my @list;
@@ -79,9 +81,8 @@ sub name {
 sub InArray {
     my $self = shift;
     my $int_array = shift;
-    unless (ref $int_array && ref $int_array eq 'ARRAY') {
-	croak('InArray: usage: $v->InArray([array_ref]');
-    }
+
+    validate([$int_array], ["iA"], "Usage: InArray([values]");
 
     my $parray = Algorithm::CP::IZ::alloc_int_array([map { int($_) } @$int_array]);
     my $ret = Algorithm::CP::IZ::cs_InArray($$self, $parray, scalar @$int_array);
@@ -94,9 +95,8 @@ sub InArray {
 sub NotInArray {
     my $self = shift;
     my $int_array = shift;
-    unless (ref $int_array && ref $int_array eq 'ARRAY') {
-	croak('InArray: usage: $v->NotInArray([array_ref]');
-    }
+
+    validate([$int_array], ["iA"], "Usage: NotInArray([values]");
 
     my $parray = Algorithm::CP::IZ::alloc_int_array([map { int($_) } @$int_array]);
     my $ret = Algorithm::CP::IZ::cs_NotInArray($$self, $parray, scalar @$int_array);
@@ -110,12 +110,18 @@ sub InInterval {
     my $self = shift;
     my ($min, $max) = @_;
 
+    validate([scalar @_, $min, $max], [sub { shift == 2 }, "I", "I"],
+	     "Usage: InInterval(min, max)");
+
     return Algorithm::CP::IZ::cs_InInterval($$self, int($min), int($max));
 }
 
 sub NotInInterval {
     my $self = shift;
     my ($min, $max) = @_;
+
+    validate([scalar @_, $min, $max], [sub { shift == 2 }, "I", "I"],
+	     "Usage: NotInInterval(min, max)");
 
     return Algorithm::CP::IZ::cs_NotInInterval($$self, int($min), int($max));
 }

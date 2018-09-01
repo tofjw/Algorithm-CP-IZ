@@ -305,12 +305,42 @@ sub create_int {
     return $ret;
 }
 
-sub _search_params {
+sub _validate_search_params {
     my $params = shift;
     return 1 unless (defined($params));
     return 0 unless (ref $params eq 'HASH');
 
-    if ($params->{FindFreeVar}) {
+    my %checker = (
+	FindFreeVar => sub {
+	    my $x = shift;
+	    if (ref $x) {
+		validate([$x], ["C"], "search: FindFreeVar must be number or coderef");
+	    }
+	    else {
+		validate([$x], ["I"], "search: FindFreeVar must be number or coderef");
+	    }
+	},
+	Criteria => sub {
+	    my $x = shift;
+	    validate([$x], ["C"], "search: Criteria must be coderef");
+	    return 1;
+	},
+	MaxFail => sub {
+	    my $x = shift;
+	    validate([$x], ["I"], "search: MaxFail must be integer");
+	},
+    );
+
+    my @keys = sort keys %$params;
+
+    for my $k (@keys) {
+	if (exists $checker{$k}) {
+	    my $func = $checker{$k};
+	    &$func($params->{$k});
+	}
+	else {
+	    _report_error("search: Unknown Key $k in params");
+	}
     }
 
     return 1;
@@ -321,7 +351,7 @@ sub search {
     my $var_array = shift;
     my $params = shift;
 
-    validate([$var_array, $params], ["vA", \&_search_params],
+    validate([$var_array, $params], ["vA", \&_validate_search_params],
 	     "Usage: search([variables], {key=>value,...}");
 
     my $array = [map { $$_ } @$var_array];
@@ -334,10 +364,6 @@ sub search {
 	my $ffv = $params->{FindFreeVar};
 
 	if (ref $ffv) {
-	    unless (ref $ffv eq 'CODE') {
-		croak "search: FindFreeVar must be number or coderef";
-	    }
-
 	    $find_free_var_id = -1;
 	    $find_free_var_func = sub {
 		return &$ffv($var_array);
@@ -349,12 +375,7 @@ sub search {
     }
 
     if ($params->{Criteria}) {
-	my $cr = $params->{Criteria};
-	unless (ref $cr && ref $cr eq 'CODE') {
-	    croak "search: Criteria must be coderef";
-	}
-
-	$criteria_func = $cr;
+	$criteria_func = $params->{Criteria};
     }
 
     if ($params->{MaxFail}) {
@@ -376,15 +397,47 @@ sub search {
    }
 }
 
+sub _validate_find_all_params {
+    my $params = shift;
+    return 1 unless (defined($params));
+    return 0 unless (ref $params eq 'HASH');
+
+    my %checker = (
+	FindFreeVar => sub {
+	    my $x = shift;
+	    if (ref $x) {
+		validate([$x], ["C"], "find_all: FindFreeVar must be number or coderef");
+	    }
+	    else {
+		validate([$x], ["I"], "search: FindFreeVar must be number or coderef");
+	    }
+	},
+    );
+
+    my @keys = sort keys %$params;
+
+    for my $k (@keys) {
+	if (exists $checker{$k}) {
+	    my $func = $checker{$k};
+	    &$func($params->{$k});
+	}
+	else {
+	    _report_error("find_all: Unknown Key $k in params");
+	}
+    }
+
+    return 1;
+}
+
 sub find_all {
     my $self = shift;
     my $var_array = shift;
     my $found_func = shift;
     my $params = shift;
 
-    unless (ref $found_func eq 'CODE') {
-	croak "find_all: usage: find_all([vars], &callback_func, {params})";
-    }
+    validate([$var_array, $found_func, $params],
+	     ["vA", "C", \&_validate_find_all_params],
+	     "find_all: usage: find_all([vars], &callback_func, {params})");
 
     my $array = [map { $$_ } @$var_array];
 
@@ -395,10 +448,6 @@ sub find_all {
 	my $ffv = $params->{FindFreeVar};
 
 	if (ref $ffv) {
-	    unless (ref $ffv eq 'CODE') {
-		croak "find_all: FindFreeVar must be number or coderef";
-	    }
-
 	    $find_free_var_id = -1;
 	    $find_free_var_func = sub {
 		return &$ffv($var_array);
@@ -491,6 +540,9 @@ sub event_all_known {
     my $self = shift;
     my ($var_array, $handler, $ext) = @_;
 
+    validate([$var_array, $handler], ["vA", "C"],
+	     "Usage: event_all_known([variables], code_ref, ext)");
+
     my $parray = $self->_create_registered_var_array($var_array);
 
     my $h = sub {
@@ -505,6 +557,9 @@ sub event_all_known {
 sub event_known {
     my $self = shift;
     my ($var_array, $handler, $ext) = @_;
+
+    validate([$var_array, $handler], ["vA", "C"],
+	     "Usage: event_known([variables], code_ref, ext)");
 
     my $parray = $self->_create_registered_var_array($var_array);
 
@@ -522,6 +577,9 @@ sub event_new_min {
     my $self = shift;
     my ($var_array, $handler, $ext) = @_;
 
+    validate([$var_array, $handler], ["vA", "C"],
+	     "Usage: event_new_min([variables], code_ref, ext)");
+
     my $parray = $self->_create_registered_var_array($var_array);
 
     my $h = sub {
@@ -538,6 +596,9 @@ sub event_new_max {
     my $self = shift;
     my ($var_array, $handler, $ext) = @_;
 
+    validate([$var_array, $handler], ["vA", "C"],
+	     "Usage: event_new_max([variables], code_ref, ext)");
+
     my $parray = $self->_create_registered_var_array($var_array);
 
     my $h = sub {
@@ -553,6 +614,9 @@ sub event_new_max {
 sub event_neq {
     my $self = shift;
     my ($var_array, $handler, $ext) = @_;
+
+    validate([$var_array, $handler], ["vA", "C"],
+	     "Usage: event_eq([variables], code_ref, ext)");
 
     my $parray = $self->_create_registered_var_array($var_array);
 
@@ -698,9 +762,11 @@ sub ScalProd {
     my $vars = shift;
     my $coeffs = shift;
 
-    if (@$coeffs != @$vars) {
-	croak 'usage: ScalProd([ceoffs], [vars])';
-    }
+    validate([$vars, $coeffs, 1], ["vA", "iA",
+				   sub {
+				       @$coeffs == @$vars
+				   }],
+	     "Usage: ScalProd([variables], [coeffs])");
 
     @$vars = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$vars;
 
@@ -720,6 +786,8 @@ sub AllNeq {
     my $self = shift;
     my $var_array = shift;;
 
+    validate([$var_array], ["vA"], "Usage: AllNeq([variables])");
+
     my $parray = $self->_create_registered_var_array($var_array);
 
     return Algorithm::CP::IZ::cs_AllNeq($$parray, scalar(@$var_array));
@@ -729,9 +797,7 @@ sub Sigma {
     my $self = shift;
     my $var_array = shift;;
 
-    unless (ref $var_array eq 'ARRAY') {
-	croak "Sigma: usage: Sigma([vars])";
-    }
+    validate([$var_array], ["vA"], "Usage: Sigma([variables])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
 
@@ -750,9 +816,8 @@ sub Abs {
     my $self = shift;
     my @params = @_;
 
-    if (@params != 1) {
-	croak 'usage: Abs(v)'
-    }
+    validate([scalar @params, $params[0]],
+	     [sub { shift == 1 }, "V"], "Usage: Abs(v)");
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
     my $ptr = Algorithm::CP::IZ::cs_Abs(map { $$_ } @v);
@@ -768,7 +833,7 @@ sub Min {
     my $var_array = shift;;
 
     validate([$var_array], ["vA"],
-	     "Usage: Min([array_of_variable])");
+	     "Usage: Min([variables])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
 
@@ -788,7 +853,7 @@ sub Max {
     my $var_array = shift;;
 
     validate([$var_array], ["vA"],
-	     "Usage: Max([array_of_variable])");
+	     "Usage: Max([variables])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
 
@@ -805,10 +870,11 @@ sub Max {
 
 sub IfEq {
     my $self = shift;
-    unless (scalar @_ == 4 && ref $_[0] && ref $_[1]) {
-	croak "IfEq: usage: IfEq(vint1, vint2, val1, val2)";
-    }
     my ($vint1, $vint2, $val1, $val2) = @_;
+
+    validate([scalar @_, $vint1, $vint2, $val1, $val2],
+	     [sub { shift == 4 }, "V", "V", "I", "I"],
+	     "Usage: IfEq(vint1, vint2, val1, val2)");
 
     return Algorithm::CP::IZ::cs_IfEq($$vint1, $$vint2,
 				      int($val1), int($val2));
@@ -816,10 +882,11 @@ sub IfEq {
 
 sub IfNeq {
     my $self = shift;
-    unless (scalar @_ == 4 && ref $_[0] && ref $_[1]) {
-	croak "IfNeq: usage: IfNeq(vint1, vint2, val1, val2)";
-    }
     my ($vint1, $vint2, $val1, $val2) = @_;
+
+    validate([scalar @_, $vint1, $vint2, $val1, $val2],
+	     [sub { shift == 4 }, "V", "V", "I", "I"],
+	     "Usage: IfNeq(vint1, vint2, val1, val2)");
 
     return Algorithm::CP::IZ::cs_IfNeq($$vint1, $$vint2,
 				       $val1, $val2);
@@ -827,11 +894,11 @@ sub IfNeq {
 
 sub OccurDomain {
     my $self = shift;
-
-    unless (scalar @_ == 2 && !ref $_[0] && ref $_[1] && ref $_[1] eq 'ARRAY') {
-	croak "OccurDomain: usage: OccurDomain(val, [array])";
-    }
     my ($val, $var_array) = @_;
+
+    validate([scalar @_, $val, $var_array],
+	     [sub { shift == 2 }, "I", "vA"],
+	     "Usage: OccurDomain(val, [variables])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
 
@@ -849,14 +916,11 @@ sub OccurDomain {
 
 sub OccurConstraints {
     my $self = shift;
-
-    unless (scalar @_ == 3
-	    && !ref $_[1]
-	    && ref $_[2] && ref $_[2] eq 'ARRAY') {
-
-	croak "usage: OccurConstraints(vint, val, [array])";
-    }
     my ($vint, $val, $var_array) = @_;
+
+    validate([scalar @_, $vint, $val, $var_array],
+	     [sub { shift == 3 }, "V", "I", "vA"],
+	     "Usage: OccurConstraints(vint, val, [variables])");
 
     $vint = ref $vint ? $vint : $self->_const_var(int($vint));
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
@@ -871,14 +935,11 @@ sub OccurConstraints {
 
 sub Index {
     my $self = shift;
-
-    unless (scalar @_ == 2
-	    && ref $_[0] && ref $_[0] eq 'ARRAY'
-	    && !ref $_[1]) {
-
-	croak "usage: Index([var_array], val)";
-    }
     my ($var_array, $val) = @_;
+
+    validate([scalar @_, $var_array, $val],
+	     [sub { shift == 2 }, "vA", "I"],
+	     "Usage: Index([variables], val)");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
 
@@ -894,14 +955,11 @@ sub Index {
 
 sub Element {
     my $self = shift;
-
-    unless (scalar @_ == 2
-	    && ref $_[0]
-	    && ref $_[1] && ref $_[1] eq 'ARRAY') {
-
-	croak "usage: Element(index, [value_array])";
-    }
     my ($index, $val_array) = @_;
+
+    validate([scalar @_, $index, $val_array],
+	     [sub { shift == 2 }, "V", "iA"],
+	     "Usage: Element(index_var, [values])");
 
     @$val_array = map { int($_) } @$val_array;
 
@@ -928,11 +986,11 @@ sub Element {
 
 	my $meth = sub {
 	    my $self = shift;
-	    unless (@_ == 2) {
-		carp "Usage: $meth_name(v1, v2)";
-	    }
-
 	    my ($v1, $v2) = @_;
+	    validate([scalar @_, $v1, $v2],
+		     [sub { shift == 2 }, "V", "V"],
+		     "Usage: $meth_name(v1, v2)");
+
 	    my $ptr;
 
 	    if (!ref $v1) {

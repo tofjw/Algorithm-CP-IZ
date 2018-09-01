@@ -25,6 +25,17 @@ sub _is_int {
     return looks_like_number($x);
 }
 
+sub _is_var_or_int {
+    my ($x) = @_;
+    my $r = ref $x;
+    if ($r) {
+	return $r eq $INT_CLASS;
+    }
+    else {
+	return looks_like_number($x);
+    }
+}
+
 sub _is_code {
     my ($x) = @_;
     return ref $x eq 'CODE';
@@ -36,28 +47,57 @@ sub _is_optional_var {
     return ref $x eq $INT_CLASS;
 }
 
-sub _is_array_of_var_or_int {
+sub _is_array_of_int {
     my ($x) = @_;
     return 0 unless (ref $x eq 'ARRAY');
+    return 0 unless (scalar @$x > 0);
 
     my $bad = first {
-	my $v = $_;
-	my $r = ref $v;
-	if ($r) {
-	    $r ne $INT_CLASS;
-	}
-	else {
-	    !looks_like_number($v);
-	}
+	!looks_like_number($_);
     } @$x;
 
     return !defined($bad);
 }
 
+sub _is_array_of_var_or_int {
+    my ($x) = @_;
+    return 0 unless (ref $x eq 'ARRAY');
+    return 0 unless (scalar @$x > 0);
+
+    my $bad = 0;
+
+    first {
+	if (defined($_)) {
+	    my $v = $_;
+	    my $r = ref $v;
+	    if ($r) {
+		unless ($r eq $INT_CLASS) {
+		    $bad++;
+		    1;
+		}
+	    }
+	    else {
+		unless (defined($v) && looks_like_number($v)) {
+		    $bad++;
+		    1;
+		}
+	    }
+	}
+	else {
+	    $bad++;
+	    1;
+	}
+    } @$x;
+
+    return $bad == 0;
+}
+
 my %Validator = (
     I => \&_is_int,
+    V => \&_is_var_or_int,
     C => \&_is_code,
     oV => \&_is_optional_var,
+    iA => \&_is_array_of_int,
     vA => \&_is_array_of_var_or_int,
 );
 
@@ -91,7 +131,6 @@ sub validate {
 		$wantarray, $evaltext, $is_require, $hints, $bitmask, $hinthash) = caller(1);
 	    $subroutine =~ /(.*)::([^:]*)$/;
 	    my ($p, $s) = ($1, $2);
-	    print STDERR "MSG = $p: $hint\n";
 	    croak "$p: $hint";
 	}
     }
