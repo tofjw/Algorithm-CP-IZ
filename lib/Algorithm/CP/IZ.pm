@@ -532,6 +532,21 @@ sub _safe_var {
     return _const_var($vc);
 }
 
+sub get_version {
+    my $self = shift;
+    my ($err, $major) = constant('IZ_VERSION_MAJOR');
+
+    if (defined($major)) {
+	return sprintf("%d.%d.%d",
+		       $major,
+		       $self->IZ_VERSION_MINOR,
+		       $self->IZ_VERSION_PATCH);
+    }
+
+    # not supported
+    return;
+}
+
 #####################################################
 # Demon
 #####################################################
@@ -1346,6 +1361,11 @@ CALLBACK is a coderef and takes parameters and must return like:
   }
 
 EXTRA is a just a data passed to callbeck as parameter (it can be anything).
+
+=item get_version
+
+Returns version string like "3.5.0".
+undef will be returned if getVersion() is not supported in iZ-C (old version).
 
 =back
 
