@@ -351,7 +351,7 @@ sub search {
     my $var_array = shift;
     my $params = shift;
 
-    validate([$var_array, $params], ["vA", \&_validate_search_params],
+    validate([$var_array, $params], ["vA0", \&_validate_search_params],
 	     "Usage: search([variables], {key=>value,...}");
 
     my $array = [map { $$_ } @$var_array];
@@ -436,7 +436,7 @@ sub find_all {
     my $params = shift;
 
     validate([$var_array, $found_func, $params],
-	     ["vA", "C", \&_validate_find_all_params],
+	     ["vA0", "C", \&_validate_find_all_params],
 	     "find_all: usage: find_all([vars], &callback_func, {params})");
 
     my $array = [map { $$_ } @$var_array];
@@ -555,7 +555,7 @@ sub event_all_known {
     my $self = shift;
     my ($var_array, $handler, $ext) = @_;
 
-    validate([$var_array, $handler], ["vA", "C"],
+    validate([$var_array, $handler], ["vA0", "C"],
 	     "Usage: event_all_known([variables], code_ref, ext)");
 
     my $parray = $self->_create_registered_var_array($var_array);
@@ -573,7 +573,7 @@ sub event_known {
     my $self = shift;
     my ($var_array, $handler, $ext) = @_;
 
-    validate([$var_array, $handler], ["vA", "C"],
+    validate([$var_array, $handler], ["vA0", "C"],
 	     "Usage: event_known([variables], code_ref, ext)");
 
     my $parray = $self->_create_registered_var_array($var_array);
@@ -592,7 +592,7 @@ sub event_new_min {
     my $self = shift;
     my ($var_array, $handler, $ext) = @_;
 
-    validate([$var_array, $handler], ["vA", "C"],
+    validate([$var_array, $handler], ["vA0", "C"],
 	     "Usage: event_new_min([variables], code_ref, ext)");
 
     my $parray = $self->_create_registered_var_array($var_array);
@@ -611,7 +611,7 @@ sub event_new_max {
     my $self = shift;
     my ($var_array, $handler, $ext) = @_;
 
-    validate([$var_array, $handler], ["vA", "C"],
+    validate([$var_array, $handler], ["vA0", "C"],
 	     "Usage: event_new_max([variables], code_ref, ext)");
 
     my $parray = $self->_create_registered_var_array($var_array);
@@ -630,7 +630,7 @@ sub event_neq {
     my $self = shift;
     my ($var_array, $handler, $ext) = @_;
 
-    validate([$var_array, $handler], ["vA", "C"],
+    validate([$var_array, $handler], ["vA0", "C"],
 	     "Usage: event_eq([variables], code_ref, ext)");
 
     my $parray = $self->_create_registered_var_array($var_array);
@@ -777,7 +777,7 @@ sub ScalProd {
     my $vars = shift;
     my $coeffs = shift;
 
-    validate([$vars, $coeffs, 1], ["vA", "iA",
+    validate([$vars, $coeffs, 1], ["vA0", "iA0",
 				   sub {
 				       @$coeffs == @$vars
 				   }],
@@ -801,7 +801,7 @@ sub AllNeq {
     my $self = shift;
     my $var_array = shift;;
 
-    validate([$var_array], ["vA"], "Usage: AllNeq([variables])");
+    validate([$var_array], ["vA0"], "Usage: AllNeq([variables])");
 
     my $parray = $self->_create_registered_var_array($var_array);
 
@@ -812,7 +812,7 @@ sub Sigma {
     my $self = shift;
     my $var_array = shift;;
 
-    validate([$var_array], ["vA"], "Usage: Sigma([variables])");
+    validate([$var_array], ["vA0"], "Usage: Sigma([variables])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
 
@@ -847,7 +847,7 @@ sub Min {
     my $self = shift;
     my $var_array = shift;;
 
-    validate([$var_array], ["vA"],
+    validate([$var_array], ["vA1"],
 	     "Usage: Min([variables])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
@@ -867,7 +867,7 @@ sub Max {
     my $self = shift;
     my $var_array = shift;;
 
-    validate([$var_array], ["vA"],
+    validate([$var_array], ["vA1"],
 	     "Usage: Max([variables])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
@@ -912,7 +912,7 @@ sub OccurDomain {
     my ($val, $var_array) = @_;
 
     validate([scalar @_, $val, $var_array],
-	     [sub { shift == 2 }, "I", "vA"],
+	     [sub { shift == 2 }, "I", "vA0"],
 	     "Usage: OccurDomain(val, [variables])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
@@ -934,7 +934,7 @@ sub OccurConstraints {
     my ($vint, $val, $var_array) = @_;
 
     validate([scalar @_, $vint, $val, $var_array],
-	     [sub { shift == 3 }, "V", "I", "vA"],
+	     [sub { shift == 3 }, "V", "I", "vA0"],
 	     "Usage: OccurConstraints(vint, val, [variables])");
 
     $vint = ref $vint ? $vint : $self->_const_var(int($vint));
@@ -953,7 +953,7 @@ sub Index {
     my ($var_array, $val) = @_;
 
     validate([scalar @_, $var_array, $val],
-	     [sub { shift == 2 }, "vA", "I"],
+	     [sub { shift == 2 }, "vA0", "I"],
 	     "Usage: Index([variables], val)");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
@@ -973,7 +973,7 @@ sub Element {
     my ($index, $val_array) = @_;
 
     validate([scalar @_, $index, $val_array],
-	     [sub { shift == 2 }, "V", "iA"],
+	     [sub { shift == 2 }, "V", "iA1"],
 	     "Usage: Element(index_var, [values])");
 
     @$val_array = map { int($_) } @$val_array;

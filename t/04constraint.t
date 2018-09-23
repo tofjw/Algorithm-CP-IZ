@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 197;
+use Test::More tests => 199;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # Add
@@ -194,6 +194,14 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($v2->value, 12);
 }
 
+# Sigma empty
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $v = $iz->Sigma([]);
+
+    is($v->value, 0);
+}
+
 # ScalProd
 {
     my $iz = Algorithm::CP::IZ->new();
@@ -206,6 +214,14 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     # using same variables and constants
     my $v3 = $iz->ScalProd([9, $v1], [4, 3]);
     is($v3->value, $v2->value);
+}
+
+# ScalProd empty
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $v = $iz->ScalProd([], []);
+
+    is($v->value, 0);
 }
 
 # Abs

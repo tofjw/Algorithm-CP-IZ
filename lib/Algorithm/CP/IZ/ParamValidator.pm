@@ -48,9 +48,9 @@ sub _is_optional_var {
 }
 
 sub _is_array_of_int {
-    my ($x) = @_;
+    my ($n, $x) = @_;
     return 0 unless (ref $x eq 'ARRAY');
-    return 0 unless (scalar @$x > 0);
+    return 0 unless (scalar @$x >= $n);
 
     my $bad = first {
 	!looks_like_number($_);
@@ -60,9 +60,9 @@ sub _is_array_of_int {
 }
 
 sub _is_array_of_var_or_int {
-    my ($x) = @_;
+    my ($n, $x) = @_;
     return 0 unless (ref $x eq 'ARRAY');
-    return 0 unless (scalar @$x > 0);
+    return 0 unless (scalar @$x >= $n);
 
     my $bad = 0;
 
@@ -97,8 +97,10 @@ my %Validator = (
     V => \&_is_var_or_int,
     C => \&_is_code,
     oV => \&_is_optional_var,
-    iA => \&_is_array_of_int,
-    vA => \&_is_array_of_var_or_int,
+    iA0 => sub { _is_array_of_int(0, @_) },
+    iA1 => sub { _is_array_of_int(1, @_) },
+    vA0 => sub { _is_array_of_var_or_int(0, @_) },
+    vA1 => sub { _is_array_of_var_or_int(1, @_) },
 );
 
 sub validate {

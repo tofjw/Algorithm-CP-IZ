@@ -82,7 +82,7 @@ sub InArray {
     my $self = shift;
     my $int_array = shift;
 
-    validate([$int_array], ["iA"], "Usage: InArray([values]");
+    validate([$int_array], ["iA1"], "Usage: InArray([values]");
 
     my $parray = Algorithm::CP::IZ::alloc_int_array([map { int($_) } @$int_array]);
     my $ret = Algorithm::CP::IZ::cs_InArray($$self, $parray, scalar @$int_array);
@@ -96,7 +96,7 @@ sub NotInArray {
     my $self = shift;
     my $int_array = shift;
 
-    validate([$int_array], ["iA"], "Usage: NotInArray([values]");
+    validate([$int_array], ["iA0"], "Usage: NotInArray([values]");
 
     my $parray = Algorithm::CP::IZ::alloc_int_array([map { int($_) } @$int_array]);
     my $ret = Algorithm::CP::IZ::cs_NotInArray($$self, $parray, scalar @$int_array);
