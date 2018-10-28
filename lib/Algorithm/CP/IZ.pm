@@ -250,11 +250,13 @@ sub get_nb_choice_points {
 
 sub _create_int_from_min_max {
     my ($self, $min, $max) = @_;
+    validate([$min, $max], ["I", "I"], "Usage: create_int(min, max), create_int(constant), create_int([domain])");
     return Algorithm::CP::IZ::cs_createCSint(int($min), int($max));
 }
 
 sub _create_int_from_domain {
     my ($self, $int_array) = @_;
+    validate([$int_array], ["iA1"], "Usage: create_int(min, max), create_int(constant), create_int([domain])");
 
     my $parray = Algorithm::CP::IZ::alloc_int_array([map { int($_) } @$int_array]);
     my $ptr = Algorithm::CP::IZ::cs_createCSintFromDomain($parray, scalar @$int_array);
