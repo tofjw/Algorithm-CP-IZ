@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 199;
+use Test::More tests => 216;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # Add
@@ -56,6 +56,30 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     }
 }
 
+# Add error
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @vars = map{$iz->create_int($_, $_)} (1..2);
+    my $err = 1;
+    eval {
+	my $v = $iz->Add();
+	$err = 0;
+    };
+
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+
+    eval {
+	my $v = $iz->Add("x");
+	$err = 0;
+    };
+
+    $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+}
+
 # Mul
 {
     my $iz = Algorithm::CP::IZ->new();
@@ -104,6 +128,30 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
   is($v->value, 6 * 6 * 6 * 6 * 6);
 }
 
+# Mul error
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @vars = map{$iz->create_int($_, $_)} (1..2);
+    my $err = 1;
+    eval {
+	my $v = $iz->Mul();
+	$err = 0;
+    };
+
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+
+    eval {
+	my $v = $iz->Mul("x");
+	$err = 0;
+    };
+
+    $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+}
+
 # Sub
 {
     my $iz = Algorithm::CP::IZ->new();
@@ -144,6 +192,38 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($v1->value, 3);
 }
 
+# Sub
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $v1 = $iz->Sub(5, 2, 1);
+
+    is($v1->value, 2);
+}
+
+# Sub error
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @vars = map{$iz->create_int($_, $_)} (1..2);
+    my $err = 1;
+    eval {
+	my $v = $iz->Sub();
+	$err = 0;
+    };
+
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+
+    eval {
+	my $v = $iz->Sub("x", "y");
+	$err = 0;
+    };
+
+    $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+}
+
 # Div
 {
     my $iz = Algorithm::CP::IZ->new();
@@ -179,9 +259,32 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
 # Div (segfault in cs_Div)
 {
     my $iz = Algorithm::CP::IZ->new();
-    # my $v1 = $iz->Div(7, 2);
-    # is($v1->value, 9);
-    ok(1);
+    my $v1 = $iz->Div(7, 2);
+    ok(!defined($v1));
+}
+
+# Div error
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @vars = map{$iz->create_int($_, $_)} (1..2);
+    my $err = 1;
+    eval {
+	my $v = $iz->Div();
+	$err = 0;
+    };
+
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+
+    eval {
+	my $v = $iz->Div(5, "a");
+	$err = 0;
+    };
+
+    $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
 }
 
 # Sigma
