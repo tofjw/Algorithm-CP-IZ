@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 67;
+use Test::More tests => 74;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # create(min, max)
@@ -197,3 +197,44 @@ is($vdom->is_in(7), 0);
 
   $iz->restore_context;
 }
+
+# error
+{
+    my $err = 1;
+    eval {
+	my $i = $iz->create_int("a");
+	$err = 0;
+    };
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+}
+
+# error
+{
+    my $err = 1;
+    eval {
+	my $i = $iz->create_int([]);
+	$err = 0;
+    };
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+
+    # zero value is bad, but one value is good.
+    my $i = $iz->create_int([3]);
+    is("$i", "3");
+}
+
+# error
+{
+    my $err = 1;
+    eval {
+	my $i = $iz->create_int("a");
+	$err = 0;
+    };
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+}
+
