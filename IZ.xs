@@ -254,6 +254,9 @@ static IZBOOL eventNewMinMaxNeqPerlWrapper(CSint* vint, int index, int oldValue,
 }
 
 
+
+#if (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6)
+
 /* Helper functions for Algorithm::CP::IZ::ValueSelector::Simple */
 
 /*
@@ -420,6 +423,7 @@ static IZBOOL vsSimpleEnd(int index, CSint** vars, int size, void* pData) {
   return TRUE;
 }
 
+#endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
 
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ		
 

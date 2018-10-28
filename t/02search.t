@@ -239,8 +239,13 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
 }
 
 # search (ValueSelectors, basic)
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 6
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
 
     my $v1 = $iz->create_int(0, 10);
     my $v2 = $iz->create_int(0, 5);
@@ -454,8 +459,14 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
 }
 
 # cancel (call only)
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 1
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
     $iz->cancel_search;
     ok(1);
 }
