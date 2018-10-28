@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 55;
+use Test::More tests => 67;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -27,6 +27,29 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($rc, 1);
     is($v1->value, 0);
     is($v2->value, 1);
+}
+
+# search error
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $err = 1;
+    eval {
+	my $rc = $iz->search(["x"]);
+	$err = 0;
+    };
+
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+
+    eval {
+	my $rc = $iz->search([undef]);
+	$err = 0;
+    };
+
+    $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
 }
 
 # default search (use Default)
@@ -64,6 +87,29 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     # v2 must be found first.
     is($v1->value, 1);
     is($v2->value, 0);
+}
+
+# search eror (FindFreeVar)
+{
+    use Algorithm::CP::IZ::FindFreeVar;
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $v1 = $iz->create_int(0, 10);
+    my $v2 = $iz->create_int(0, 5);
+    $iz->AllNeq([$v1, $v2]);
+
+    my $err = 1;
+    eval {
+	my $rc = $iz->search([$v1, $v2],
+			     { FindFreeVar
+				   => "x", }
+	    );
+	$err = 0;
+    };
+
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
 }
 
 # search with FindFreeVar
@@ -169,6 +215,29 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($v2->value, 5);
 }
 
+# search eror (Criteria)
+{
+    use Algorithm::CP::IZ::FindFreeVar;
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $v1 = $iz->create_int(0, 10);
+    my $v2 = $iz->create_int(0, 5);
+    $iz->AllNeq([$v1, $v2]);
+
+    my $err = 1;
+    eval {
+	my $rc = $iz->search([$v1, $v2],
+			     { Criteria
+				   => "x", }
+	    );
+	$err = 0;
+    };
+
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+}
+
 # find_all
 {
     my $iz = Algorithm::CP::IZ->new();
@@ -257,6 +326,40 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is_deeply($r[1], [2, 1]);
     is_deeply($r[2], [3, 1]);
     is_deeply($r[3], [3, 2]);
+}
+
+# find_all error (callback)
+{
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $v1 = $iz->create_int(1, 3);
+    my $v2 = $iz->create_int(1, 2);
+    my $err = 1;
+    eval {
+	my $rc = $iz->find_all([$v1, $v2], undef,
+			       { FindFreeVar => undef });
+    };
+
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
+}
+
+# find_all error (FindFreeVar)
+{
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $v1 = $iz->create_int(1, 3);
+    my $v2 = $iz->create_int(1, 2);
+    my $err = 1;
+    eval {
+	my $rc = $iz->find_all([$v1, $v2], sub {},
+			       { FindFreeVar => undef });
+    };
+
+    my $msg = $@;
+    is($err, 1);
+    ok($msg =~ /^Algorithm::CP::IZ:/);
 }
 
 # backtrack
