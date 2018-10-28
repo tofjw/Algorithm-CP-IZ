@@ -787,12 +787,24 @@ sub Div {
     my $self = shift;
     my @params = @_;
 
+    my $usage_msg = 'usage: Div(v1, v2)';
     if (@params != 2) {
-	_report_error('usage: Div(v1, v2)');
+	_report_error($usage_msg);
+    }
+    for my $v (@params) {
+	validate([$v], ["V"], $usage_msg);
+    }
+
+    if (@params == 1) {
+	return $params[0] if (ref $params[0]);
+	return $self->_const_var(int($params[0]));
     }
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
     my $ptr = Algorithm::CP::IZ::cs_Div(map { $$_ } @v);
+
+    # cannot divide number
+    return undef if ($ptr == 0);
 
     my $ret = Algorithm::CP::IZ::Int->new($ptr);
 
