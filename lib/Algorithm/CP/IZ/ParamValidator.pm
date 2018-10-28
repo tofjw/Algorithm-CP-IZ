@@ -71,13 +71,19 @@ sub _is_array_of_var_or_int {
 	    my $v = $_;
 	    my $r = ref $v;
 	    if ($r) {
-		unless ($r eq $INT_CLASS) {
+		if ($r eq $INT_CLASS) {
+		    0;
+		}
+		else  {
 		    $bad++;
 		    1;
 		}
 	    }
 	    else {
-		unless (defined($v) && looks_like_number($v)) {
+		if (defined($v) && looks_like_number($v)) {
+		    0;
+		}
+		else {
 		    $bad++;
 		    1;
 		}
