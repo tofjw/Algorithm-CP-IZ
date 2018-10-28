@@ -92,7 +92,7 @@ WriteMakefile(
     INC               => "-I$iz_inc_dir", # e.g., '-I. -I/usr/include/other'
     # Un-comment this if you add C files to link with later:
     # OBJECT            => '$(O_FILES)', # link all the C files too
-    clean             => {FILES => "cs_reif2.inc cs_vadd.inc cs_vmul.inc"},
+    clean             => {FILES => "cs_reif2.inc cs_vadd.inc cs_vmul.inc cs_vsub.inc"},
 );
 if  (eval {require ExtUtils::Constant; 1}) {
   # If you edit these definitions to change the constants used by this module,
@@ -167,6 +167,30 @@ unless (-f "cs_vmul.inc") {
 
 	print $fh "CODE:\n";
 	print $fh "    RETVAL = cs_VMul($i, ";
+	print $fh join(", ", map { "vint$_" } (1..$i));
+	print $fh ");\n";
+	print $fh "OUTPUT:\n";
+	print $fh "    RETVAL\n\n";
+    }
+    close($fh);
+}
+
+# VSub
+unless (-f "cs_vsub.inc") {
+    open (my $fh, ">", "cs_vsub.inc") or die "cs_vsub.inc: cannot create: $!";
+
+    for my $i (3..10) {
+	print $fh "void*\n";
+	print $fh "cs_VSub$i(";
+
+	print $fh join(", ", map { "vint$_" } (1..$i));
+
+	print $fh ")\n";
+
+	print $fh map { "    void* vint$_\n" } (1..$i);
+
+	print $fh "CODE:\n";
+	print $fh "    RETVAL = cs_VSub($i, ";
 	print $fh join(", ", map { "vint$_" } (1..$i));
 	print $fh ");\n";
 	print $fh "OUTPUT:\n";

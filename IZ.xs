@@ -259,6 +259,7 @@ INCLUDE: const-xs.inc
 
 INCLUDE: cs_vadd.inc
 INCLUDE: cs_vmul.inc
+INCLUDE: cs_vsub.inc
 INCLUDE: cs_reif2.inc
 
 void*

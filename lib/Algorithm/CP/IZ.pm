@@ -694,9 +694,14 @@ sub Add {
     my $self = shift;
     my @params = @_;
 
+    my $usage_msg = 'usage: Add(v1, v2, ...)';
     if (@params < 1) {
-	croak 'usage: Add(v1, v2, ...)';
+	_report_error($usage_msg);
     }
+    for my $v (@params) {
+	validate([$v], ["V"], $usage_msg);
+    }
+
     if (@params == 1) {
 	return $params[0] if (ref $params[0]);
 	return $self->_const_var(int($params[0]));
@@ -718,9 +723,14 @@ sub Mul {
     my $self = shift;
     my @params = @_;
 
+    my $usage_msg = 'usage: Mul(v1, v2, ...)';
     if (@params < 1) {
-	croak 'usage: Mul(v1, v2, ...)';
+	_report_error($usage_msg);
     }
+    for my $v (@params) {
+	validate([$v], ["V"], $usage_msg);
+    }
+
     if (@params == 1) {
 	return $params[0] if (ref $params[0]);
 	return $self->_const_var(int($params[0]));
@@ -743,13 +753,30 @@ sub Sub {
     my $self = shift;
     my @params = @_;
 
-    if (@params != 2) {
-	croak 'usage: Sub(v1, v2)';
+    my $usage_msg = 'usage: Sub(v1, v2, ...)';
+    if (@params < 1) {
+	_report_error($usage_msg);
+    }
+    for my $v (@params) {
+	validate([$v], ["V"], $usage_msg);
+    }
+
+    if (@params == 1) {
+	return $params[0] if (ref $params[0]);
+	return $self->_const_var(int($params[0]));
     }
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
-    my $ptr = Algorithm::CP::IZ::cs_Sub(map { $$_ } @v);
+
+    my $ptr = _argv_func([map { $$_} @v], 10,
+			 "Algorithm::CP::IZ::cs_Sub",
+			 "Algorithm::CP::IZ::cs_VSub");
+
     my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
 
     $self->_register_variable($ret);
 
@@ -761,7 +788,7 @@ sub Div {
     my @params = @_;
 
     if (@params != 2) {
-	croak 'usage: Div(v1, v2)';
+	_report_error('usage: Div(v1, v2)');
     }
 
     my @v = map { ref $_ ? $_ : $self->_const_var(int($_)) } @params;
