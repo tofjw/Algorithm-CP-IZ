@@ -350,13 +350,15 @@ cs_acceptAll()
 CODE:
     cs_acceptAll();
 
-int cs_getNbFails()
+int get_nb_fails(iz)
+    void* iz
 CODE:
     RETVAL = cs_getNbFails();
 OUTPUT:
     RETVAL
 
-int cs_getNbChoicePoints()
+int get_nb_choice_points(iz)
+    void* iz
 CODE:
     RETVAL = cs_getNbChoicePoints();
 OUTPUT:
@@ -871,6 +873,73 @@ CODE:
 OUTPUT:
     RETVAL
 
+#if (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6)
+
+void
+cancel_search(iz)
+    void* iz
+CODE:
+    cs_cancelSearch();
+
+void*
+cs_getValueSelector(vs)
+    int vs
+CODE:
+    RETVAL = cs_getValueSelector(vs);
+OUTPUT:
+    RETVAL
+
+void*
+valueSelector_init(vs, index, array, size)
+    void* vs;
+    int index
+    void* array
+    int size
+PREINIT:
+    void* ext;
+CODE:
+    ext = malloc(sizeof(void*) > sizeof(int) ? sizeof(void*) : sizeof(int));
+    if (ext) {
+      cs_initValueSelector(vs, index, array, ext);
+    }
+    RETVAL = ext;
+OUTPUT:
+    RETVAL
+
+void
+cs_selectNextValue(vs, index, array, ext)
+    void* vs
+    int index
+    void* array
+    void* ext
+PREINIT:
+    CSvalueSelection r;
+    int rc;
+PPCODE:
+    rc = cs_selectNextValue(&r, vs, index, array, ext);
+    if (rc) {
+      XPUSHs(sv_2mortal(newSViv(r.method)));
+      XPUSHs(sv_2mortal(newSViv(r.value)));
+    }
+    
+int
+cs_endValueSelector(vs, index, array, ext)
+    void* vs
+    int index
+    void* array
+    void* ext
+PREINIT:
+    int rc;
+CODE:
+    rc = cs_endValueSelector(vs, index, array, ext);
+    free(ext);
+    RETVAL = rc;
+OUTPUT:
+    RETVAL
+
+    
+#endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
+
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ::Int
 
 int
@@ -1111,4 +1180,3 @@ CODE:
     }
 OUTPUT:
     RETVAL
-

@@ -15,6 +15,7 @@ use Algorithm::CP::IZ::Int;
 use Algorithm::CP::IZ::RefVarArray;
 use Algorithm::CP::IZ::RefIntArray;
 use Algorithm::CP::IZ::ParamValidator qw(validate);
+use Algorithm::CP::IZ::ValueSelector;
 
 our @ISA = qw(Exporter);
 
@@ -25,17 +26,21 @@ our @ISA = qw(Exporter);
 # This allows declaration	use Algorithm::CP::IZ ':all';
 # If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
 # will save memory.
-our %EXPORT_TAGS = ( 'all' => [ qw(
-	CS_INT_MAX
-	CS_INT_MIN
-) ] );
+our %EXPORT_TAGS = ( 'value_selector' => [ qw(
+    CS_VALUE_SELECTOR_MIN_TO_MAX
+    CS_VALUE_SELECTOR_MAX_TO_MIN
+    CS_VALUE_SELECTOR_LOWER_AND_UPPER
+    CS_VALUE_SELECTOR_UPPER_AND_LOWER
+    CS_VALUE_SELECTOR_MEDIAN_AND_REST
+    CS_VALUE_SELECTION_EQ
+    CS_VALUE_SELECTION_NEQ
+    CS_VALUE_SELECTION_LE
+    CS_VALUE_SELECTION_LT
+    CS_VALUE_SELECTION_GE
+    CS_VALUE_SELECTION_GT
+) ]);
 
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
-
-our @EXPORT = qw(
-	CS_INT_MAX
-	CS_INT_MIN
-);
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'value_selector'} } );
 
 our $VERSION = '0.04';
 
@@ -234,18 +239,6 @@ sub backtrack {
 
     Algorithm::CP::IZ::cs_backtrack($vptr, $id,
 				    $self->{_backtrack_code_ref});
-}
-
-sub get_nb_fails {
-    my $self = shift;
-
-    return Algorithm::CP::IZ::cs_getNbFails();
-}
-
-sub get_nb_choice_points {
-    my $self = shift;
-
-    return Algorithm::CP::IZ::cs_getNbChoicePoints();
 }
 
 sub _create_int_from_min_max {
@@ -547,6 +540,13 @@ sub get_version {
 
     # not supported
     return;
+}
+
+sub get_value_selector {
+    my $self = shift;
+    my $id = shift;
+
+    return Algorithm::CP::IZ::ValueSelector->new($self, $id);
 }
 
 #####################################################
@@ -1283,6 +1283,11 @@ which 'save_context' returns.
 
 Restore status of variables and constraints to point of first
 'save_context' call.
+
+=item cancel_search
+
+Cancel running search from other thread or signal handler.
+Context will be restored using restore_context_until if needed.
 
 =item backtrack(VAR, INDEX, CALLBACK)
 
