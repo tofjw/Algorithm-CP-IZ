@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 67;
+use Test::More tests => 68;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -421,3 +421,11 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($v1->nb_elements, 3);
 
 }
+
+# cancel (call only)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    $iz->cancel_search;
+    ok(1);
+}
+
