@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 68;
+use Test::More tests => 74;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -236,6 +236,37 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     my $msg = $@;
     is($err, 1);
     ok($msg =~ /^Algorithm::CP::IZ:/);
+}
+
+# search (ValueSelectors, basic)
+{
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $v1 = $iz->create_int(0, 10);
+    my $v2 = $iz->create_int(0, 5);
+    $iz->AllNeq([$v1, $v2]);
+
+    my $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_MIN_TO_MAX);
+
+    my $label = $iz->save_context();
+    my $rc = $iz->search([$v1, $v2],
+			 { ValueSelectors
+			       => [$vs, $vs], }
+	);
+
+    is($rc, 1);
+    is($v1->value, 0);
+    is($v2->value, 1);
+
+    $iz->restore_context_until($label);
+    $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_MAX_TO_MIN);
+    $rc = $iz->search([$v1, $v2],
+		      { ValueSelectors => [$vs, $vs], }
+	);
+
+    is($rc, 1);
+    is($v1->value, 10);
+    is($v2->value, 5);
 }
 
 # find_all

@@ -937,6 +937,62 @@ CODE:
 OUTPUT:
     RETVAL
 
+int
+cs_searchValueSelectorFail(av, vs, findvar_id, findvar_ref, fail_max, nf_ref)
+    AV *av
+    AV *vs
+    int findvar_id
+    SV* findvar_ref
+    int fail_max
+    SV* nf_ref
+PREINIT:
+    void** array;
+    void** vs_array;
+    SSize_t alen;
+    SSize_t i;
+CODE:
+    alen = av_len(av) + 1;
+    Newx(array, alen, void*);
+    Newx(vs_array, alen, void*);
+
+    for (i = 0; i<alen; i++) {
+      SV** pptr = av_fetch(av, i, 0);
+      SV** vsptr = av_fetch(vs, i, 0);
+      SV** vsvs = hv_fetch((HV*)SvRV((*vsptr)), "_vs", 3, 0);
+
+      array[i] = (void*)SvUV(*pptr);
+      vs_array[i] = (void*)SvUV(*vsvs);
+    }
+#if 1
+    currentArray2IndexFunc = 0;
+    findFreeVarPerlFunc = 0;
+
+    if (findvar_id < 0) {
+      findFreeVarPerlFunc = SvRV(findvar_ref);
+      currentArray2IndexFunc = findFreeVarPerlWrapper;
+    }
+    else {
+      if (findvar_id >= sizeof(findFreeVarTbl)/sizeof(findFreeVarTbl[0])) {
+	Safefree(array);
+	croak("search: Bad FindFreeVar value");
+      }
+      currentArray2IndexFunc = findFreeVarTbl[findvar_id];
+    }
+
+    if (fail_max < 0)
+        fail_max = INT_MAX;
+
+    RETVAL = cs_searchValueSelectorFail((CSint**)array,
+					(const CSvalueSelector**)vs_array,
+					(int)alen,
+					currentArray2IndexFunc,
+					fail_max,
+					NULL);
+#endif
+    Safefree(array);
+    Safefree(vs_array);
+OUTPUT:
+    RETVAL
     
 #endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
 

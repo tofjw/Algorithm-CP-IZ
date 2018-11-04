@@ -324,6 +324,9 @@ sub _validate_search_params {
 	    my $x = shift;
 	    validate([$x], ["I"], "search: MaxFail must be integer");
 	},
+	ValueSelectors => sub {
+	    1;
+	}
     );
 
     my @keys = sort keys %$params;
@@ -354,7 +357,8 @@ sub search {
     my $find_free_var_id = 0;
     my $find_free_var_func = sub { die "search: Internal error"; };
     my $criteria_func = undef;
-
+    my $value_selectors = undef;
+    
     if ($params->{FindFreeVar}) {
 	my $ffv = $params->{FindFreeVar};
 
@@ -377,12 +381,26 @@ sub search {
 	$max_fail = int($params->{MaxFail});
     }
 
+    if ($params->{ValueSelectors}) {
+	$value_selectors = $params->{ValueSelectors}
+    }
+
     if ($criteria_func) {
 	return Algorithm::CP::IZ::cs_searchCriteria($array,
 						    $find_free_var_id,
 						    $find_free_var_func,
 						    $criteria_func,
 						    $max_fail);
+    }
+    elsif ($value_selectors) {
+	print STDERR "---------------------------------\n";
+	return Algorithm::CP::IZ::cs_searchValueSelectorFail(
+	    $array,
+	    $value_selectors,
+	    $find_free_var_id,
+	    $find_free_var_func,
+	    $max_fail,
+	    undef);
     }
     else {
  	return Algorithm::CP::IZ::cs_search($array,
