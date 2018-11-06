@@ -564,7 +564,14 @@ sub get_value_selector {
     my $self = shift;
     my $id = shift;
 
-    return Algorithm::CP::IZ::ValueSelector->new($self, $id);
+    return Algorithm::CP::IZ::ValueSelector::IZ->new($self, $id);
+}
+
+sub create_simple_value_selector {
+    my $self = shift;
+    my $id = shift;
+
+    return Algorithm::CP::IZ::ValueSelector::Simple->new($self, $id);
 }
 
 #####################################################

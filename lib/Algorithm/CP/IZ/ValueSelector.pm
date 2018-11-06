@@ -59,33 +59,15 @@ sub init {
     my $array = $iz->_create_registered_var_array($var_array);
     return unless ($array);
 
-    return Algorithm::CP::IZ::ValueSelector::Bound->new($vs, $index,
-							$array, $size);
+    return Algorithm::CP::IZ::ValueSelector::Bound::IZ->new($vs, $index,
+							    $array, $size);
 }
 
-#
-# ValueSelector user defined
-#
-package Algorithm::CP::IZ::ValueSelector::UD;
-
-use base qw(Algorithm::CP::IZ::ValueSelector);
-
-sub new {
-    my $class = shift;
-    my ($iz, $vs) = @_;
-
-    my $ptr = Algorithm::CP::IZ::cs_getValueSelector($vs);
-    bless \$ptr, $class;
-}
-
-sub DESTROY {
-    
-}
 
 #
 # ValueSelector bound to variable
 #
-package Algorithm::CP::IZ::ValueSelector::Bound;
+package Algorithm::CP::IZ::ValueSelector::Bound::IZ;
 
 sub new {
     my $class = shift;
@@ -112,8 +94,9 @@ sub next {
     my $index = $self->{_index};
     my $array = $self->{_array};
     my $ptr = $self->{_ptr};
+    my $size = $self->{_size};
     
-    return Algorithm::CP::IZ::cs_selectNextValue($vs, $index, $$array, $ptr);
+    return Algorithm::CP::IZ::cs_selectNextValue($vs, $index, $$array, $size, $ptr);
 }
 
 # end is bound to DESTORY in Perl way
@@ -124,9 +107,56 @@ sub DESTROY {
     my $index = $self->{_index};
     my $array = $self->{_array};
     my $ptr = $self->{_ptr};
+    my $size = $self->{_size};
 
-    Algorithm::CP::IZ::cs_endValueSelector($vs, $index, $$array, $ptr);
+    Algorithm::CP::IZ::cs_endValueSelector($vs, $index, $$array, $size, $ptr);
 }
+
+#
+# ValueSelector user defined (simple)
+#
+# init : $cls->new(Int_instance) is called. Instance of $cls must be returned.
+# next : $obj->next(Int_instane) is called.
+# end : $obj is released.
+#
+# Callback functions don't take class parameter therefore useer defined
+# value selectors distincted by its index (when search function is called).
+#
+package Algorithm::CP::IZ::ValueSelector::Simple;
+
+use base qw(Algorithm::CP::IZ::ValueSelector);
+
+sub new {
+    my $class = shift;
+    my ($cls) = @_;
+
+    my $vs = Algorithm::CP::IZ::createSimpleValueSelector();
+    my $self = {
+	_vs => $vs,
+	_cls => $cls,
+    };
+
+    bless $self, $class;
+}
+
+sub prepare {
+    my $self = shift;
+    my ($index) = @_;
+
+    # keep in memory to avoid GC
+    $self->{_init} = sub {
+	my ($v, $index) = @_;
+	my $obj = $self->{_cls}->new($index, $v);
+	return $obj;
+    };
+
+     Algorithm::CP::IZ::registerSimpleValueSelectorClass($index, $self->{_init});
+}
+
+sub DESTROY {
+    Algorithm::CP::IZ::deleteSimpleValueSelector();
+}
+
 
 1;
 

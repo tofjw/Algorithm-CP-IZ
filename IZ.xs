@@ -9,6 +9,8 @@
 
 #include "const-c.inc"
 
+static const char* PACKAGE_INT = "Algorithm::CP::IZ::Int";
+
 /*
  * Helper functinos for cs_search, cs_searchCriteria, cs_findAll
  */
@@ -251,7 +253,167 @@ static IZBOOL eventNewMinMaxNeqPerlWrapper(CSint* vint, int index, int oldValue,
   return (IZBOOL)ret;
 }
 
-static const char* PACKAGE_INT = "Algorithm::CP::IZ::Int";
+
+/* Helper functions for Algorithm::CP::IZ::ValueSelector::Simple */
+
+/*
+ * Callback functions don't take class parameter therefore useer defined
+ * value selectors distincted by its index (when search function is called).
+ */
+
+typedef struct {
+  SV* init;
+  SV* next;
+  SV* end;
+} vsSimple;
+
+static vsSimple* vsSimpleArray = NULL;
+static size_t vsSimpleArraySize = 0;
+
+static int vsSimpleObjRef = 0;
+static CSvalueSelector* vsSimpleObj = NULL;
+
+static IZBOOL prepareSimpleVS(int index) {
+  if (!vsSimpleArray) {
+    size_t size = (size_t)index * 2;
+    size_t i;
+
+    if (size < 1000)
+      size = 1000;
+
+    vsSimpleArray = malloc(sizeof(vsSimple) * size);
+    if (!vsSimpleArray)
+      return FALSE;
+
+    vsSimpleArraySize = size;
+
+    for (i = 0; i < size; i++) {
+      vsSimpleArray[i].init = NULL;
+      vsSimpleArray[i].next = NULL;
+      vsSimpleArray[i].end = NULL;
+    }
+  }
+  else {
+    size_t newSize = vsSimpleArraySize + 1000;
+    size_t i;
+
+    vsSimple* newArray = malloc(sizeof(vsSimple) * newSize);
+    if (!newArray)
+      return FALSE;
+
+    memcpy(newArray, vsSimpleArray, sizeof(vsSimple) * vsSimpleArraySize);
+
+    for (i = vsSimpleArraySize; i < newSize; i++) {
+      newArray[i].init = NULL;
+      newArray[i].next = NULL;
+      newArray[i].end = NULL;
+    }
+
+    vsSimpleArray = newArray;
+    vsSimpleArraySize = newSize;
+  }
+
+  return TRUE;
+}
+
+static IZBOOL vsSimpleInit(int index, CSint** vars, int size, void* pData) {
+  void** pp = (void**)pData;
+  SV* obj = NULL;
+
+  {
+    SV* paramVar;
+    int count;
+
+    dTHX;
+    dSP;
+
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+
+    paramVar = sv_newmortal();
+    sv_setuv(newSVrv(paramVar, PACKAGE_INT), (UV)vars[index]);
+    XPUSHs(paramVar);
+    XPUSHs(sv_2mortal(newSViv(index)));
+
+    PUTBACK;
+    count = call_sv(vsSimpleArray[index].init, G_ARRAY);
+    SPAGAIN;
+
+    if (count > 0) {
+      obj = POPs;
+      SvREFCNT_inc(obj);
+      PUTBACK;
+    }
+
+    FREETMPS;
+    LEAVE;
+  }
+
+  if (!obj)
+    return FALSE;
+
+  *pp = obj;
+
+  return TRUE;
+}
+
+static IZBOOL vsSimpleNext(CSvalueSelection* r, int index, CSint** vars, int size, void* pData) {
+  void** pp = (void**)pData;
+  SV* obj = (SV*)*pp;
+  IZBOOL ret;
+
+  {
+    SV* paramVar;
+    int count;
+
+    dTHX;
+    dSP;
+
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+
+    paramVar = sv_newmortal();
+    sv_setuv(newSVrv(paramVar, PACKAGE_INT), (UV)vars[index]);
+    XPUSHs(obj);
+    XPUSHs(paramVar);
+    XPUSHs(sv_2mortal(newSViv(index)));
+
+    PUTBACK;
+    count = call_method("next", G_ARRAY);
+    SPAGAIN;
+
+    if (count >= 2) {
+      r->value = POPi;
+      r->method = POPi;
+      ret = TRUE;
+    }
+    else {
+      ret = FALSE;
+    }
+
+    PUTBACK;
+
+    FREETMPS;
+    LEAVE;
+  }
+
+  return ret;
+}
+
+static IZBOOL vsSimpleEnd(int index, CSint** vars, int size, void* pData) {
+  void** pp = (void**)pData;
+  SV* obj = (SV*)*pp;
+
+  {
+    dTHX;
+    SvREFCNT_dec(obj);
+  }
+
+  return TRUE;
+}
+
 
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ		
 
@@ -885,7 +1047,7 @@ void*
 cs_getValueSelector(vs)
     int vs
 CODE:
-    RETVAL = cs_getValueSelector(vs);
+    RETVAL = (void*)cs_getValueSelector(vs);
 OUTPUT:
     RETVAL
 
@@ -900,40 +1062,84 @@ PREINIT:
 CODE:
     ext = malloc(sizeof(void*) > sizeof(int) ? sizeof(void*) : sizeof(int));
     if (ext) {
-      cs_initValueSelector(vs, index, array, ext);
+      cs_initValueSelector(vs, index, array, size, ext);
     }
     RETVAL = ext;
 OUTPUT:
     RETVAL
 
 void
-cs_selectNextValue(vs, index, array, ext)
+cs_selectNextValue(vs, index, array, size, ext)
     void* vs
     int index
     void* array
+    int size
     void* ext
 PREINIT:
     CSvalueSelection r;
     int rc;
 PPCODE:
-    rc = cs_selectNextValue(&r, vs, index, array, ext);
+    rc = cs_selectNextValue(&r, vs, index, array, size, ext);
     if (rc) {
       XPUSHs(sv_2mortal(newSViv(r.method)));
       XPUSHs(sv_2mortal(newSViv(r.value)));
     }
     
 int
-cs_endValueSelector(vs, index, array, ext)
+cs_endValueSelector(vs, index, array, size, ext)
     void* vs
     int index
     void* array
+    int size
     void* ext
 PREINIT:
     int rc;
 CODE:
-    rc = cs_endValueSelector(vs, index, array, ext);
+    rc = cs_endValueSelector(vs, index, array, size, ext);
     free(ext);
     RETVAL = rc;
+OUTPUT:
+    RETVAL
+
+void*
+createSimpleValueSelector()
+CODE:
+    if (vsSimpleObjRef == 0) {
+      vsSimpleObj = cs_createValueSelector(vsSimpleInit, vsSimpleNext, vsSimpleEnd);
+    }
+    vsSimpleObjRef++;
+    RETVAL = vsSimpleObj;
+OUTPUT:
+    RETVAL
+
+void
+deleteSimpleValueSelector()
+CODE:
+    vsSimpleObjRef--;
+
+    if (vsSimpleObjRef == 0) {
+      cs_freeValueSelector(vsSimpleObj);
+      vsSimpleObj = NULL;
+
+      if (vsSimpleArray) {
+	free(vsSimpleArray);
+	vsSimpleArray = NULL;
+	vsSimpleArraySize = 0;
+      }
+    }
+
+int
+registerSimpleValueSelectorClass(index, init)
+     int index;
+     SV* init;
+CODE:
+    if (prepareSimpleVS(index)) {
+      vsSimpleArray[index].init = init;
+      RETVAL = TRUE;
+    }
+    else {
+      RETVAL = FALSE;
+    }
 OUTPUT:
     RETVAL
 
