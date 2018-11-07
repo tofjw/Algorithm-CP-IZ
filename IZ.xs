@@ -310,6 +310,7 @@ static IZBOOL prepareSimpleVS(int index) {
       newArray[i].end = NULL;
     }
 
+    Safefree(vsSimpleArray);
     vsSimpleArray = newArray;
     vsSimpleArraySize = newSize;
   }
@@ -1104,7 +1105,7 @@ PREINIT:
     int rc;
 CODE:
     rc = cs_endValueSelector(vs, index, array, size, ext);
-    free(ext);
+    Safefree(ext);
     RETVAL = rc;
 OUTPUT:
     RETVAL
@@ -1130,7 +1131,7 @@ CODE:
       vsSimpleObj = NULL;
 
       if (vsSimpleArray) {
-	free(vsSimpleArray);
+	Safefree(vsSimpleArray);
 	vsSimpleArray = NULL;
 	vsSimpleArraySize = 0;
       }
