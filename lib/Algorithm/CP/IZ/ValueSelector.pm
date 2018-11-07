@@ -63,6 +63,8 @@ sub init {
 							    $array, $size);
 }
 
+sub prepare {
+}
 
 #
 # ValueSelector bound to variable
@@ -128,10 +130,12 @@ use base qw(Algorithm::CP::IZ::ValueSelector);
 
 sub new {
     my $class = shift;
-    my ($cls) = @_;
+    my ($iz, $cls) = @_;
 
     my $vs = Algorithm::CP::IZ::createSimpleValueSelector();
+
     my $self = {
+	_iz => $iz,
 	_vs => $vs,
 	_cls => $cls,
     };
@@ -143,14 +147,34 @@ sub prepare {
     my $self = shift;
     my ($index) = @_;
 
-    # keep in memory to avoid GC
+    # keep init in memory to avoid GC
+    # but don't keep $self too avoid cyclic reference
+    my $cls = $self->{_cls};
+
     $self->{_init} = sub {
-	my ($v, $index) = @_;
-	my $obj = $self->{_cls}->new($index, $v);
-	return $obj;
+	return $cls->new(@_);
     };
 
-     Algorithm::CP::IZ::registerSimpleValueSelectorClass($index, $self->{_init});
+    return Algorithm::CP::IZ::registerSimpleValueSelectorClass($index, $self->{_init});
+}
+
+sub init {
+    my $self = shift;
+    my ($index, $var_array) = @_;
+
+    $self->prepare($index);
+    
+    my $iz = $self->{_iz};
+    my $vs = $self->{_vs};
+    my $size = scalar @$var_array;
+    
+    @$var_array = map { ref $_ ? $_ : $iz->_const_var(int($_)) } @$var_array;
+
+    my $array = $iz->_create_registered_var_array($var_array);
+    return unless ($array);
+
+    return Algorithm::CP::IZ::ValueSelector::Bound::IZ->new($vs, $index,
+							    $array, $size);
 }
 
 sub DESTROY {

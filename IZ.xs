@@ -281,7 +281,7 @@ static IZBOOL prepareSimpleVS(int index) {
     if (size < 1000)
       size = 1000;
 
-    vsSimpleArray = malloc(sizeof(vsSimple) * size);
+    Newx(vsSimpleArray, size, vsSimple);
     if (!vsSimpleArray)
       return FALSE;
 
@@ -297,7 +297,8 @@ static IZBOOL prepareSimpleVS(int index) {
     size_t newSize = vsSimpleArraySize + 1000;
     size_t i;
 
-    vsSimple* newArray = malloc(sizeof(vsSimple) * newSize);
+    vsSimple* newArray;
+    Newx(newArray, newSize, vsSimple);
     if (!newArray)
       return FALSE;
 
@@ -337,7 +338,11 @@ static IZBOOL vsSimpleInit(int index, CSint** vars, int size, void* pData) {
     XPUSHs(sv_2mortal(newSViv(index)));
 
     PUTBACK;
-    count = call_sv(vsSimpleArray[index].init, G_ARRAY);
+    if (vsSimpleArray[index].init)
+      count = call_sv(vsSimpleArray[index].init, G_ARRAY);
+    else
+      count = 0;
+
     SPAGAIN;
 
     if (count > 0) {
@@ -1060,7 +1065,10 @@ valueSelector_init(vs, index, array, size)
 PREINIT:
     void* ext;
 CODE:
-    ext = malloc(sizeof(void*) > sizeof(int) ? sizeof(void*) : sizeof(int));
+    if (sizeof(void*) > sizeof(int))
+      Newx(ext, 1, void*);
+    else
+      Newx(ext, 1, int);
     if (ext) {
       cs_initValueSelector(vs, index, array, size, ext);
     }

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 26;
+use Test::More tests => 39;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 BEGIN { use_ok('Algorithm::CP::IZ::ValueSelector') };
 
@@ -77,7 +77,7 @@ use Algorithm::CP::IZ qw(:value_selector);
     package TestVS;
     sub new {
 	my $class = shift;
-	my ($index, $v) = @_;
+	my ($v, $index) = @_;
 
 	my $self = {
 	    _pos => 0,
@@ -94,7 +94,7 @@ use Algorithm::CP::IZ qw(:value_selector);
 	return if ($pos >= @$domain);
 
 	my @ret = (Algorithm::CP::IZ::CS_VALUE_SELECTION_EQ, $domain->[$pos]);
-	$self->{_pos} = $pos++;
+	$self->{_pos} = ++$pos;
 
 	return @ret;
     }
@@ -105,37 +105,63 @@ use Algorithm::CP::IZ qw(:value_selector);
     package main;
 }
 
-if (1) {
-
-    use Data::Dumper;
-    my $obj = Algorithm::CP::IZ::ValueSelector::Simple->new("TestVS");
-    
+{
     my $iz = Algorithm::CP::IZ->new;
+    my $obj = $iz->create_value_selector_simple("TestVS");
+    
     my $v = $iz->create_int(0, 2);
     # my $vsi = $obj->init(0, [$v]);
     # print $vsi->next;
+    $iz = undef;
 }
 
-if (1) {
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $vs = $iz->create_value_selector_simple("TestVS");
+    my $v1 = $iz->create_int(-2, 1);
+    my $v2 = $iz->create_int(3);
+
+    my $vs1 = $vs->init(0, [$v1, $v2]);
+    my ($meth, $val);
+    ($meth, $val) = $vs1->next;
+    is($meth, Algorithm::CP::IZ::CS_VALUE_SELECTION_EQ);
+    is($val, -2);
+    ($meth, $val) = $vs1->next;
+    is($meth, Algorithm::CP::IZ::CS_VALUE_SELECTION_EQ);
+    is($val, -1);
+    ($meth, $val) = $vs1->next;
+    is($meth, Algorithm::CP::IZ::CS_VALUE_SELECTION_EQ);
+    is($val, 0);
+    ($meth, $val) = $vs1->next;
+    is($meth, Algorithm::CP::IZ::CS_VALUE_SELECTION_EQ);
+    is($val, 1);
+    ($meth, $val) = $vs1->next;
+    ok(!defined($vs1->next));
+
+    my $vs2 = $vs->init(1, [$v1, $v2]);
+    ($meth, $val) = $vs2->next;
+    is($meth, Algorithm::CP::IZ::CS_VALUE_SELECTION_EQ);
+    is($val, 3);
+    is($meth, Algorithm::CP::IZ::CS_VALUE_SELECTION_EQ);
+    ok(!defined($vs2->next));
+}
+
+
+{
     my $iz = Algorithm::CP::IZ->new();
 
     my $v1 = $iz->create_int(0, 10);
     my $v2 = $iz->create_int(0, 5);
     $iz->AllNeq([$v1, $v2]);
 
-    my $vs = Algorithm::CP::IZ::ValueSelector::Simple->new("TestVS");
-    $vs->prepare(0);
-    $vs->prepare(1);
+    my $vs = $iz->create_value_selector_simple("TestVS");
     my $label = $iz->save_context();
-    print STDERR "**************** search\n";
     my $rc = $iz->search([$v1, $v2],
 			 { ValueSelectors
 			       => [$vs, $vs], }
 	);
-    print STDERR "**************** done\n";
 
     is($rc, 1);
     is($v1->value, 0);
     is($v2->value, 1);
 }
-

@@ -393,7 +393,14 @@ sub search {
 						    $max_fail);
     }
     elsif ($value_selectors) {
-	print STDERR "---------------------------------\n";
+	my $i = 0;
+	for my $v (@$array) {
+	    my $vs = $value_selectors->[$i];
+	    print STDERR "vs = $vs\n";
+	    $vs->prepare($i);
+	    $i++;
+	}
+
 	return Algorithm::CP::IZ::cs_searchValueSelectorFail(
 	    $array,
 	    $value_selectors,
@@ -567,7 +574,7 @@ sub get_value_selector {
     return Algorithm::CP::IZ::ValueSelector::IZ->new($self, $id);
 }
 
-sub create_simple_value_selector {
+sub create_value_selector_simple {
     my $self = shift;
     my $id = shift;
 
