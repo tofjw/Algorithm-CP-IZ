@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 224;
+use Test::More tests => 244;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # Add
@@ -555,9 +555,52 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($elem->min, 2);
     is($elem->max, 12);
 
-    ok($v1->Eq(5));
+    is($elem->nb_elements, 12-2+1);
+    is($v1->Neq(4), 1);
+    is($elem->min, 2);
+    is($elem->max, 12);
+    is($elem->nb_elements, 12-2+1-1);
+    ok(!$elem->is_in(4));
+
+    is($v1->Eq(5), 1);
     is($elem->min, 5);
     is($elem->max, 5);
+
+    $iz->restore_context;
+}
+
+# VarElementRange
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $index = $iz->create_int(0, 10);
+    my $v1 = $iz->create_int(2, 12);
+    my $v2 = $iz->create_int(0, 5);
+    my $elem = $iz->VarElementRange($index, [$v1, $v2]);
+
+    $iz->save_context;
+
+    is($index->Eq(1), 1);
+    is($elem->min, 0);
+    is($elem->max, 5);
+
+    ok($v2->Eq(5));
+    is($elem->min, 5);
+    is($elem->max, 5);
+
+    $iz->restore_context;
+
+    # hole is ignored
+    $iz->save_context;
+
+    is($index->Eq(1), 1);
+    is($elem->min, 0);
+    is($elem->max, 5);
+    is($elem->nb_elements, 5-0+1);
+
+    ok($v2->Neq(3));
+    is($elem->min, 0);
+    is($elem->max, 5);
+    is($elem->nb_elements, 5-0+1);
 
     $iz->restore_context;
 }

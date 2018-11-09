@@ -1083,6 +1083,27 @@ sub VarElement {
     return $ret;
 }
 
+sub VarElementRange {
+    my $self = shift;
+    my ($index, $var_array) = @_;
+
+    validate([scalar @_, $index, $var_array],
+	     [sub { shift == 2 }, "V", "vA1"],
+	     "Usage: VarElementRange(index_var, [value_vars])");
+
+    @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $ptr = Algorithm::CP::IZ::cs_VarElementRange($$index,
+					    $$parray, scalar(@$var_array));
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
 #
 # Create Reif* Methods
 #
@@ -1597,6 +1618,19 @@ Create an instance of Algorithm::CP::IZ::Int represents a value at VAR in VARIAB
   Created_instance = VARIABLES[VAR]
 
 VARIABLES is an arrayref contains instances ofe Algorithm::CP::IZ::Int.
+
+=item VarElementRange(VAR, VARIABLES)
+
+Create an instance of Algorithm::CP::IZ::Int represents a value at VAR in VARIABLES. This relation is:
+
+  Created_instance = VARIABLES[VAR]
+    ok($elem->is_in(4))
+
+Contrast to VarElement, constraint propagation for variables in
+VARIABLES will occur only when upper or lower bound is changed.
+
+VARIABLES is an arrayref contains instances ofe Algorithm::CP::IZ::Int.
+
 
 =item ReifEq(VAR1, VAR2)
 
