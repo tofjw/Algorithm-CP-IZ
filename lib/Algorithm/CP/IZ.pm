@@ -1669,7 +1669,8 @@ Created variable will be instantiated to 1 when VAR1 >= VAR2 otherwise to 0.
 L<Algorithm::CP::IZ::Int>
 L<Algorithm::CP::IZ::FindFreeVar>
 
-L<iZ-C|http://www.constraint.org/en/izc_download.html>
+L<http://www.constraint.org/en/izc_download.html>
+L<https://github.com/tofjw/Algorithm-CP-IZ/wiki>
 
 =head1 AUTHOR
 
