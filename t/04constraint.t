@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 250;
+use Test::More tests => 253;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # Add
@@ -534,6 +534,18 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     $iz->restore_context;
 }
 
+# Element (constant)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $elem = $iz->Element(3, [1, 3, 5, 7, 9]);
+
+    $iz->save_context;
+
+    is($elem->value, 7);
+
+    $iz->restore_context;
+}
+
 # VarElement
 {
     my $iz = Algorithm::CP::IZ->new();
@@ -567,6 +579,15 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($elem->max, 5);
 
     $iz->restore_context;
+}
+
+# VarElement (constant)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $index = $iz->create_int(0, 10);
+    my $elem = $iz->VarElement(1, [1, 3, 5]);
+
+    is($elem->value, 3);
 }
 
 # VarElementRange
@@ -603,6 +624,14 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($elem->nb_elements, 5-0+1);
 
     $iz->restore_context;
+}
+
+# VarElementRange (constant)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $elem = $iz->VarElementRange(0, [3, 5, 7]);
+
+    is($elem->value, 3);
 }
 
 # Cumulative

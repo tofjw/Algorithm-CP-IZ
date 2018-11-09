@@ -1050,6 +1050,7 @@ sub Element {
 	     "Usage: Element(index_var, [values])");
 
     @$val_array = map { int($_) } @$val_array;
+    $index = ref $index ? $index : $self->_const_var(int($index));
 
     my $parray = $self->_create_registered_int_array($val_array);
 
@@ -1071,6 +1072,7 @@ sub VarElement {
 	     "Usage: VarElement(index_var, [value_vars])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+    $index = ref $index ? $index : $self->_const_var(int($index));
 
     my $parray = $self->_create_registered_var_array($var_array);
 
@@ -1092,6 +1094,7 @@ sub VarElementRange {
 	     "Usage: VarElementRange(index_var, [value_vars])");
 
     @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+    $index = ref $index ? $index : $self->_const_var(int($index));
 
     my $parray = $self->_create_registered_var_array($var_array);
 
