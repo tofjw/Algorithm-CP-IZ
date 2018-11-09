@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 216;
+use Test::More tests => 224;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # Add
@@ -530,6 +530,34 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
 
     is($index->Eq(2), 1);
     is($elem->value, 5);
+
+    $iz->restore_context;
+}
+
+# VarElement
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $index = $iz->create_int(0, 10);
+    my $v1 = $iz->create_int(2, 12);
+    my $v2 = $iz->create_int(0, 5);
+    my $elem = $iz->VarElement($index, [1, 3, 5, $v1, 9, $v2]);
+
+    $iz->save_context;
+
+    is($index->Eq(2), 1);
+    is($elem->value, 5);
+
+    $iz->restore_context;
+
+    $iz->save_context;
+
+    is($index->Eq(3), 1);
+    is($elem->min, 2);
+    is($elem->max, 12);
+
+    ok($v1->Eq(5));
+    is($elem->min, 5);
+    is($elem->max, 5);
 
     $iz->restore_context;
 }

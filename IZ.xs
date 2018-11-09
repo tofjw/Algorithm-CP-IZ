@@ -1009,6 +1009,16 @@ CODE:
 OUTPUT:
     RETVAL
 
+void*
+cs_VarElement(index, values, size)
+    void* index
+    void* values
+    int size
+CODE:
+    RETVAL = cs_VarElement(index, values, size);
+OUTPUT:
+    RETVAL
+
 int
 iz_getEndValue(vint, val)
     void* vint
