@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 244;
+use Test::More tests => 250;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # Add
@@ -603,6 +603,43 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($elem->nb_elements, 5-0+1);
 
     $iz->restore_context;
+}
+
+# Cumulative
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @s = (0, $iz->create_int(0, 10));
+    my @d = ($iz->create_int(0, 5), 5);
+    my @r = ($iz->create_int(0, 5), 5);
+    my $limit = $iz->create_int(2, 5);
+    ok($iz->Cumulative(\@s, \@d, \@r, $limit));
+}
+
+# Cumulative (constant)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @s = (0, $iz->create_int(0, 10));
+    my @d = (5, 5);
+    my @r = (1, 1);
+    ok($iz->Cumulative(\@s, \@d, \@r, 1));
+    is($s[1]->min, 5);
+}
+
+# Disjunctive
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @s = (0, $iz->create_int(0, 10));
+    my @d = ($iz->create_int(0, 5), 5);
+    ok($iz->Disjunctive(\@s, \@d));
+}
+
+# Disjunctive (constant)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @s = (0, $iz->create_int(0, 10));
+    my @d = (5, 5);
+    ok($iz->Disjunctive(\@s, \@d));
+    is($s[1]->min, 5);
 }
 
 # ReifEq(var, var)

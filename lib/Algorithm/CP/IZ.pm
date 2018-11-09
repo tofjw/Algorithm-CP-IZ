@@ -1104,6 +1104,51 @@ sub VarElementRange {
     return $ret;
 }
 
+sub Cumulative {
+    my $self = shift;
+    my ($starts, $durations, $resources, $limit) = @_;
+
+    validate([$starts, $durations, $resources, $limit, 1],
+	     ["vA0", "vA0", "vA0", "V", sub {
+		 @$starts == @$durations && @$durations == @$resources
+	      }],
+	     "Usage: Cumulative([starts], [durations], [resources], limit)");
+
+    @$starts = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$starts;
+    @$durations = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$durations;
+    @$resources = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$resources;
+    $limit = ref $limit ? $limit : $self->_const_var(int($limit));
+
+    my $pstarts = $self->_create_registered_var_array($starts);
+    my $pdurs = $self->_create_registered_var_array($durations);
+    my $pres = $self->_create_registered_var_array($resources);
+
+    my $ret = Algorithm::CP::IZ::cs_Cumulative($$pstarts, $$pdurs, $$pres,
+					       scalar(@$starts), $$limit);
+    return $ret;
+}
+
+sub Disjunctive {
+    my $self = shift;
+    my ($starts, $durations) = @_;
+
+    validate([$starts, $durations, 1],
+	     ["vA0", "vA0",  sub {
+		 @$starts == @$durations
+	      }],
+	     "Usage: Disjunctive([starts], [durations])");
+
+    @$starts = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$starts;
+    @$durations = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$durations;
+
+    my $pstarts = $self->_create_registered_var_array($starts);
+    my $pdurs = $self->_create_registered_var_array($durations);
+
+    my $ret = Algorithm::CP::IZ::cs_Disjunctive($$pstarts, $$pdurs,
+						scalar(@$starts));
+    return $ret;
+}
+
 #
 # Create Reif* Methods
 #

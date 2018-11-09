@@ -1030,6 +1030,28 @@ OUTPUT:
     RETVAL
 
 int
+cs_Cumulative(s, d, r, size, limit)
+    void* s
+    void* d
+    void* r
+    int size
+    void* limit
+CODE:
+    RETVAL = cs_Cumulative(s, d, r, size, limit);
+OUTPUT:
+    RETVAL
+
+int
+cs_Disjunctive(s, d, size)
+    void* s
+    void* d
+    int size
+CODE:
+    RETVAL = cs_Disjunctive(s, d, size);
+OUTPUT:
+    RETVAL
+
+int
 iz_getEndValue(vint, val)
     void* vint
     int val
