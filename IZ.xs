@@ -423,6 +423,32 @@ static IZBOOL vsSimpleEnd(int index, CSint** vars, int size, void* pData) {
   return TRUE;
 }
 
+static SV* maxFailPerlFunc;
+static int maxFailFuncPerlWrapper(void* dummy)
+{
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(sp);
+
+  PUTBACK;
+  int count = call_sv(maxFailPerlFunc, G_SCALAR);
+  SPAGAIN;
+  int ret = -1;
+
+  if (count < 0) {
+    croak("maxFailFuncPerlWrapper: error");
+  }
+  ret = POPi;
+
+  FREETMPS;
+  LEAVE;
+
+  return ret;
+}
+
 #endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
 
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ		
@@ -558,11 +584,11 @@ OUTPUT:
     RETVAL
 
 int
-cs_search(av, func_id, func_ref, fail_max)
+cs_search(av, func_id, func_ref, max_fail)
     AV *av
     int func_id
     SV* func_ref
-    int fail_max
+    int max_fail
 PREINIT:
     void** array;
     SSize_t alen;
@@ -591,22 +617,22 @@ CODE:
       currentArray2IndexFunc = findFreeVarTbl[func_id];
     }
 
-    if (fail_max < 0)
-      fail_max = INT_MAX;
+    if (max_fail < 0)
+      max_fail = INT_MAX;
 
     RETVAL = cs_searchFail((CSint**)array,
-			   (int)alen, findFreeVarWrapper, fail_max);
+			   (int)alen, findFreeVarWrapper, max_fail);
     Safefree(array);
 OUTPUT:
     RETVAL
 
 int
-cs_searchCriteria(av, findvar_id, findvar_ref, criteria_ref, fail_max)
+cs_searchCriteria(av, findvar_id, findvar_ref, criteria_ref, max_fail)
     AV *av
     int findvar_id
     SV* findvar_ref
     SV* criteria_ref
-    int fail_max
+    int max_fail
 PREINIT:
     void** array;
     SSize_t alen;
@@ -636,14 +662,14 @@ CODE:
       currentArray2IndexFunc = findFreeVarTbl[findvar_id];
     }
 
-    if (fail_max < 0)
-        fail_max = INT_MAX;
+    if (max_fail < 0)
+        max_fail = INT_MAX;
 
     RETVAL = cs_searchCriteriaFail((CSint**)array,
 				   (int)alen,
 				   currentArray2IndexFunc,
 				   criteriaPerlWrapper,
-				   fail_max);
+				   max_fail);
     Safefree(array);
 OUTPUT:
     RETVAL
@@ -1199,12 +1225,12 @@ OUTPUT:
     RETVAL
 
 int
-cs_searchValueSelectorFail(av, vs, findvar_id, findvar_ref, fail_max, nf_ref)
+cs_searchValueSelectorFail(av, vs, findvar_id, findvar_ref, max_fail, nf_ref)
     AV *av
     AV *vs
     int findvar_id
     SV* findvar_ref
-    int fail_max
+    int max_fail
     SV* nf_ref
 PREINIT:
     void** array;
@@ -1224,7 +1250,7 @@ CODE:
       array[i] = (void*)SvUV(*pptr);
       vs_array[i] = (void*)SvUV(*vsvs);
     }
-#if 1
+
     currentArray2IndexFunc = 0;
     findFreeVarPerlFunc = 0;
 
@@ -1240,16 +1266,79 @@ CODE:
       currentArray2IndexFunc = findFreeVarTbl[findvar_id];
     }
 
-    if (fail_max < 0)
-        fail_max = INT_MAX;
+    if (max_fail < 0)
+        max_fail = INT_MAX;
 
     RETVAL = cs_searchValueSelectorFail((CSint**)array,
 					(const CSvalueSelector**)vs_array,
 					(int)alen,
 					currentArray2IndexFunc,
-					fail_max,
+					max_fail,
 					NULL);
-#endif
+    Safefree(array);
+    Safefree(vs_array);
+OUTPUT:
+    RETVAL
+
+
+int
+cs_searchValueSelectorRestartNG(av, vs, findvar_id, findvar_ref, max_fail_func, max_fail, ngs, nf_ref)
+    AV *av
+    AV *vs
+    int findvar_id
+    SV* findvar_ref
+    SV* max_fail_func
+    int max_fail
+    SV* ngs
+    SV* nf_ref
+PREINIT:
+    void** array;
+    void** vs_array;
+    SSize_t alen;
+    SSize_t i;
+CODE:
+    alen = av_len(av) + 1;
+    Newx(array, alen, void*);
+    Newx(vs_array, alen, void*);
+
+    for (i = 0; i<alen; i++) {
+      SV** pptr = av_fetch(av, i, 0);
+      SV** vsptr = av_fetch(vs, i, 0);
+      SV** vsvs = hv_fetch((HV*)SvRV((*vsptr)), "_vs", 3, 0);
+
+      array[i] = (void*)SvUV(*pptr);
+      vs_array[i] = (void*)SvUV(*vsvs);
+    }
+
+    currentArray2IndexFunc = 0;
+    findFreeVarPerlFunc = 0;
+
+    if (findvar_id < 0) {
+      findFreeVarPerlFunc = SvRV(findvar_ref);
+      currentArray2IndexFunc = findFreeVarPerlWrapper;
+    }
+    else {
+      if (findvar_id >= sizeof(findFreeVarTbl)/sizeof(findFreeVarTbl[0])) {
+	Safefree(array);
+	croak("search: Bad FindFreeVar value");
+      }
+      currentArray2IndexFunc = findFreeVarTbl[findvar_id];
+    }
+
+    if (max_fail < 0)
+        max_fail = INT_MAX;
+
+    maxFailPerlFunc = max_fail_func;
+
+    RETVAL = cs_searchValueSelectorRestartNG((CSint**)array,
+					     (const CSvalueSelector**)vs_array,
+					     (int)alen,
+					     currentArray2IndexFunc,
+					     maxFailFuncPerlWrapper,
+					     NULL,
+					     max_fail,
+					     NULL,
+					     NULL);
     Safefree(array);
     Safefree(vs_array);
 OUTPUT:

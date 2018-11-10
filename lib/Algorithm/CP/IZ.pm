@@ -309,23 +309,27 @@ sub _validate_search_params {
 	FindFreeVar => sub {
 	    my $x = shift;
 	    if (ref $x) {
-		validate([$x], ["C"], "search: FindFreeVar must be number or coderef");
+		validate([$x], ["C"], "search: FindFreeVar must be a number or a coderef");
 	    }
 	    else {
-		validate([$x], ["I"], "search: FindFreeVar must be number or coderef");
+		validate([$x], ["I"], "search: FindFreeVar must be a number or a coderef");
 	    }
 	},
 	Criteria => sub {
 	    my $x = shift;
-	    validate([$x], ["C"], "search: Criteria must be coderef");
+	    validate([$x], ["C"], "search: Criteria must be a coderef");
 	    return 1;
 	},
 	MaxFail => sub {
 	    my $x = shift;
-	    validate([$x], ["I"], "search: MaxFail must be integer");
+	    validate([$x], ["I"], "search: MaxFail must be an integer");
 	},
 	ValueSelectors => sub {
 	    1;
+	},
+	MaxFailFunc => sub {
+	    my $x = shift;
+	    validate([$x], ["C"], "search: MaxFailFunc must be a coderef");
 	}
     );
 
@@ -356,9 +360,10 @@ sub search {
     my $max_fail = -1;
     my $find_free_var_id = 0;
     my $find_free_var_func = sub { die "search: Internal error"; };
-    my $criteria_func = undef;
-    my $value_selectors = undef;
-    
+    my $criteria_func;
+    my $value_selectors;
+    my $max_fail_func;
+
     if ($params->{FindFreeVar}) {
 	my $ffv = $params->{FindFreeVar};
 
@@ -382,7 +387,11 @@ sub search {
     }
 
     if ($params->{ValueSelectors}) {
-	$value_selectors = $params->{ValueSelectors}
+	$value_selectors = $params->{ValueSelectors};
+    }
+
+    if ($params->{MaxFailFunc}) {
+	$max_fail_func = $params->{MaxFailFunc};
     }
 
     if ($criteria_func) {
@@ -396,18 +405,30 @@ sub search {
 	my $i = 0;
 	for my $v (@$array) {
 	    my $vs = $value_selectors->[$i];
-	    print STDERR "vs = $vs\n";
 	    $vs->prepare($i);
 	    $i++;
 	}
 
-	return Algorithm::CP::IZ::cs_searchValueSelectorFail(
-	    $array,
-	    $value_selectors,
-	    $find_free_var_id,
-	    $find_free_var_func,
-	    $max_fail,
-	    undef);
+	if ($max_fail_func) {
+	    return Algorithm::CP::IZ::cs_searchValueSelectorRestartNG(
+		$array,
+		$value_selectors,
+		$find_free_var_id,
+		$find_free_var_func,
+		$max_fail_func,
+		$max_fail,
+		undef,
+		undef);
+	}
+	else {
+	    return Algorithm::CP::IZ::cs_searchValueSelectorFail(
+		$array,
+		$value_selectors,
+		$find_free_var_id,
+		$find_free_var_func,
+		$max_fail,
+		undef);
+	}
     }
     else {
  	return Algorithm::CP::IZ::cs_search($array,
