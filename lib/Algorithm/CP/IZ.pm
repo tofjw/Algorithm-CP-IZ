@@ -16,6 +16,7 @@ use Algorithm::CP::IZ::RefVarArray;
 use Algorithm::CP::IZ::RefIntArray;
 use Algorithm::CP::IZ::ParamValidator qw(validate);
 use Algorithm::CP::IZ::ValueSelector;
+use Algorithm::CP::IZ::NoGoodSet;
 
 our @ISA = qw(Exporter);
 
@@ -330,6 +331,10 @@ sub _validate_search_params {
 	MaxFailFunc => sub {
 	    my $x = shift;
 	    validate([$x], ["C"], "search: MaxFailFunc must be a coderef");
+	},
+	NoGoodSet => sub {
+	    my $x = shift;
+	    validate([$x], [sub{1}], "search: NoGoodSet must be a NoGoodSet object");
 	}
     );
 
@@ -363,6 +368,7 @@ sub search {
     my $criteria_func;
     my $value_selectors;
     my $max_fail_func;
+    my $ngs;
 
     if ($params->{FindFreeVar}) {
 	my $ffv = $params->{FindFreeVar};
@@ -392,6 +398,10 @@ sub search {
 
     if ($params->{MaxFailFunc}) {
 	$max_fail_func = $params->{MaxFailFunc};
+    }
+
+    if ($params->{NoGoodSet}) {
+	$ngs = $params->{NoGoodSet};
     }
 
     if ($criteria_func) {
@@ -601,6 +611,26 @@ sub create_value_selector_simple {
 
     return Algorithm::CP::IZ::ValueSelector::Simple->new($self, $id);
 }
+
+sub create_no_good_set {
+    my $self = shift;
+    my ($var_array, $prefilter, $max_no_good, $ext) = @_;
+    $max_no_good ||= 0;
+#    validate([$var_array, $size], ["vA0", "I"],
+#	     "Usage: create_no_good_set([variables], size)");
+
+    my $ngsObj = Algorithm::CP::IZ::NoGoodSet->new($var_array, $prefilter, $ext);
+    print STDERR "return?\n";
+    print STDERR sprintf("pm av = %p\n", $ngsObj->_parray);
+    my $ptr = Algorithm::CP::IZ::cs_createNoGoodSet($ngsObj->_parray,
+						    scalar(@$var_array),
+						    $max_no_good,
+						    $ngsObj);
+    $ngsObj->_init($ptr);
+    print STDERR "return!\n";
+    return $ngsObj;
+}
+
 
 #####################################################
 # Demon

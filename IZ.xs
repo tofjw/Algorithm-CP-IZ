@@ -449,6 +449,60 @@ static int maxFailFuncPerlWrapper(void* dummy)
   return ret;
 }
 
+static int noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSint** vars, int size, void* ext)
+{
+  SV* ngsObj = (SV*)ext;
+  IZBOOL ret;
+
+  {
+    dTHX;
+    dSP;
+
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+
+    XPUSHs(ngsObj);
+    XPUSHs(sv_2mortal(newSViv(cs_getNbNoGoodElements(ng))));
+
+    PUTBACK;
+    ret = call_method("prefilter", G_ARRAY);
+    SPAGAIN;
+
+    PUTBACK;
+
+    FREETMPS;
+    LEAVE;
+  }
+
+  return ret;
+}
+
+static void noGoodSetDestoryPerlWrapper(CSnoGoodSet* ngs, void* ext)
+{
+  SV* ngsObj = (SV*)ext;
+  fprintf(stderr, "noGoodSetDestoryPerlWrapper enter\n");
+  {
+    dTHX;
+    dSP;
+
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+
+    XPUSHs(ngsObj);
+
+    PUTBACK;
+    call_method("_destroy_notify", G_ARRAY);
+    SPAGAIN;
+
+    PUTBACK;
+
+    FREETMPS;
+    LEAVE;
+  }
+}
+
 #endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
 
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ		
@@ -1221,6 +1275,20 @@ CODE:
     else {
       RETVAL = FALSE;
     }
+OUTPUT:
+    RETVAL
+
+void*
+cs_createNoGoodSet(av, size, max_no_good, ext)
+    SV* av
+    int size
+    int max_no_good
+    SV* ext
+CODE:
+    fprintf(stderr, "av = %p\n", SvUV(av));
+    fprintf(stderr, "size = %d\n", size);
+    fprintf(stderr, "max_no_good = %d\n", max_no_good);
+    RETVAL = cs_createNoGoodSet(SvUV(av), size, NULL, max_no_good, noGoodSetDestoryPerlWrapper, ext);
 OUTPUT:
     RETVAL
 
