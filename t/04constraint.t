@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 216;
+use Test::More tests => 253;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # Add
@@ -532,6 +532,143 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
     is($elem->value, 5);
 
     $iz->restore_context;
+}
+
+# Element (constant)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $elem = $iz->Element(3, [1, 3, 5, 7, 9]);
+
+    $iz->save_context;
+
+    is($elem->value, 7);
+
+    $iz->restore_context;
+}
+
+# VarElement
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $index = $iz->create_int(0, 10);
+    my $v1 = $iz->create_int(2, 12);
+    my $v2 = $iz->create_int(0, 5);
+    my $elem = $iz->VarElement($index, [1, 3, 5, $v1, 9, $v2]);
+
+    $iz->save_context;
+
+    is($index->Eq(2), 1);
+    is($elem->value, 5);
+
+    $iz->restore_context;
+
+    $iz->save_context;
+
+    is($index->Eq(3), 1);
+    is($elem->min, 2);
+    is($elem->max, 12);
+
+    is($elem->nb_elements, 12-2+1);
+    is($v1->Neq(4), 1);
+    is($elem->min, 2);
+    is($elem->max, 12);
+    is($elem->nb_elements, 12-2+1-1);
+    ok(!$elem->is_in(4));
+
+    is($v1->Eq(5), 1);
+    is($elem->min, 5);
+    is($elem->max, 5);
+
+    $iz->restore_context;
+}
+
+# VarElement (constant)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $index = $iz->create_int(0, 10);
+    my $elem = $iz->VarElement(1, [1, 3, 5]);
+
+    is($elem->value, 3);
+}
+
+# VarElementRange
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $index = $iz->create_int(0, 10);
+    my $v1 = $iz->create_int(2, 12);
+    my $v2 = $iz->create_int(0, 5);
+    my $elem = $iz->VarElementRange($index, [$v1, $v2]);
+
+    $iz->save_context;
+
+    is($index->Eq(1), 1);
+    is($elem->min, 0);
+    is($elem->max, 5);
+
+    ok($v2->Eq(5));
+    is($elem->min, 5);
+    is($elem->max, 5);
+
+    $iz->restore_context;
+
+    # hole is ignored
+    $iz->save_context;
+
+    is($index->Eq(1), 1);
+    is($elem->min, 0);
+    is($elem->max, 5);
+    is($elem->nb_elements, 5-0+1);
+
+    ok($v2->Neq(3));
+    is($elem->min, 0);
+    is($elem->max, 5);
+    is($elem->nb_elements, 5-0+1);
+
+    $iz->restore_context;
+}
+
+# VarElementRange (constant)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $elem = $iz->VarElementRange(0, [3, 5, 7]);
+
+    is($elem->value, 3);
+}
+
+# Cumulative
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @s = (0, $iz->create_int(0, 10));
+    my @d = ($iz->create_int(0, 5), 5);
+    my @r = ($iz->create_int(0, 5), 5);
+    my $limit = $iz->create_int(2, 5);
+    ok($iz->Cumulative(\@s, \@d, \@r, $limit));
+}
+
+# Cumulative (constant)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @s = (0, $iz->create_int(0, 10));
+    my @d = (5, 5);
+    my @r = (1, 1);
+    ok($iz->Cumulative(\@s, \@d, \@r, 1));
+    is($s[1]->min, 5);
+}
+
+# Disjunctive
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @s = (0, $iz->create_int(0, 10));
+    my @d = ($iz->create_int(0, 5), 5);
+    ok($iz->Disjunctive(\@s, \@d));
+}
+
+# Disjunctive (constant)
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my @s = (0, $iz->create_int(0, 10));
+    my @d = (5, 5);
+    ok($iz->Disjunctive(\@s, \@d));
+    is($s[1]->min, 5);
 }
 
 # ReifEq(var, var)

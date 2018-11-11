@@ -8,8 +8,13 @@ BEGIN { use_ok('Algorithm::CP::IZ::ValueSelector') };
 use Algorithm::CP::IZ qw(:value_selector);
 
 
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new;
+    skip "old iZ", 7
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+		
     my $v = $iz->create_int(0, 2);
 
     my $vs = $iz->get_value_selector(CS_VALUE_SELECTOR_MIN_TO_MAX);
@@ -32,8 +37,13 @@ use Algorithm::CP::IZ qw(:value_selector);
     ok(!defined($vsi->next));
 }
 
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new;
+    skip "old iZ", 14
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
     my $v = $iz->create_int(0, 2);
 
     my $vs = $iz->get_value_selector(CS_VALUE_SELECTOR_MAX_TO_MIN);
@@ -73,7 +83,14 @@ use Algorithm::CP::IZ qw(:value_selector);
     ok(!defined($vsi->next));
 }
 
-{
+SKIP: {
+    my $iz = Algorithm::CP::IZ->new;
+
+    skip "old iZ", 0
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
     package TestVS;
     sub new {
 	my $class = shift;
@@ -105,8 +122,14 @@ use Algorithm::CP::IZ qw(:value_selector);
     package main;
 }
 
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new;
+
+    skip "old iZ", 0
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
     my $obj = $iz->create_value_selector_simple("TestVS");
     
     my $v = $iz->create_int(0, 2);
@@ -115,8 +138,14 @@ use Algorithm::CP::IZ qw(:value_selector);
     $iz = undef;
 }
 
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 13
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
     my $vs = $iz->create_value_selector_simple("TestVS");
     my $v1 = $iz->create_int(-2, 1);
     my $v2 = $iz->create_int(3);
@@ -147,8 +176,13 @@ use Algorithm::CP::IZ qw(:value_selector);
 }
 
 
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 3
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
 
     my $v1 = $iz->create_int(0, 10);
     my $v2 = $iz->create_int(0, 5);

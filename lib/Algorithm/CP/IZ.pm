@@ -16,6 +16,7 @@ use Algorithm::CP::IZ::RefVarArray;
 use Algorithm::CP::IZ::RefIntArray;
 use Algorithm::CP::IZ::ParamValidator qw(validate);
 use Algorithm::CP::IZ::ValueSelector;
+use Algorithm::CP::IZ::NoGoodSet;
 
 our @ISA = qw(Exporter);
 
@@ -309,23 +310,31 @@ sub _validate_search_params {
 	FindFreeVar => sub {
 	    my $x = shift;
 	    if (ref $x) {
-		validate([$x], ["C"], "search: FindFreeVar must be number or coderef");
+		validate([$x], ["C"], "search: FindFreeVar must be a number or a coderef");
 	    }
 	    else {
-		validate([$x], ["I"], "search: FindFreeVar must be number or coderef");
+		validate([$x], ["I"], "search: FindFreeVar must be a number or a coderef");
 	    }
 	},
 	Criteria => sub {
 	    my $x = shift;
-	    validate([$x], ["C"], "search: Criteria must be coderef");
+	    validate([$x], ["C"], "search: Criteria must be a coderef");
 	    return 1;
 	},
 	MaxFail => sub {
 	    my $x = shift;
-	    validate([$x], ["I"], "search: MaxFail must be integer");
+	    validate([$x], ["I"], "search: MaxFail must be an integer");
 	},
 	ValueSelectors => sub {
 	    1;
+	},
+	MaxFailFunc => sub {
+	    my $x = shift;
+	    validate([$x], ["C"], "search: MaxFailFunc must be a coderef");
+	},
+	NoGoodSet => sub {
+	    my $x = shift;
+	    validate([$x], [sub{1}], "search: NoGoodSet must be a NoGoodSet object");
 	}
     );
 
@@ -356,9 +365,11 @@ sub search {
     my $max_fail = -1;
     my $find_free_var_id = 0;
     my $find_free_var_func = sub { die "search: Internal error"; };
-    my $criteria_func = undef;
-    my $value_selectors = undef;
-    
+    my $criteria_func;
+    my $value_selectors;
+    my $max_fail_func;
+    my $ngs;
+
     if ($params->{FindFreeVar}) {
 	my $ffv = $params->{FindFreeVar};
 
@@ -382,7 +393,15 @@ sub search {
     }
 
     if ($params->{ValueSelectors}) {
-	$value_selectors = $params->{ValueSelectors}
+	$value_selectors = $params->{ValueSelectors};
+    }
+
+    if ($params->{MaxFailFunc}) {
+	$max_fail_func = $params->{MaxFailFunc};
+    }
+
+    if ($params->{NoGoodSet}) {
+	$ngs = $params->{NoGoodSet};
     }
 
     if ($criteria_func) {
@@ -400,13 +419,26 @@ sub search {
 	    $i++;
 	}
 
-	return Algorithm::CP::IZ::cs_searchValueSelectorFail(
-	    $array,
-	    $value_selectors,
-	    $find_free_var_id,
-	    $find_free_var_func,
-	    $max_fail,
-	    undef);
+	if ($max_fail_func) {
+	    return Algorithm::CP::IZ::cs_searchValueSelectorRestartNG(
+		$array,
+		$value_selectors,
+		$find_free_var_id,
+		$find_free_var_func,
+		$max_fail_func,
+		$max_fail,
+		undef,
+		undef);
+	}
+	else {
+	    return Algorithm::CP::IZ::cs_searchValueSelectorFail(
+		$array,
+		$value_selectors,
+		$find_free_var_id,
+		$find_free_var_func,
+		$max_fail,
+		undef);
+	}
     }
     else {
  	return Algorithm::CP::IZ::cs_search($array,
@@ -579,6 +611,26 @@ sub create_value_selector_simple {
 
     return Algorithm::CP::IZ::ValueSelector::Simple->new($self, $id);
 }
+
+sub create_no_good_set {
+    my $self = shift;
+    my ($var_array, $prefilter, $max_no_good, $ext) = @_;
+    $max_no_good ||= 0;
+#    validate([$var_array, $size], ["vA0", "I"],
+#	     "Usage: create_no_good_set([variables], size)");
+
+    my $ngsObj = Algorithm::CP::IZ::NoGoodSet->new($var_array, $prefilter, $ext);
+    print STDERR "return?\n";
+    print STDERR sprintf("pm av = %p\n", $ngsObj->_parray);
+    my $ptr = Algorithm::CP::IZ::cs_createNoGoodSet($ngsObj->_parray,
+						    scalar(@$var_array),
+						    $max_no_good,
+						    $ngsObj);
+    $ngsObj->_init($ptr);
+    print STDERR "return!\n";
+    return $ngsObj;
+}
+
 
 #####################################################
 # Demon
@@ -1049,6 +1101,7 @@ sub Element {
 	     "Usage: Element(index_var, [values])");
 
     @$val_array = map { int($_) } @$val_array;
+    $index = ref $index ? $index : $self->_const_var(int($index));
 
     my $parray = $self->_create_registered_int_array($val_array);
 
@@ -1058,6 +1111,95 @@ sub Element {
 
     $self->_register_variable($ret);
 
+    return $ret;
+}
+
+sub VarElement {
+    my $self = shift;
+    my ($index, $var_array) = @_;
+
+    validate([scalar @_, $index, $var_array],
+	     [sub { shift == 2 }, "V", "vA1"],
+	     "Usage: VarElement(index_var, [value_vars])");
+
+    @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+    $index = ref $index ? $index : $self->_const_var(int($index));
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $ptr = Algorithm::CP::IZ::cs_VarElement($$index,
+					    $$parray, scalar(@$var_array));
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub VarElementRange {
+    my $self = shift;
+    my ($index, $var_array) = @_;
+
+    validate([scalar @_, $index, $var_array],
+	     [sub { shift == 2 }, "V", "vA1"],
+	     "Usage: VarElementRange(index_var, [value_vars])");
+
+    @$var_array = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$var_array;
+    $index = ref $index ? $index : $self->_const_var(int($index));
+
+    my $parray = $self->_create_registered_var_array($var_array);
+
+    my $ptr = Algorithm::CP::IZ::cs_VarElementRange($$index,
+					    $$parray, scalar(@$var_array));
+    my $ret = Algorithm::CP::IZ::Int->new($ptr);
+
+    $self->_register_variable($ret);
+
+    return $ret;
+}
+
+sub Cumulative {
+    my $self = shift;
+    my ($starts, $durations, $resources, $limit) = @_;
+
+    validate([$starts, $durations, $resources, $limit, 1],
+	     ["vA0", "vA0", "vA0", "V", sub {
+		 @$starts == @$durations && @$durations == @$resources
+	      }],
+	     "Usage: Cumulative([starts], [durations], [resources], limit)");
+
+    @$starts = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$starts;
+    @$durations = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$durations;
+    @$resources = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$resources;
+    $limit = ref $limit ? $limit : $self->_const_var(int($limit));
+
+    my $pstarts = $self->_create_registered_var_array($starts);
+    my $pdurs = $self->_create_registered_var_array($durations);
+    my $pres = $self->_create_registered_var_array($resources);
+
+    my $ret = Algorithm::CP::IZ::cs_Cumulative($$pstarts, $$pdurs, $$pres,
+					       scalar(@$starts), $$limit);
+    return $ret;
+}
+
+sub Disjunctive {
+    my $self = shift;
+    my ($starts, $durations) = @_;
+
+    validate([$starts, $durations, 1],
+	     ["vA0", "vA0",  sub {
+		 @$starts == @$durations
+	      }],
+	     "Usage: Disjunctive([starts], [durations])");
+
+    @$starts = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$starts;
+    @$durations = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$durations;
+
+    my $pstarts = $self->_create_registered_var_array($starts);
+    my $pdurs = $self->_create_registered_var_array($durations);
+
+    my $ret = Algorithm::CP::IZ::cs_Disjunctive($$pstarts, $$pdurs,
+						scalar(@$starts));
     return $ret;
 }
 
@@ -1150,7 +1292,7 @@ and search related functions
 
 =item methods of Algorithm::CP::IZ::Int
 
-accessors of variable attributes and some constraints
+accessors of variable attributes and some relationship constraints
 
 =back
 
@@ -1196,16 +1338,16 @@ only one per process.
 
 =item create_int(INT)
 
-Create Algorithm::CP::IZ::Int instance. Its domain contains INT.
+Create an instance of Algorithm::CP::IZ::Int. Its domain contains INT.
 
 =item create_int(VALUES [, NAME])
 
-Create Algorithm::CP::IZ::Int instance. Its domain contains values
+Create an instance of Algorithm::CP::IZ::Int. Its domain contains values
 specified by VALUES(arrayref).
 
 =item create_int(MIN, MAX, [, NAME])
 
-Create Algorithm::CP::IZ::Int instance. Its domain is {MIN..MAX}.
+Create an instance of Algorithm::CP::IZ::Int. Its domain is {MIN..MAX}.
 
 =item search(VARIABLES [, PARAMS])
 
@@ -1341,7 +1483,7 @@ CALLBACK is a coderef which takes parameters like:
 Set a callback function which will be called when all variables in VARIABLES are
 instantiated.
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 CALLBACK is a coderef and takes parameters and must return like:
 
@@ -1360,7 +1502,7 @@ EXTRA is a just a data passed to callbeck as parameter (it can be anything).
 Set a callback function which will be called when any variable in VARIABLES is
 instantiated.
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 CALLBACK is a coderef and takes parameters and must return like:
 
@@ -1381,7 +1523,7 @@ EXTRA is a just a data passed to callbeck as parameter (it can be anything).
 Set a callback function which will be called when lower bound of any variable
 in VARIABLES is changed.
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 CALLBACK is a coderef and takes parameters and must return like:
 
@@ -1402,7 +1544,7 @@ EXTRA is a just a data passed to callbeck as parameter (it can be anything).
 Set a callback function which will be called when upper bound of any variable
 in VARIABLES is changed.
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 CALLBACK is a coderef and takes parameters and must return like:
 
@@ -1423,7 +1565,7 @@ EXTRA is a just a data passed to callbeck as parameter (it can be anything).
 Set a callback function which will be called when value of any variable is
 removed in VARIABLES is changed.
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances Algorithm::CP::IZ::Int.
 
 CALLBACK is a coderef and takes parameters and must return like:
 
@@ -1452,74 +1594,74 @@ undef will be returned if getVersion() is not supported in iZ-C (old version).
 
 =item Add(VAR1, VAR2 [, VAR3....])
 
-Create new Algorithm::CP::IZ::Int instance constrainted to be:
+Create an instance of Algorithm::CP::IZ::Int constrainted to be:
 
-  CREATED = VAR1 + VAR2 + ....
+  Created_instance  = VAR1 + VAR2 + ....
 
 =item Mul(VAR1, VAR2 [, VAR3....])
 
-Create Algorithm::CP::IZ::Int instance constrainted to be:
+Create an instance of Algorithm::CP::IZ::Int constrainted to be:
 
-  CREATED = VAR1 * VAR2 * ....
+  Created_instance = VAR1 * VAR2 * ....
 
 =item Sub(VAR1, VAR2)
 
-Create Algorithm::CP::IZ::Int instance constrainted to be:
+Create an instance of Algorithm::CP::IZ::Int constrainted to be:
 
-  CREATED = VAR1 - VAR2
+  Created_instance = VAR1 - VAR2
 
 =item Div(VAR1, VAR2)
 
-Create Algorithm::CP::IZ::Int instance constrainted to be:
+Create an instance of Algorithm::CP::IZ::Int constrainted to be:
 
-  CREATED = VAR1 / VAR2
+  Created_instance = VAR1 / VAR2
 
 =item ScalProd(VARIABLES, COEFFICIENTS)
 
-Create Algorithm::CP::IZ::Int instance constrainted to be:
+Create an instance of Algorithm::CP::IZ::Int constrainted to be:
 
-  CREATED = COEFFICIENTS[0]*VARIABLES[0] + COEFFICIENTS[1]*VARIABLES[1] + ...
+  Created_instance = COEFFICIENTS[0]*VARIABLES[0] + COEFFICIENTS[1]*VARIABLES[1] + ...
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int,
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int,
 and COEFFICIENTS is an arreyref contains integer values.
 
 =item AllNeq(VARIABLES)
 
 Constraint all variables in VARIABLES to be different each other.
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 Returns 1 (success) or 0 (fail).
 
 =item Sigma(VARIABLES)
 
-Create Algorithm::CP::IZ::Int instance constrainted to be:
+Create an Algorithm::CP::IZ::Int instance constrainted to be:
 
-  CREATED = VARIABLES[0] + VARIABLES[1] + ...
+  Created_instance = VARIABLES[0] + VARIABLES[1] + ...
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 =item Abs(VAR)
 
-Create Algorithm::CP::IZ::Int instance constrainted to be:
+Create an instance of Algorithm::CP::IZ::Int constrainted to be:
 
-  CREATED = abs(VAR)
+  Created_instance = abs(VAR)
 
 =item Min(VARIABLES)
 
-Create Algorithm::CP::IZ::Int instance constrainted to be:
+Create an instance of Algorithm::CP::IZ::Int constrainted to be:
 
-  CREATED = minimum value of (VARIABLES[0], VARIABLES[1], ...)
+  Created_value = minimum value of (VARIABLES[0], VARIABLES[1], ...)
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 =item Max(VARIABLES)
 
-Create Algorithm::CP::IZ::Int instance constrainted to be:
+Create an instance of Algorithm::CP::IZ::Int to be:
 
-  CREATED = maximum value of (VARIABLES[0], VARIABLES[1], ...)
+  Created_instance = maximum value of (VARIABLES[0], VARIABLES[1], ...)
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 =item IfEq(VAR1, VAR2, VAL1, VAL2)
 
@@ -1540,62 +1682,83 @@ Returns 1 (success) or 0 (fail).
 
 =item OccurDomain(VAL, VARIABLES)
 
-Create Algorithm::CP::IZ::Int instance represents count of VAL in VARIABLES.
+Create instance of Algorithm::CP::IZ::Int represents count of VAL in VARIABLES.
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 =item OccurConstraints(VAR, VAL, VARIABLES)
 
 Constraint VAR to represent count of VAL in VARIABLES.
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 Returns 1 (success) or 0 (fail).
 
 =item Index(VARIABLES, VAL)
 
-Create Algorithm::CP::IZ::Int instance represents position of VAL in VARIABLES.
+Create an instance of Algorithm::CP::IZ::Int represents position of VAL in VARIABLES.
 
   VAL = VARIABLES[CREATED]
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VARIABLES is an arrayref contains instances Algorithm::CP::IZ::Int.
 
 =item Element(VAR, VALUES)
 
-Create Algorithm::CP::IZ::Int instance represents value at VAR in VARIABLES.
+Create an instance of Algorithm::CP::IZ::Int represents a value at VAR in VALUES. This relation is:
 
-  CREATED = VARIABLES[VAR]
+  Created_instance = VALUES[VAR]
 
-VARIABLES is an arrayref contains Create Algorithm::CP::IZ::Int.
+VALUES is an arrayref contains integer values.
+
+=item VarElement(VAR, VARIABLES)
+
+Create an instance of Algorithm::CP::IZ::Int represents a value at VAR in VARIABLES. This relation is:
+
+  Created_instance = VARIABLES[VAR]
+
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
+
+=item VarElementRange(VAR, VARIABLES)
+
+Create an instance of Algorithm::CP::IZ::Int represents a value at VAR in VARIABLES. This relation is:
+
+  Created_instance = VARIABLES[VAR]
+    ok($elem->is_in(4))
+
+Contrast to VarElement, constraint propagation for variables in
+VARIABLES will occur only when upper or lower bound is changed.
+
+VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
+
 
 =item ReifEq(VAR1, VAR2)
 
-Create Algorithm::CP::IZ::Int instance represents VAR1 == VAR2.
+Create an instance of Algorithm::CP::IZ::Int represents state of VAR1 == VAR2.
 Created variable will be instantiated to 1 when VAR1 == VAR2 otherwise to 0.
 
 =item ReifNeq(VAR1, VAR2)
 
-Create Algorithm::CP::IZ::Int instance represents VAR1 != VAR2.
+Create an instance of Algorithm::CP::IZ::Int represents state of VAR1 != VAR2.
 Created variable will be instantiated to 1 when VAR1 != VAR2 otherwise to 0.
 
 =item ReifLt(VAR1, VAR2)
 
-Create Algorithm::CP::IZ::Int instance represents VAR1 < VAR2.
+Create an instance of Algorithm::CP::IZ::Int represents state of VAR1 < VAR2.
 Created variable will be instantiated to 1 when VAR1 < VAR2 otherwise to 0.
 
 =item ReifLe(VAR1, VAR2)
 
-Create Algorithm::CP::IZ::Int instance represents VAR1 <= VAR2.
+Create an instance of Algorithm::CP::IZ::Int represents state of VAR1 <= VAR2.
 Created variable will be instantiated to 1 when VAR1 <= VAR2 otherwise to 0.
 
 =item ReifGt(VAR1, VAR2)
 
-Create Algorithm::CP::IZ::Int instance represents VAR1 > VAR2.
+Create an instance of Algorithm::CP::IZ::Int represents state of VAR1 > VAR2.
 Created variable will be instantiated to 1 when VAR1 > VAR2 otherwise to 0.
 
 =item ReifGe(VAR1, VAR2)
 
-Create Algorithm::CP::IZ::Int instance represents VAR1 >= VAR2.
+Create an instance of Algorithm::CP::IZ::Int represents state of VAR1 >= VAR2.
 Created variable will be instantiated to 1 when VAR1 >= VAR2 otherwise to 0.
 
 =back
@@ -1604,6 +1767,9 @@ Created variable will be instantiated to 1 when VAR1 >= VAR2 otherwise to 0.
 
 L<Algorithm::CP::IZ::Int>
 L<Algorithm::CP::IZ::FindFreeVar>
+
+L<http://www.constraint.org/en/izc_download.html>
+L<https://github.com/tofjw/Algorithm-CP-IZ/wiki>
 
 =head1 AUTHOR
 
