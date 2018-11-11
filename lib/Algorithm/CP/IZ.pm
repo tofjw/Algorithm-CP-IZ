@@ -396,7 +396,6 @@ sub search {
 	my $i = 0;
 	for my $v (@$array) {
 	    my $vs = $value_selectors->[$i];
-	    print STDERR "vs = $vs\n";
 	    $vs->prepare($i);
 	    $i++;
 	}
