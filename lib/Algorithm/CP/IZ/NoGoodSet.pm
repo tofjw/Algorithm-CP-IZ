@@ -11,17 +11,16 @@ use Algorithm::CP::IZ::RefVarArray;
 
 sub new {
     my $class = shift;
-    my ($var_array, $prefilter, $ext);
+    my ($var_array, $prefilter, $ext) = @_;
 
     my $parray = Algorithm::CP::IZ::RefVarArray->new($var_array);
-    print STDERR "RefVarArray: parray = $parray\n";
-    print STDERR sprintf("RefVarArray: parray = %p\n", $$parray);
-    bless {
+    my $self = {
 	_var_array => $var_array,
 	_parray => $parray,
 	_prefilter => $prefilter,
 	_ext => $ext,
-    }, $class;
+    };
+    bless $self, $class;
 }
 
 #
@@ -30,16 +29,15 @@ sub new {
 
 sub _init {
     my $self = shift;
-    my $ptr = shift;
+    my $parray = shift;
 
-    $self->{_ptr} = $ptr;
+    $self->{_ngs} = $parray;
 }
 
 sub _parray {
     my $self = shift;
     my $parray = $self->{_parray};
-    print STDERR sprintf("_parray: %p\n", $$parray);
-    return $$parray;
+    return $parray;
 }
 
 sub _id {
@@ -47,15 +45,12 @@ sub _id {
     return $self->{_id};
 }
 
-sub _destroy_notify {
+sub nb_no_goods {
     my $self = shift;
+    return Algorithm::CP::IZ::cs_getNbNoGoods($self->{_ngs});
+}
 
-    delete $self->{_ptr};
-
-    delete $self->{_var_array};
-    delete $self->{_parray};
-    delete $self->{_pfilter};
-    delete $self->{_ext};
+DESTROY {
 }
 
 1;

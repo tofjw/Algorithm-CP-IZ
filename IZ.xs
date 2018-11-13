@@ -481,22 +481,15 @@ static int noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSint**
 static void noGoodSetDestoryPerlWrapper(CSnoGoodSet* ngs, void* ext)
 {
   SV* ngsObj = (SV*)ext;
-  fprintf(stderr, "noGoodSetDestoryPerlWrapper enter\n");
+
   {
     dTHX;
     dSP;
 
     ENTER;
     SAVETMPS;
-    PUSHMARK(SP);
 
-    XPUSHs(ngsObj);
-
-    PUTBACK;
-    call_method("_destroy_notify", G_ARRAY);
-    SPAGAIN;
-
-    PUTBACK;
+    SvREFCNT_dec(ngsObj);
 
     FREETMPS;
     LEAVE;
@@ -1279,16 +1272,23 @@ OUTPUT:
     RETVAL
 
 void*
-cs_createNoGoodSet(av, size, max_no_good, ext)
-    SV* av
+cs_createNoGoodSet(av, size, max_no_good, ngsObj)
+    void* av
     int size
     int max_no_good
-    SV* ext
+    SV* ngsObj
 CODE:
-    fprintf(stderr, "av = %p\n", SvUV(av));
-    fprintf(stderr, "size = %d\n", size);
-    fprintf(stderr, "max_no_good = %d\n", max_no_good);
-    RETVAL = cs_createNoGoodSet(SvUV(av), size, NULL, max_no_good, noGoodSetDestoryPerlWrapper, ext);
+    SvREFCNT_inc(ngsObj);
+    RETVAL = cs_createNoGoodSet(av, size, NULL, max_no_good, noGoodSetDestoryPerlWrapper, ngsObj);
+OUTPUT:
+    RETVAL
+
+
+int
+cs_getNbNoGoods(ngs)
+    void* ngs
+CODE:
+    RETVAL = cs_getNbNoGoods(ngs);
 OUTPUT:
     RETVAL
 
@@ -1348,7 +1348,6 @@ CODE:
 OUTPUT:
     RETVAL
 
-
 int
 cs_searchValueSelectorRestartNG(av, vs, findvar_id, findvar_ref, max_fail_func, max_fail, ngs, nf_ref)
     AV *av
@@ -1405,7 +1404,7 @@ CODE:
 					     maxFailFuncPerlWrapper,
 					     NULL,
 					     max_fail,
-					     NULL,
+					     (CSnoGoodSet*)SvUV(ngs),
 					     NULL);
     Safefree(array);
     Safefree(vs_array);

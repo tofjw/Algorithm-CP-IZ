@@ -24,11 +24,8 @@ SKIP: {
     package main;
 
     my $obj = TestNG->new;
-    print STDERR "******** 1\n";
     $iz->create_no_good_set([$v], sub { $obj->prefilter(@_); },
 			    100, $obj);
-
-    print STDERR "******** 2\n";
     ok(1);
 }
 }

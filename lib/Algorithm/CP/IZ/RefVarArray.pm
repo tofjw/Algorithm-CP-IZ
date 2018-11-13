@@ -12,6 +12,11 @@ sub new {
     bless \$ptr, $class;
 }
 
+sub ptr {
+    my $self = shift;
+    return $$self;
+}
+
 sub DESTROY {
     my $self = shift;
     Algorithm::CP::IZ::free_array($$self);

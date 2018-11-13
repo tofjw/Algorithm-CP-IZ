@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 90;
+use Test::More tests => 91;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -367,7 +367,7 @@ SKIP: {
 SKIP: {
     my $iz = Algorithm::CP::IZ->new();
 
-    skip "old iZ", 4
+    skip "old iZ", 7
 	unless (defined($iz->get_version)
 		&& $iz->IZ_VERSION_MAJOR >= 3
 		&& $iz->IZ_VERSION_MINOR >= 6);
@@ -394,11 +394,7 @@ SKIP: {
     my $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_MIN_TO_MAX);
 
     my $array = [$s, $e, $n, $d, $m, $o, $r, $y];
-    print STDERR "--------------------\n";
-    my $ngs = $iz->create_no_good_set($array);
-    print STDERR "--------------------\n";
-    use Data::Dumper;
-    print STDERR Dumper($ngs);
+    my $ngs = $iz->create_no_good_set($array, sub { 1; }, 100, undef);
     my $restart = 0;
     my $rc = $iz->search($array,
 			 {
@@ -423,6 +419,8 @@ SKIP: {
     is($l1, "9 5 6 7");
     is($l2, "1 0 8 5");
     is($l3, "1 0 6 5 2");
+
+    ok($ngs->nb_no_goods > 0);
 }
 
 # find_all
