@@ -45,6 +45,11 @@ sub _id {
     return $self->{_id};
 }
 
+sub prefilter {
+    my $self = shift;
+    return &{$self->{_prefilter}}($self, $self->{_var_array}, $self->{_ext});
+}
+
 sub nb_no_goods {
     my $self = shift;
     return Algorithm::CP::IZ::cs_getNbNoGoods($self->{_ngs});
