@@ -449,7 +449,7 @@ static int maxFailFuncPerlWrapper(void* dummy)
   return ret;
 }
 
-static int noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSint** vars, int size, void* ext)
+static IZBOOL noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSint** vars, int size, void* ext)
 {
   SV* ngsObj = (SV*)ext;
   IZBOOL ret;
@@ -1279,7 +1279,7 @@ cs_createNoGoodSet(av, size, max_no_good, ngsObj)
     SV* ngsObj
 CODE:
     SvREFCNT_inc(ngsObj);
-    RETVAL = cs_createNoGoodSet(av, size, NULL, max_no_good, noGoodSetDestoryPerlWrapper, ngsObj);
+    RETVAL = cs_createNoGoodSet(av, size, noGoodSetPrefilterPerlWrapper, max_no_good, noGoodSetDestoryPerlWrapper, ngsObj);
 OUTPUT:
     RETVAL
 
