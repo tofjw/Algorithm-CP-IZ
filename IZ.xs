@@ -452,9 +452,14 @@ static int maxFailFuncPerlWrapper(void* dummy)
 static IZBOOL noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSint** vars, int size, void* ext)
 {
   SV* ngsObj = (SV*)ext;
-  IZBOOL ret;
+  IZBOOL ret = FALSE;
 
   {
+    int i, n;
+    AV* elements;
+    SV* r;
+    HV* ngeh;
+
     dTHX;
     dSP;
 
@@ -463,13 +468,37 @@ static IZBOOL noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSin
     PUSHMARK(SP);
 
     XPUSHs(ngsObj);
-    XPUSHs(sv_2mortal(newSViv(cs_getNbNoGoodElements(ng))));
+
+    elements = newAV();
+    n = cs_getNbNoGoodElements(ng);
+    ngeh = gv_stashpv("Algorithm::CP::IZ::NoGoodElement", 0);
+
+    for (i = 0; i < n; i++) {
+      AV* elem = newAV();
+      int idx;
+      CSvalueSelection vs;
+
+      cs_getNoGoodElementAt(&idx, &vs, ng, i);
+      av_push(elem, newSViv(idx));
+      av_push(elem, newSViv(vs.method));
+      av_push(elem, newSViv(vs.value));
+
+      r = (SV*)newRV_noinc((SV*)elem);
+      r = sv_bless(r, ngeh);
+      av_push(elements, r);
+    }
+
+    r = newRV_noinc((SV*)elements);
+    XPUSHs((SV*)r);
 
     PUTBACK;
-    ret = call_method("prefilter", G_ARRAY);
-    SPAGAIN;
-
-    PUTBACK;
+    {
+      int count = call_method("prefilter", G_ARRAY);
+      SPAGAIN;
+      if (count > 0) {
+	ret = POPi;
+      }
+    }
 
     FREETMPS;
     LEAVE;
@@ -1415,6 +1444,25 @@ CODE:
     Safefree(vs_array);
 OUTPUT:
     RETVAL
+
+
+int
+cs_selectValue(rv, method, value)
+    SV *rv
+    int method
+    int value
+PREINIT:
+    void* vint;
+    CSvalueSelection vs;
+CODE:
+    vint = (void*)SvUV(SvRV(rv));
+    vs.method = method;
+    vs.value = value;
+    RETVAL = cs_selectValue(vint, &vs);
+OUTPUT:
+    RETVAL
+
+
     
 #endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
 

@@ -8,6 +8,8 @@ our @ISA = qw(Exporter);
 
 use Algorithm::CP::IZ;
 use Algorithm::CP::IZ::RefVarArray;
+use Algorithm::CP::IZ::NoGood;
+use Algorithm::CP::IZ::NoGoodElement;
 
 sub new {
     my $class = shift;
@@ -47,7 +49,10 @@ sub _id {
 
 sub prefilter {
     my $self = shift;
-    return &{$self->{_prefilter}}($self, $self->{_var_array}, $self->{_ext});
+
+    my $r = &{$self->{_prefilter}}($self, $_[0],
+				   $self->{_var_array}, $self->{_ext});
+    return $r ? 1: 0;
 }
 
 sub nb_no_goods {

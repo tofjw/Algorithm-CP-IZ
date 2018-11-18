@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 74;
+use Test::More tests => 76;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # create(min, max)
@@ -226,15 +226,16 @@ is($vdom->is_in(7), 0);
     is("$i", "3");
 }
 
-# error
-{
-    my $err = 1;
-    eval {
-	my $i = $iz->create_int("a");
-	$err = 0;
-    };
-    my $msg = $@;
-    is($err, 1);
-    ok($msg =~ /^Algorithm::CP::IZ:/);
-}
+SKIP: {
+    skip "old iZ", 2
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
 
+    my $v = $iz->create_int(0, 10);
+    ok($v->select_value(&Algorithm::CP::IZ::CS_VALUE_SELECTION_GE, 4));
+    is($v->min, 4);
+    is($v->max, 10);
+
+    ok(!$v->select_value(&Algorithm::CP::IZ::CS_VALUE_SELECTION_EQ, 1));
+}

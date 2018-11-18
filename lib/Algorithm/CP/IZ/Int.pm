@@ -133,6 +133,15 @@ sub _invalidate {
     bless $self, __PACKAGE__ . "::InvalidInt";
 }
 
+sub select_value {
+    my $self = shift;
+    my ($method, $value) = @_;
+
+    validate([$method, $value], ["I", "I"],
+	     "Usage: selectValue(method, value)");
+    return Algorithm::CP::IZ::cs_selectValue($self, $method, $value);
+}
+
 1;
 
 __END__

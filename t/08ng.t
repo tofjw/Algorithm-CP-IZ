@@ -33,9 +33,10 @@ SKIP: {
 
     my $func_called = 0;  
 
-    my $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_MIN_TO_MAX);
+    my $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_LOWER_AND_UPPER);
 
-    my $array = [$s, $e, $n, $d, $m, $o, $r, $y];
+    my $array = [$y, $s, $e, $n, $d, $m, $o, $r];
+    my @ng_set;
 
     package TestNG;
     sub new {
@@ -45,9 +46,13 @@ SKIP: {
 
     sub prefilter {
 	my $self = shift;
-	print STDERR "prefilter: self = $self\n";
-	my @x = @_;
-	print STDERR "prefilter: ", scalar(@x), "\n";
+	my $ngs = shift;
+	my $ng = shift;
+	my $var_array = shift;
+	my $nElem = scalar @$ng;
+
+	push(@ng_set, $ng);
+	return 1;
     }
     package main;
 
@@ -56,6 +61,7 @@ SKIP: {
 				      sub { $obj->prefilter(@_); },
 				      100, undef);
     my $restart = 0;
+    my $label = $iz->save_context;
     my $rc = $iz->search($array,
 			 {
 			     ValueSelectors => [map { $vs } 1..8],
@@ -80,5 +86,24 @@ SKIP: {
     is($l2, "1 0 8 5");
     is($l3, "1 0 6 5 2");
 
-    ok($ngs->nb_no_goods > 0);
+    # ok($ngs->nb_no_goods > 0);
+    ok(1);
+
+    $iz->restore_context_until($label);
+    use Data::Dumper;
+    
+    print STDERR Dumper(\@ng_set);
+    for my $ng (@ng_set) {
+	my $label = $iz->save_context;
+	my @a;
+	for my $nge (@$ng) {
+	    print STDERR " index = ", $nge->index, "\n";
+	    my $v = $array->[$nge->index];
+	    print STDERR "before $v\n";
+	    push(@a, $v->select_value($nge->method, $nge->value));
+	    print STDERR "after $v\n";
+	}
+	$iz->restore_context_until($label);
+	print STDERR "result ", join(", ", @a), "\n";
+    }
 }
