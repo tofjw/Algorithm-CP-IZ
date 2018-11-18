@@ -1272,14 +1272,19 @@ OUTPUT:
     RETVAL
 
 void*
-cs_createNoGoodSet(av, size, max_no_good, ngsObj)
+cs_createNoGoodSet(av, size, prefilter_is_defined, max_no_good, ngsObj)
     void* av
     int size
+    int prefilter_is_defined
     int max_no_good
     SV* ngsObj
 CODE:
     SvREFCNT_inc(ngsObj);
-    RETVAL = cs_createNoGoodSet(av, size, noGoodSetPrefilterPerlWrapper, max_no_good, noGoodSetDestoryPerlWrapper, ngsObj);
+    RETVAL = cs_createNoGoodSet(av, size,
+				(prefilter_is_defined
+				 ? noGoodSetPrefilterPerlWrapper : NULL),
+				max_no_good,
+				noGoodSetDestoryPerlWrapper, ngsObj);
 OUTPUT:
     RETVAL
 

@@ -394,7 +394,7 @@ SKIP: {
     my $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_MIN_TO_MAX);
 
     my $array = [$s, $e, $n, $d, $m, $o, $r, $y];
-    my $ngs = $iz->create_no_good_set($array, sub { 1; }, 100, undef);
+    my $ngs = $iz->create_no_good_set($array, undef, 100, undef);
     my $restart = 0;
     my $rc = $iz->search($array,
 			 {

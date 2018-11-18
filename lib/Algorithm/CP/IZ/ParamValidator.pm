@@ -41,6 +41,11 @@ sub _is_code {
     return ref $x eq 'CODE';
 }
 
+sub _is_code_if_defined {
+    my ($x) = @_;
+    return defined($x) ? _is_code($x) : 1;
+}
+
 sub _is_optional_var {
     my ($x) = @_;
     return 1 unless (defined($x));
@@ -102,6 +107,7 @@ my %Validator = (
     I => \&_is_int,
     V => \&_is_var_or_int,
     C => \&_is_code,
+    C0 => \&_is_code_if_defined,
     oV => \&_is_optional_var,
     iA0 => sub { _is_array_of_int(0, @_) },
     iA1 => sub { _is_array_of_int(1, @_) },

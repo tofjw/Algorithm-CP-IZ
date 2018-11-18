@@ -616,12 +616,13 @@ sub create_no_good_set {
     my $self = shift;
     my ($var_array, $prefilter, $max_no_good, $ext) = @_;
     $max_no_good ||= 0;
-    validate([$var_array, $prefilter, $max_no_good], ["vA0", "C", "I"],
+    validate([$var_array, $prefilter, $max_no_good], ["vA0", "C0", "I"],
 	     "Usage: create_no_good_set([variables], prefilter, max_no_good, ext)");
 
     my $ngsObj = Algorithm::CP::IZ::NoGoodSet->new($var_array, $prefilter, $ext);
     my $ptr = Algorithm::CP::IZ::cs_createNoGoodSet($ngsObj->_parray->ptr,
 						    scalar(@$var_array),
+						    ($prefilter ? 1 : 0),
 						    $max_no_good,
 						    $ngsObj);
     $ngsObj->_init($ptr);
