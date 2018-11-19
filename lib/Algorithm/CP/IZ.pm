@@ -148,7 +148,7 @@ sub restore_context_until {
 	     "Usage: restore_context_until(int_label)");
 
     my $cxt = $self->{_cxt};
-    unless (1 <= $label && $label <= @$cxt) {
+    if (@$cxt == 0) {
 	_report_error("restore_context_until: invalid label");
     }
 
@@ -187,8 +187,7 @@ sub accept_context_until {
 	     "Usage: accept_context_until(int_label)");
 
     my $cxt = $self->{_cxt};
-
-    unless (1 <= $label && $label <= @$cxt) {
+    if (@$cxt == 0) {
 	_report_error("accept_context_until: invalid label");
     }
 
