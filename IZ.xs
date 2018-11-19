@@ -493,7 +493,7 @@ static IZBOOL noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSin
 
     PUTBACK;
     {
-      int count = call_method("prefilter", G_ARRAY);
+      int count = call_method("_prefilter", G_ARRAY);
       SPAGAIN;
       if (count > 0) {
 	ret = POPi;

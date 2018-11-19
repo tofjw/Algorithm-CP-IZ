@@ -47,7 +47,7 @@ sub _id {
     return $self->{_id};
 }
 
-sub prefilter {
+sub _prefilter {
     my $self = shift;
 
     my $r = &{$self->{_prefilter}}($self, $_[0],
