@@ -25,10 +25,24 @@ sub new {
     bless $self, $class;
 }
 
+sub nb_no_goods {
+    my $self = shift;
+    return Algorithm::CP::IZ::cs_getNbNoGoods($self->{_ngs});
+}
+
+our $FILTER;
+
+sub filter_no_good {
+    my $self = shift;
+    my $filter = shift;
+
+    local $FILTER = $filter;
+    Algorithm::CP::IZ::cs_filterNoGood($self->{_ngs});
+}
+
 #
 # internal routines for Algorithm::CP::IZ
 #
-
 sub _init {
     my $self = shift;
     my $parray = shift;
@@ -55,9 +69,14 @@ sub _prefilter {
     return $r ? 1: 0;
 }
 
-sub nb_no_goods {
+sub _filter {
     my $self = shift;
-    return Algorithm::CP::IZ::cs_getNbNoGoods($self->{_ngs});
+
+    my $r = &$FILTER($self, $_[0],
+		     $self->{_var_array}, $self->{_ext});
+
+    print STDERR "here r = $r\n";
+    return $r ? 1: 0;
 }
 
 DESTROY {

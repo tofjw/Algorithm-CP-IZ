@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 19;
+use Test::More tests => 21;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 BEGIN { use_ok('Algorithm::CP::IZ::NoGoodSet') };
 
@@ -189,4 +189,15 @@ SKIP: {
 
     # NoGood is registered
     ok($ngs->nb_no_goods > 0);
+    my $nng = $ngs->nb_no_goods;
+
+    use Data::Dumper;
+    $ngs->filter_no_good(sub {
+	# print STDERR Dumper(\@_);
+	return 1;
+			 }); # use this NG
+    is($ngs->nb_no_goods, $nng);
+
+    $ngs->filter_no_good(sub {0}); # don't use this NG
+    is($ngs->nb_no_goods, 0);
 }

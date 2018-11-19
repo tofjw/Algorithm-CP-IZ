@@ -449,7 +449,8 @@ static int maxFailFuncPerlWrapper(void* dummy)
   return ret;
 }
 
-static IZBOOL noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSint** vars, int size, void* ext)
+static IZBOOL noGoodSetFilterMethod(const char* meth,
+       CSnoGoodSet* ngs, CSnoGood* ng, CSint** vars, int size, void* ext)
 {
   SV* ngsObj = (SV*)ext;
   IZBOOL ret = FALSE;
@@ -493,7 +494,7 @@ static IZBOOL noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSin
 
     PUTBACK;
     {
-      int count = call_method("_prefilter", G_ARRAY);
+      int count = call_method(meth, G_ARRAY);
       SPAGAIN;
       if (count > 0) {
 	ret = POPi;
@@ -505,6 +506,16 @@ static IZBOOL noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSin
   }
 
   return ret;
+}
+
+static IZBOOL noGoodSetPrefilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSint** vars, int size, void* ext)
+{
+  return noGoodSetFilterMethod("_prefilter", ngs, ng, vars, size, ext);
+}
+
+static IZBOOL noGoodSetFilterPerlWrapper(CSnoGoodSet* ngs, CSnoGood* ng, CSint** vars, int size, void* ext)
+{
+  return noGoodSetFilterMethod("_filter", ngs, ng, vars, size, ext);
 }
 
 static void noGoodSetDestoryPerlWrapper(CSnoGoodSet* ngs, void* ext)
@@ -1317,6 +1328,11 @@ CODE:
 OUTPUT:
     RETVAL
 
+void
+cs_filterNoGood(ngs)
+    void* ngs
+CODE:
+    cs_filterNoGood(ngs, noGoodSetFilterPerlWrapper);
 
 int
 cs_getNbNoGoods(ngs)
