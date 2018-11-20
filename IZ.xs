@@ -536,6 +536,12 @@ static void noGoodSetDestoryPerlWrapper(CSnoGoodSet* ngs, void* ext)
   }
 }
 
+static void searchStart(int maxFails, CSint** allvars, int nbVars, void* ext) {
+    dTHX;
+    dSP;
+  fprintf(stderr, "search start!\n");
+}
+
 #endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
 
 MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ		
@@ -1396,7 +1402,7 @@ CODE:
 					(int)alen,
 					currentArray2IndexFunc,
 					max_fail,
-					NULL);
+					(nf_ref ? (CSsearchNotify*)SvUV(nf_ref) : NULL));
     Safefree(array);
     Safefree(vs_array);
 OUTPUT:
@@ -1459,7 +1465,7 @@ CODE:
 					     NULL,
 					     max_fail,
 					     (CSnoGoodSet*)SvUV(ngs),
-					     NULL);
+					     (nf_ref ? (CSsearchNotify*)SvUV(nf_ref) : NULL));
     Safefree(array);
     Safefree(vs_array);
 OUTPUT:
@@ -1482,7 +1488,21 @@ CODE:
 OUTPUT:
     RETVAL
 
+void*
+cs_createSearchNotify(obj)
+    SV* obj
+CODE:
+    RETVAL = cs_createSearchNotify(obj);
+    /* test */
+    cs_searchNotifySetSearchStart(RETVAL, searchStart);
+OUTPUT:
+    RETVAL
 
+void
+cs_freeSearchNotify(notify)
+    void* notify
+CODE:
+    cs_freeSearchNotify(notify);
     
 #endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
 

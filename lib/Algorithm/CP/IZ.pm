@@ -17,6 +17,7 @@ use Algorithm::CP::IZ::RefIntArray;
 use Algorithm::CP::IZ::ParamValidator qw(validate);
 use Algorithm::CP::IZ::ValueSelector;
 use Algorithm::CP::IZ::NoGoodSet;
+use Algorithm::CP::IZ::SearchNotify;
 
 our @ISA = qw(Exporter);
 
@@ -334,7 +335,11 @@ sub _validate_search_params {
 	NoGoodSet => sub {
 	    my $x = shift;
 	    validate([$x], [sub{1}], "search: NoGoodSet must be a NoGoodSet object");
-	}
+	},
+	Notify => sub {
+	    my $x = shift;
+	    validate([$x], [sub{1}], "search: Notify must be a SearchNotify object");
+	},
     );
 
     my @keys = sort keys %$params;
@@ -368,7 +373,8 @@ sub search {
     my $value_selectors;
     my $max_fail_func;
     my $ngs;
-
+    my $notify;
+    
     if ($params->{FindFreeVar}) {
 	my $ffv = $params->{FindFreeVar};
 
@@ -403,6 +409,10 @@ sub search {
 	$ngs = $params->{NoGoodSet};
     }
 
+    if ($params->{Notify}) {
+	$notify = $params->{Notify};
+    }
+
     if ($criteria_func) {
 	return Algorithm::CP::IZ::cs_searchCriteria($array,
 						    $find_free_var_id,
@@ -427,7 +437,7 @@ sub search {
 		$max_fail_func,
 		$max_fail,
 		defined($ngs) ? $ngs->{_ngs} : 0,
-		undef);
+		defined($notify) ? $notify->{_ptr} : 0);
 	}
 	else {
 	    return Algorithm::CP::IZ::cs_searchValueSelectorFail(
@@ -436,7 +446,7 @@ sub search {
 		$find_free_var_id,
 		$find_free_var_func,
 		$max_fail,
-		undef);
+		defined($notify) ? $notify->{_ptr} : 0);
 	}
     }
     else {
@@ -628,6 +638,10 @@ sub create_no_good_set {
     return $ngsObj;
 }
 
+sub create_search_notify {
+    my $iz = shift;
+    return Algorithm::CP::IZ::SearchNotify->new;
+}
 
 #####################################################
 # Demon
