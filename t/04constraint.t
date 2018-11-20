@@ -591,8 +591,14 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
 }
 
 # VarElementRange
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 14
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
     my $index = $iz->create_int(0, 10);
     my $v1 = $iz->create_int(2, 12);
     my $v2 = $iz->create_int(0, 5);
@@ -627,16 +633,28 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
 }
 
 # VarElementRange (constant)
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 1
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
     my $elem = $iz->VarElementRange(0, [3, 5, 7]);
 
     is($elem->value, 3);
 }
 
 # Cumulative
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 1
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+    
     my @s = (0, $iz->create_int(0, 10));
     my @d = ($iz->create_int(0, 5), 5);
     my @r = ($iz->create_int(0, 5), 5);
@@ -645,8 +663,14 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
 }
 
 # Cumulative (constant)
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 2
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+    
     my @s = (0, $iz->create_int(0, 10));
     my @d = (5, 5);
     my @r = (1, 1);
@@ -655,16 +679,28 @@ BEGIN { use_ok('Algorithm::CP::IZ') };
 }
 
 # Disjunctive
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 1
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
     my @s = (0, $iz->create_int(0, 10));
     my @d = ($iz->create_int(0, 5), 5);
     ok($iz->Disjunctive(\@s, \@d));
 }
 
 # Disjunctive (constant)
-{
+SKIP: {
     my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 2
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
     my @s = (0, $iz->create_int(0, 10));
     my @d = (5, 5);
     ok($iz->Disjunctive(\@s, \@d));

@@ -1132,6 +1132,8 @@ CODE:
 OUTPUT:
     RETVAL
 
+#if (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6)
+
 void*
 cs_VarElementRange(index, values, size)
     void* index
@@ -1164,6 +1166,8 @@ CODE:
 OUTPUT:
     RETVAL
 
+#endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
+    
 int
 iz_getEndValue(vint, val)
     void* vint

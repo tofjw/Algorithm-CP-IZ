@@ -9,7 +9,7 @@ BEGIN { use_ok('Algorithm::CP::IZ::NoGoodSet') };
 SKIP: {
     my $iz = Algorithm::CP::IZ->new();
 
-    skip "old iZ", 8
+    skip "old iZ", 9
 	unless (defined($iz->get_version)
 		&& $iz->IZ_VERSION_MAJOR >= 3
 		&& $iz->IZ_VERSION_MINOR >= 6);
@@ -113,7 +113,7 @@ SKIP: {
 SKIP: {
     my $iz = Algorithm::CP::IZ->new();
 
-    skip "old iZ", 8
+    skip "old iZ", 10
 	unless (defined($iz->get_version)
 		&& $iz->IZ_VERSION_MAJOR >= 3
 		&& $iz->IZ_VERSION_MINOR >= 6);

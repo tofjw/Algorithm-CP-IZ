@@ -227,7 +227,7 @@ is($vdom->is_in(7), 0);
 }
 
 SKIP: {
-    skip "old iZ", 2
+    skip "old iZ", 4
 	unless (defined($iz->get_version)
 		&& $iz->IZ_VERSION_MAJOR >= 3
 		&& $iz->IZ_VERSION_MINOR >= 6);

@@ -8,7 +8,6 @@ our @ISA = qw(Exporter);
 
 use Algorithm::CP::IZ;
 use Algorithm::CP::IZ::RefVarArray;
-use Algorithm::CP::IZ::NoGood;
 use Algorithm::CP::IZ::NoGoodElement;
 
 sub new {
