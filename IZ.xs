@@ -536,10 +536,41 @@ static void noGoodSetDestoryPerlWrapper(CSnoGoodSet* ngs, void* ext)
   }
 }
 
-static void searchStart(int maxFails, CSint** allvars, int nbVars, void* ext) {
+static void searchNotify_searchStart(int maxFails, CSint** allvars, int nbVars, void* ext) {
     dTHX;
     dSP;
-  fprintf(stderr, "search start!\n");
+
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+
+    XPUSHs(sv_2mortal((SV*)newRV(ext)));
+    XPUSHs(sv_2mortal((SV*)newSViv(maxFails)));
+
+    PUTBACK;
+    call_method("search_start", G_DISCARD);
+
+    FREETMPS;
+    LEAVE;
+}
+
+static void searchNotify_searchEnd(IZBOOL result, int nbFails, int maxFails, CSint** allvars, int nbVars, void* ext) {
+    dTHX;
+    dSP;
+
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+    XPUSHs(sv_2mortal((SV*)newRV(ext)));
+    XPUSHs(sv_2mortal((SV*)newSViv(result)));
+    XPUSHs(sv_2mortal((SV*)newSViv(nbFails)));
+    XPUSHs(sv_2mortal((SV*)newSViv(maxFails)));
+
+    PUTBACK;
+    call_method("search_end", G_DISCARD);
+
+    FREETMPS;
+    LEAVE;
 }
 
 #endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
@@ -1492,11 +1523,25 @@ void*
 cs_createSearchNotify(obj)
     SV* obj
 CODE:
-    RETVAL = cs_createSearchNotify(obj);
-    /* test */
-    cs_searchNotifySetSearchStart(RETVAL, searchStart);
+    RETVAL = cs_createSearchNotify(SvRV(obj));
 OUTPUT:
     RETVAL
+
+void
+searchNotify_set_search_start(notify)
+    SV* notify
+CODE:
+    fprintf(stderr, "obj = %p\n",(void*)SvUV(notify));
+    cs_searchNotifySetSearchStart((void*)SvUV(notify),
+				  searchNotify_searchStart);
+
+void
+searchNotify_set_search_end(notify)
+    SV* notify
+CODE:
+    fprintf(stderr, "obj = %p\n",(void*)SvUV(notify));
+    cs_searchNotifySetSearchEnd((void*)SvUV(notify),
+				searchNotify_searchEnd);
 
 void
 cs_freeSearchNotify(notify)

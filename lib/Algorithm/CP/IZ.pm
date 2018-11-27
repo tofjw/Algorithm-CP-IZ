@@ -411,6 +411,7 @@ sub search {
 
     if ($params->{Notify}) {
 	$notify = $params->{Notify};
+	$notify->set_array($array);
     }
 
     if ($criteria_func) {
@@ -640,7 +641,8 @@ sub create_no_good_set {
 
 sub create_search_notify {
     my $iz = shift;
-    return Algorithm::CP::IZ::SearchNotify->new;
+    my $obj = shift;
+    return Algorithm::CP::IZ::SearchNotify->new($obj);
 }
 
 #####################################################

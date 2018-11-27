@@ -316,7 +316,7 @@ SKIP: {
 				  MaxFailFunc => sub {
 				      $func_called++;
 				      return ++$restart;
-			      }
+			      },
 			  });
     is($rc1, 0);
     $iz->restore_context;
