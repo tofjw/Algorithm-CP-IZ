@@ -337,7 +337,7 @@ static IZBOOL vsSimpleInit(int index, CSint** vars, int size, void* pData) {
     PUSHMARK(SP);
 
     paramVar = sv_newmortal();
-    sv_setuv(newSVrv(paramVar, PACKAGE_INT), (UV)vars[index]);
+    sv_setiv(newSVrv(paramVar, PACKAGE_INT), PTR2IV(vars[index]));
     XPUSHs(paramVar);
     XPUSHs(sv_2mortal(newSViv(index)));
 
@@ -384,7 +384,7 @@ static IZBOOL vsSimpleNext(CSvalueSelection* r, int index, CSint** vars, int siz
     PUSHMARK(SP);
 
     paramVar = sv_newmortal();
-    sv_setuv(newSVrv(paramVar, PACKAGE_INT), (UV)vars[index]);
+    sv_setiv(newSVrv(paramVar, PACKAGE_INT), PTR2IV(vars[index]));
     XPUSHs(obj);
     XPUSHs(paramVar);
     XPUSHs(sv_2mortal(newSViv(index)));
@@ -524,15 +524,7 @@ static void noGoodSetDestoryPerlWrapper(CSnoGoodSet* ngs, void* ext)
 
   {
     dTHX;
-    dSP;
-
-    ENTER;
-    SAVETMPS;
-
     SvREFCNT_dec(ngsObj);
-
-    FREETMPS;
-    LEAVE;
   }
 }
 
@@ -588,17 +580,17 @@ void*
 alloc_var_array(av)
     AV *av;
 PREINIT:
-    void** array;
+    CSint** array;
     SSize_t alen;
     SSize_t i;
 CODE:
     alen = av_len(av) + 1;
-    Newx(array, alen, void*);
+    Newx(array, alen, CSint*);
     RETVAL = array;
 
     for (i = 0; i<alen; i++) {
       SV** pptr = av_fetch(av, i, 0);
-      array[i] = (void*)SvUV(*pptr);
+      array[i] = INT2PTR(CSint*, SvIV(*pptr));
     }
 OUTPUT:
     RETVAL
@@ -714,16 +706,16 @@ cs_search(av, func_id, func_ref, max_fail)
     SV* func_ref
     int max_fail
 PREINIT:
-    void** array;
+    CSint** array;
     SSize_t alen;
     SSize_t i;
 CODE:
     alen = av_len(av) + 1;
-    Newx(array, alen, void*);
+    Newx(array, alen, CSint*);
 
     for (i = 0; i<alen; i++) {
       SV** pptr = av_fetch(av, i, 0);
-      array[i] = (void*)SvUV(*pptr);
+      array[i] = INT2PTR(CSint*, SvIV(*pptr));
     }
 
     currentArray2IndexFunc = 0;
@@ -744,7 +736,7 @@ CODE:
     if (max_fail < 0)
       max_fail = INT_MAX;
 
-    RETVAL = cs_searchFail((CSint**)array,
+    RETVAL = cs_searchFail(array,
 			   (int)alen, findFreeVarWrapper, max_fail);
     Safefree(array);
 OUTPUT:
@@ -758,16 +750,16 @@ cs_searchCriteria(av, findvar_id, findvar_ref, criteria_ref, max_fail)
     SV* criteria_ref
     int max_fail
 PREINIT:
-    void** array;
+    CSint** array;
     SSize_t alen;
     SSize_t i;
 CODE:
     alen = av_len(av) + 1;
-    Newx(array, alen, void*);
+    Newx(array, alen, CSint*);
 
     for (i = 0; i<alen; i++) {
       SV** pptr = av_fetch(av, i, 0);
-      array[i] = (void*)SvUV(*pptr);
+      array[i] = INT2PTR(CSint*, SvIV(*pptr));
     }
 
     currentArray2IndexFunc = 0;
@@ -789,7 +781,7 @@ CODE:
     if (max_fail < 0)
         max_fail = INT_MAX;
 
-    RETVAL = cs_searchCriteriaFail((CSint**)array,
+    RETVAL = cs_searchCriteriaFail(array,
 				   (int)alen,
 				   currentArray2IndexFunc,
 				   criteriaPerlWrapper,
@@ -805,16 +797,16 @@ cs_findAll(av, findvar_id, findvar_ref, found_ref)
     SV* findvar_ref
     SV* found_ref
 PREINIT:
-    void** array;
+    CSint** array;
     SSize_t alen;
     SSize_t i;
 CODE:
     alen = av_len(av) + 1;
-    Newx(array, alen, void*);
+    Newx(array, alen, CSint*);
 
     for (i = 0; i<alen; i++) {
       SV** pptr = av_fetch(av, i, 0);
-      array[i] = (void*)SvUV(*pptr);
+      array[i] = INT2PTR(CSint*, SvIV(*pptr));
     }
 
     currentArray2IndexFunc = 0;
@@ -835,7 +827,7 @@ CODE:
       currentArray2IndexFunc = findFreeVarTbl[findvar_id];
     }
 
-    RETVAL = cs_findAll((CSint**)array, (int)alen,
+    RETVAL = cs_findAll(array, (int)alen,
 			findFreeVarWrapper, foundPerlWrapper);
     Safefree(array);
 OUTPUT:
@@ -1392,22 +1384,22 @@ cs_searchValueSelectorFail(av, vs, findvar_id, findvar_ref, max_fail, nf_ref)
     int max_fail
     SV* nf_ref
 PREINIT:
-    void** array;
-    void** vs_array;
+    CSint** array;
+    const CSvalueSelector** vs_array;
     SSize_t alen;
     SSize_t i;
 CODE:
     alen = av_len(av) + 1;
-    Newx(array, alen, void*);
-    Newx(vs_array, alen, void*);
+    Newx(array, alen, CSint*);
+    Newx(vs_array, alen, const CSvalueSelector*);
 
     for (i = 0; i<alen; i++) {
       SV** pptr = av_fetch(av, i, 0);
       SV** vsptr = av_fetch(vs, i, 0);
       SV** vsvs = hv_fetch((HV*)SvRV((*vsptr)), "_vs", 3, 0);
 
-      array[i] = (void*)SvUV(*pptr);
-      vs_array[i] = (void*)SvUV(*vsvs);
+      array[i] = INT2PTR(CSint*, SvIV(*pptr));
+      vs_array[i] = INT2PTR(CSvalueSelector*, SvIV(*vsvs));
     }
 
     currentArray2IndexFunc = 0;
@@ -1428,12 +1420,12 @@ CODE:
     if (max_fail < 0)
         max_fail = INT_MAX;
 
-    RETVAL = cs_searchValueSelectorFail((CSint**)array,
-					(const CSvalueSelector**)vs_array,
+    RETVAL = cs_searchValueSelectorFail(array,
+					vs_array,
 					(int)alen,
 					currentArray2IndexFunc,
 					max_fail,
-					(nf_ref ? (CSsearchNotify*)SvUV(nf_ref) : NULL));
+					(nf_ref ? INT2PTR(CSsearchNotify*, SvIV(nf_ref)) : NULL));
     Safefree(array);
     Safefree(vs_array);
 OUTPUT:
@@ -1450,22 +1442,22 @@ cs_searchValueSelectorRestartNG(av, vs, findvar_id, findvar_ref, max_fail_func, 
     SV* ngs
     SV* nf_ref
 PREINIT:
-    void** array;
-    void** vs_array;
+    CSint** array;
+    const CSvalueSelector** vs_array;
     SSize_t alen;
     SSize_t i;
 CODE:
     alen = av_len(av) + 1;
-    Newx(array, alen, void*);
-    Newx(vs_array, alen, void*);
+    Newx(array, alen, CSint*);
+    Newx(vs_array, alen, const CSvalueSelector*);
 
     for (i = 0; i<alen; i++) {
       SV** pptr = av_fetch(av, i, 0);
       SV** vsptr = av_fetch(vs, i, 0);
       SV** vsvs = hv_fetch((HV*)SvRV((*vsptr)), "_vs", 3, 0);
 
-      array[i] = (void*)SvUV(*pptr);
-      vs_array[i] = (void*)SvUV(*vsvs);
+      array[i] = INT2PTR(CSint*, SvIV(*pptr));
+      vs_array[i] = INT2PTR(CSvalueSelector*, SvIV(*vsvs));
     }
 
     currentArray2IndexFunc = 0;
@@ -1488,15 +1480,15 @@ CODE:
 
     maxFailPerlFunc = max_fail_func;
 
-    RETVAL = cs_searchValueSelectorRestartNG((CSint**)array,
-					     (const CSvalueSelector**)vs_array,
+    RETVAL = cs_searchValueSelectorRestartNG(array,
+					     vs_array,
 					     (int)alen,
 					     currentArray2IndexFunc,
 					     maxFailFuncPerlWrapper,
 					     NULL,
 					     max_fail,
-					     (CSnoGoodSet*)SvUV(ngs),
-					     (nf_ref ? (CSsearchNotify*)SvUV(nf_ref) : NULL));
+					     INT2PTR(CSnoGoodSet*, SvIV(ngs)),
+					     (nf_ref ? INT2PTR(CSsearchNotify*, SvIV(nf_ref)) : NULL));
     Safefree(array);
     Safefree(vs_array);
 OUTPUT:
@@ -1509,13 +1501,11 @@ cs_selectValue(rv, method, value)
     int method
     int value
 PREINIT:
-    void* vint;
     CSvalueSelection vs;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
     vs.method = method;
     vs.value = value;
-    RETVAL = cs_selectValue(vint, &vs);
+    RETVAL = cs_selectValue(INT2PTR(CSint*, SvIV(SvRV(rv))), &vs);
 OUTPUT:
     RETVAL
 
@@ -1531,16 +1521,16 @@ void
 searchNotify_set_search_start(notify)
     SV* notify
 CODE:
-    fprintf(stderr, "obj = %p\n",(void*)SvUV(notify));
-    cs_searchNotifySetSearchStart((void*)SvUV(notify),
+    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
+    cs_searchNotifySetSearchStart(INT2PTR(void*, SvIV(notify)),
 				  searchNotify_searchStart);
 
 void
 searchNotify_set_search_end(notify)
     SV* notify
 CODE:
-    fprintf(stderr, "obj = %p\n",(void*)SvUV(notify));
-    cs_searchNotifySetSearchEnd((void*)SvUV(notify),
+    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
+    cs_searchNotifySetSearchEnd(INT2PTR(void*, SvIV(notify)),
 				searchNotify_searchEnd);
 
 void
@@ -1556,66 +1546,48 @@ MODULE = Algorithm::CP::IZ		PACKAGE = Algorithm::CP::IZ::Int
 int
 nb_elements(rv)
     SV* rv;
-PREINIT:
-    void* vint;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
-    RETVAL = cs_getNbElements(vint);
+    RETVAL = cs_getNbElements(INT2PTR(CSint*, SvIV(SvRV(rv))));
 OUTPUT:
     RETVAL
 
 int
 min(rv)
     SV* rv;
-PREINIT:
-    void* vint;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
-    RETVAL = cs_getMin(vint);
+    RETVAL = cs_getMin(INT2PTR(CSint*, SvIV(SvRV(rv))));
 OUTPUT:
     RETVAL
 
 int
 max(rv)
     SV* rv;
-PREINIT:
-    void* vint;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
-    RETVAL = cs_getMax(vint);
+    RETVAL = cs_getMax(INT2PTR(CSint*, SvIV(SvRV(rv))));
 OUTPUT:
     RETVAL
 
 int
 value(rv)
     SV* rv;
-PREINIT:
-    void* vint;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
-    RETVAL = cs_getValue(vint);
+    RETVAL = cs_getValue(INT2PTR(CSint*, SvIV(SvRV(rv))));
 OUTPUT:
     RETVAL
 
 int
 is_free(rv)
     SV* rv;
-PREINIT:
-    void* vint;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
-    RETVAL = cs_isFree(vint);
+    RETVAL = cs_isFree(INT2PTR(CSint*, SvIV(SvRV(rv))));
 OUTPUT:
     RETVAL
 
 int
 is_instantiated(rv)
     SV* rv;
-PREINIT:
-    void* vint;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
-    RETVAL = cs_isInstantiated(vint);
+    RETVAL = cs_isInstantiated(INT2PTR(CSint*, SvIV(SvRV(rv))));
 OUTPUT:
     RETVAL
 
@@ -1623,11 +1595,8 @@ int
 get_next_value(rv, val)
     SV* rv;
     int val;
-PREINIT:
-    void* vint;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
-    RETVAL = cs_getNextValue(vint, val);
+    RETVAL = cs_getNextValue(INT2PTR(CSint*, SvIV(SvRV(rv))), val);
 OUTPUT:
     RETVAL
 
@@ -1635,11 +1604,8 @@ int
 get_previous_value(rv, val)
     SV* rv;
     int val;
-PREINIT:
-    void* vint;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
-    RETVAL = cs_getPreviousValue(vint, val);
+    RETVAL = cs_getPreviousValue(INT2PTR(CSint*, SvIV(SvRV(rv))), val);
 OUTPUT:
     RETVAL
 
@@ -1647,11 +1613,8 @@ int
 is_in(rv, val)
     SV* rv;
     int val;
-PREINIT:
-    void* vint;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
-    RETVAL = cs_isIn(vint, val);
+    RETVAL = cs_isIn(INT2PTR(CSint*, SvIV(SvRV(rv))), val);
 OUTPUT:
     RETVAL
 
@@ -1660,12 +1623,12 @@ Eq(rv, val)
     SV* rv;
     SV* val;
 PREINIT:
-    void* vint1;
-    void* vint2;
+    CSint* vint1;
+    CSint* vint2;
 CODE:
-    vint1 = (void*)SvUV(SvRV(rv));
+    vint1 = INT2PTR(CSint*, SvIV(SvRV(rv)));
     if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
-        vint2 = (void*)SvUV(SvRV(val));
+        vint2 = INT2PTR(CSint*, SvIV(SvRV(val)));
         RETVAL = cs_Eq(vint1, vint2);
     }
     else {
@@ -1679,12 +1642,12 @@ Neq(rv, val)
     SV* rv;
     SV* val;
 PREINIT:
-    void* vint1;
-    void* vint2;
+    CSint* vint1;
+    CSint* vint2;
 CODE:
-    vint1 = (void*)SvUV(SvRV(rv));
+    vint1 = INT2PTR(CSint*, SvIV(SvRV(rv)));
     if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
-        vint2 = (void*)SvUV(SvRV(val));
+        vint2 = INT2PTR(CSint*, SvIV(SvRV(val)));
         RETVAL = cs_Neq(vint1, vint2);
     }
     else {
@@ -1698,12 +1661,12 @@ Le(rv, val)
     SV* rv;
     SV* val;
 PREINIT:
-    void* vint1;
-    void* vint2;
+    CSint* vint1;
+    CSint* vint2;
 CODE:
-    vint1 = (void*)SvUV(SvRV(rv));
+    vint1 = INT2PTR(CSint*, SvIV(SvRV(rv)));
     if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
-        vint2 = (void*)SvUV(SvRV(val));
+        vint2 = INT2PTR(CSint*, SvIV(SvRV(val)));
         RETVAL = cs_Le(vint1, vint2);
     }
     else {
@@ -1717,12 +1680,12 @@ Lt(rv, val)
     SV* rv;
     SV* val;
 PREINIT:
-    void* vint1;
-    void* vint2;
+    CSint* vint1;
+    CSint* vint2;
 CODE:
-    vint1 = (void*)SvUV(SvRV(rv));
+    vint1 = INT2PTR(CSint*, SvIV(SvRV(rv)));
     if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
-        vint2 = (void*)SvUV(SvRV(val));
+        vint2 = INT2PTR(CSint*, SvIV(SvRV(val)));
         RETVAL = cs_Lt(vint1, vint2);
     }
     else {
@@ -1736,12 +1699,12 @@ Ge(rv, val)
     SV* rv;
     SV* val;
 PREINIT:
-    void* vint1;
-    void* vint2;
+    CSint* vint1;
+    CSint* vint2;
 CODE:
-    vint1 = (void*)SvUV(SvRV(rv));
+    vint1 = INT2PTR(CSint*, SvIV(SvRV(rv)));
     if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
-        vint2 = (void*)SvUV(SvRV(val));
+        vint2 = INT2PTR(CSint*, SvIV(SvRV(val)));
         RETVAL = cs_Ge(vint1, vint2);
     }
     else {
@@ -1755,12 +1718,12 @@ Gt(rv, val)
     SV* rv;
     SV* val;
 PREINIT:
-    void* vint1;
-    void* vint2;
+    CSint* vint1;
+    CSint* vint2;
 CODE:
-    vint1 = (void*)SvUV(SvRV(rv));
+    vint1 = INT2PTR(CSint*, SvIV(SvRV(rv)));
     if (sv_isobject(val) && sv_derived_from(val, PACKAGE_INT)) {
-        vint2 = (void*)SvUV(SvRV(val));
+        vint2 = INT2PTR(CSint*, SvIV(SvRV(val)));
         RETVAL = cs_Gt(vint1, vint2);
     }
     else {
@@ -1773,12 +1736,12 @@ AV *
 domain(rv)
     SV* rv;
 PREINIT:
-    void* vint;
+    CSint* vint;
     int i;
     int val;
     int maxVal;
 CODE:
-    vint = (void*)SvUV(SvRV(rv));
+    vint = INT2PTR(CSint*, SvIV(SvRV(rv)));
 
     RETVAL = newAV();
     av_extend(RETVAL, cs_getNbElements(vint));
