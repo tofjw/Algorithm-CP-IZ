@@ -411,7 +411,7 @@ sub search {
 
     if ($params->{Notify}) {
 	$notify = $params->{Notify};
-	$notify->set_array($array);
+	$notify->set_var_array($var_array);
     }
 
     if ($criteria_func) {

@@ -7,7 +7,7 @@ my @method_names = qw(
     search_start
     search_end
     before_value_selection
-    after_Value_selection
+    after_value_selection
     enter
     leave
     found
@@ -41,24 +41,59 @@ sub new {
     return $self;
 }
 
-sub set_array {
+sub set_var_array {
     my $self = shift;
-    my $array = shift;
-    $self->{_array} = $array;
+    my $var_array = shift;
+    $self->{_var_array} = $var_array;
 }
 
 sub search_start {
     my $self = shift;
     my ($max_fails) = @_;
     
-    &{$self->{_methods}->{search_start}}($max_fails, $self->{_array});
+    &{$self->{_methods}->{search_start}}($max_fails, $self->{_var_array});
 }
 
 sub search_end {
     my $self = shift;
     my ($result, $nb_fails, $max_fails) = @_;
     
-    &{$self->{_methods}->{search_end}}($result, $nb_fails, $max_fails, $self->{_array});
+    &{$self->{_methods}->{search_end}}($result, $nb_fails, $max_fails, $self->{_var_array});
+}
+
+sub before_value_selection {
+    my $self = shift;
+    my ($depth, $index, $method, $value) = @_;
+    
+    &{$self->{_methods}->{before_value_selection}}($depth, $index, [$method, $value], $self->{_var_array});
+}
+
+sub after_value_selection {
+    my $self = shift;
+    my ($result, $depth, $index, $method, $value) = @_;
+    
+    &{$self->{_methods}->{after_value_selection}}($result, $depth, $index, [$method, $value], $self->{_var_array});
+}
+
+sub enter {
+    my $self = shift;
+    my ($depth, $index) = @_;
+    
+    &{$self->{_methods}->{enter}}($depth, $index, $self->{_var_array});
+}
+
+sub leave {
+    my $self = shift;
+    my ($depth, $index) = @_;
+    
+    &{$self->{_methods}->{leave}}($depth, $index, $self->{_var_array});
+}
+
+sub found {
+    my $self = shift;
+    my ($depth) = @_;
+
+    return &{$self->{_methods}->{found}}($depth, $self->{_var_array});
 }
 
 DESTROY {

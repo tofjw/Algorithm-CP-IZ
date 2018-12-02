@@ -31,6 +31,8 @@ static CSint* findFreeVarWrapper(CSint **allVars, int nbVars)
 
 static int findFreeVarPerlWrapper(CSint **allVars, int nbVars)
 {
+  int count, ret;
+
   dTHX;
   dSP;
 
@@ -39,9 +41,9 @@ static int findFreeVarPerlWrapper(CSint **allVars, int nbVars)
   PUSHMARK(sp);
 
   PUTBACK;
-  int count = call_sv(findFreeVarPerlFunc, G_SCALAR);
+  count = call_sv(findFreeVarPerlFunc, G_SCALAR);
   SPAGAIN;
-  int ret = -1;
+  ret = -1;
 
   if (count == 0) {
     croak("findFreeVarPerlWrapper: error");
@@ -92,6 +94,8 @@ static SV* criteriaPerlFunc;
 
 static int criteriaPerlWrapper(int index, int val)
 {
+  int count, ret;
+
   dTHX;
   dSP;
 
@@ -103,9 +107,9 @@ static int criteriaPerlWrapper(int index, int val)
   XPUSHs(sv_2mortal(newSViv(val)));
 
   PUTBACK;
-  int count = call_sv(criteriaPerlFunc, G_SCALAR);
+  count = call_sv(criteriaPerlFunc, G_SCALAR);
   SPAGAIN;
-  int ret = -1;
+  ret = -1;
 
   if (count == 0) {
     croak("criteriaPerlWrapper: error");
@@ -174,6 +178,7 @@ static void backtrackPerlWrapper(CSint *vint, int index)
 
 static IZBOOL eventAllKnownPerlWrapper(CSint **tint, int size, void *ext)
 {
+  int count, ret;
   dTHX;
   dSP;
 
@@ -182,9 +187,9 @@ static IZBOOL eventAllKnownPerlWrapper(CSint **tint, int size, void *ext)
   PUSHMARK(sp);
 
   PUTBACK;
-  int count = call_sv((SV*)ext, G_SCALAR);
+  count = call_sv((SV*)ext, G_SCALAR);
   SPAGAIN;
-  int ret = -1;
+  ret = -1;
 
   if (count == 0) {
     croak("eventAllKnownPerlWrapper: error");
@@ -199,6 +204,7 @@ static IZBOOL eventAllKnownPerlWrapper(CSint **tint, int size, void *ext)
 
 static IZBOOL eventKnownPerlWrapper(int val, int index, CSint **tint, int size, void *ext)
 {
+  int count, ret;
   dTHX;
   dSP;
 
@@ -210,9 +216,9 @@ static IZBOOL eventKnownPerlWrapper(int val, int index, CSint **tint, int size, 
   XPUSHs(sv_2mortal(newSViv(index)));
 
   PUTBACK;
-  int count = call_sv((SV*)ext, G_SCALAR);
+  count = call_sv((SV*)ext, G_SCALAR);
   SPAGAIN;
-  int ret = -1;
+  ret = -1;
 
   if (count == 0) {
     croak("eventKnownPerlWrapper: error");
@@ -227,6 +233,7 @@ static IZBOOL eventKnownPerlWrapper(int val, int index, CSint **tint, int size, 
 
 static IZBOOL eventNewMinMaxNeqPerlWrapper(CSint* vint, int index, int oldValue, CSint **tint, int size, void *ext)
 {
+  int count, ret;
   dTHX;
   dSP;
 
@@ -238,9 +245,9 @@ static IZBOOL eventNewMinMaxNeqPerlWrapper(CSint* vint, int index, int oldValue,
   XPUSHs(sv_2mortal(newSViv(oldValue)));
 
   PUTBACK;
-  int count = call_sv((SV*)ext, G_SCALAR);
+  count = call_sv((SV*)ext, G_SCALAR);
   SPAGAIN;
-  int ret = -1;
+  ret = -1;
 
   if (count == 0) {
     croak("eventNewMinMaxNeqPerlWrapper: error");
@@ -426,6 +433,7 @@ static IZBOOL vsSimpleEnd(int index, CSint** vars, int size, void* pData) {
 static SV* maxFailPerlFunc;
 static int maxFailFuncPerlWrapper(void* dummy)
 {
+  int count, ret;
   dTHX;
   dSP;
 
@@ -434,9 +442,9 @@ static int maxFailFuncPerlWrapper(void* dummy)
   PUSHMARK(sp);
 
   PUTBACK;
-  int count = call_sv(maxFailPerlFunc, G_SCALAR);
+  count = call_sv(maxFailPerlFunc, G_SCALAR);
   SPAGAIN;
-  int ret = -1;
+  ret = -1;
 
   if (count < 0) {
     croak("maxFailFuncPerlWrapper: error");
@@ -529,40 +537,143 @@ static void noGoodSetDestoryPerlWrapper(CSnoGoodSet* ngs, void* ext)
 }
 
 static void searchNotify_searchStart(int maxFails, CSint** allvars, int nbVars, void* ext) {
-    dTHX;
-    dSP;
+  dTHX;
+  dSP;
 
-    ENTER;
-    SAVETMPS;
-    PUSHMARK(SP);
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(SP);
 
-    XPUSHs(sv_2mortal((SV*)newRV(ext)));
-    XPUSHs(sv_2mortal((SV*)newSViv(maxFails)));
+  XPUSHs(sv_2mortal((SV*)newRV(ext)));
+  XPUSHs(sv_2mortal((SV*)newSViv(maxFails)));
 
-    PUTBACK;
-    call_method("search_start", G_DISCARD);
+  PUTBACK;
+  call_method("search_start", G_DISCARD);
 
-    FREETMPS;
-    LEAVE;
+  FREETMPS;
+  LEAVE;
 }
 
 static void searchNotify_searchEnd(IZBOOL result, int nbFails, int maxFails, CSint** allvars, int nbVars, void* ext) {
-    dTHX;
-    dSP;
+  dTHX;
+  dSP;
 
-    ENTER;
-    SAVETMPS;
-    PUSHMARK(SP);
-    XPUSHs(sv_2mortal((SV*)newRV(ext)));
-    XPUSHs(sv_2mortal((SV*)newSViv(result)));
-    XPUSHs(sv_2mortal((SV*)newSViv(nbFails)));
-    XPUSHs(sv_2mortal((SV*)newSViv(maxFails)));
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(SP);
+  XPUSHs(sv_2mortal((SV*)newRV(ext)));
+  XPUSHs(sv_2mortal((SV*)newSViv(result)));
+  XPUSHs(sv_2mortal((SV*)newSViv(nbFails)));
+  XPUSHs(sv_2mortal((SV*)newSViv(maxFails)));
 
-    PUTBACK;
-    call_method("search_end", G_DISCARD);
+  PUTBACK;
+  call_method("search_end", G_DISCARD);
 
-    FREETMPS;
-    LEAVE;
+  FREETMPS;
+  LEAVE;
+}
+
+static void searchNotify_BeforeValueSelection(int depth, int index, const CSvalueSelection* vs, CSint** allvars, int nbVars, void* ext) {
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(SP);
+  XPUSHs(sv_2mortal((SV*)newRV(ext)));
+  XPUSHs(sv_2mortal((SV*)newSViv(depth)));
+  XPUSHs(sv_2mortal((SV*)newSViv(index)));
+  XPUSHs(sv_2mortal((SV*)newSViv(vs->method)));
+  XPUSHs(sv_2mortal((SV*)newSViv(vs->value)));
+
+  PUTBACK;
+  call_method("before_value_selection", G_DISCARD);
+
+  FREETMPS;
+  LEAVE;
+}
+
+static void searchNotify_AfterValueSelection(IZBOOL result, int depth, int index, const CSvalueSelection* vs, CSint** allvars, int nbVars, void* ext) {
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(SP);
+  XPUSHs(sv_2mortal((SV*)newRV(ext)));
+  XPUSHs(sv_2mortal((SV*)newSViv(result)));
+  XPUSHs(sv_2mortal((SV*)newSViv(depth)));
+  XPUSHs(sv_2mortal((SV*)newSViv(index)));
+  XPUSHs(sv_2mortal((SV*)newSViv(vs->method)));
+  XPUSHs(sv_2mortal((SV*)newSViv(vs->value)));
+
+  PUTBACK;
+  call_method("after_value_selection", G_DISCARD);
+
+  FREETMPS;
+  LEAVE;
+}
+
+static void searchNotify_Enter(int depth, int index, CSint** allvars, int nbVars, void* ext) {
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(SP);
+  XPUSHs(sv_2mortal((SV*)newRV(ext)));
+  XPUSHs(sv_2mortal((SV*)newSViv(depth)));
+  XPUSHs(sv_2mortal((SV*)newSViv(index)));
+
+  PUTBACK;
+  call_method("enter", G_DISCARD);
+
+  FREETMPS;
+  LEAVE;
+}
+
+static void searchNotify_Leave(int depth, int index, CSint** allvars, int nbVars, void* ext) {
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(SP);
+  XPUSHs(sv_2mortal((SV*)newRV(ext)));
+  XPUSHs(sv_2mortal((SV*)newSViv(depth)));
+  XPUSHs(sv_2mortal((SV*)newSViv(index)));
+
+  PUTBACK;
+  call_method("leave", G_DISCARD);
+
+  FREETMPS;
+  LEAVE;
+}
+
+static IZBOOL searchNotify_Found(int depth, CSint** allvars, int nbVars, void* ext) {
+  int count, ret;
+  dTHX;
+  dSP;
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(SP);
+  XPUSHs(sv_2mortal((SV*)newRV(ext)));
+  XPUSHs(sv_2mortal((SV*)newSViv(depth)));
+
+  PUTBACK;
+  count = call_method("found", G_SCALAR);
+  SPAGAIN;
+
+  ret = 0;
+  if (count > 0) {
+    ret = POPi;
+  }
+
+  FREETMPS;
+  LEAVE;
+
+  return ret;
 }
 
 #endif /* (IZ_VERSION_MAJOR == 3 && IZ_VERSION_MINOR >= 6) */
@@ -1532,6 +1643,46 @@ CODE:
     fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
     cs_searchNotifySetSearchEnd(INT2PTR(void*, SvIV(notify)),
 				searchNotify_searchEnd);
+
+void
+searchNotify_set_before_value_selection(notify)
+    SV* notify
+CODE:
+    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
+    cs_searchNotifySetBeforeValueSelection(INT2PTR(void*, SvIV(notify)),
+					   searchNotify_BeforeValueSelection);
+
+void
+searchNotify_set_after_value_selection(notify)
+    SV* notify
+CODE:
+    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
+    cs_searchNotifySetAfterValueSelection(INT2PTR(void*, SvIV(notify)),
+					  searchNotify_AfterValueSelection);
+
+void
+searchNotify_set_enter(notify)
+    SV* notify
+CODE:
+    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
+    cs_searchNotifySetEnter(INT2PTR(void*, SvIV(notify)),
+			    searchNotify_Enter);
+
+void
+searchNotify_set_leave(notify)
+    SV* notify
+CODE:
+    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
+    cs_searchNotifySetLeave(INT2PTR(void*, SvIV(notify)),
+			    searchNotify_Leave);
+
+void
+searchNotify_set_found(notify)
+    SV* notify
+CODE:
+    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
+    cs_searchNotifySetFound(INT2PTR(void*, SvIV(notify)),
+			    searchNotify_Found);
 
 void
 cs_freeSearchNotify(notify)

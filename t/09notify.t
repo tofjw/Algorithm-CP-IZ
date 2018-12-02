@@ -46,23 +46,60 @@ SKIP: {
 	my $array = shift;
 	print STDERR "search end!: $array\n";
     }
+
+    sub before_value_selection {
+	my $self = shift;
+	my ($depth, $index, $vs, $array) = @_;
+	print STDERR "value selection: $depth, $index, $array\n";
+	print STDERR "  ", $vs->[0], ", ", $vs->[1], "\n";
+	print STDERR join(", ", map {$_->min} @$array), "\n";
+    }
+
+    sub after_value_selection {
+	my $self = shift;
+	my ($result, $depth, $index, $vs, $array) = @_;
+	print STDERR "after value selection: $result, $depth, $index, $array\n";
+	print STDERR "  ", $vs->[0], ", ", $vs->[1], "\n";
+	print STDERR join(", ", map {$_->min} @$array), "\n";
+    }
+
+    sub enter {
+	my $self = shift;
+	my ($depth, $index, $array) = @_;
+	print STDERR "enter: $depth, $index, $array\n";
+	print STDERR join(", ", map {"$_"} @$array), "\n";
+    }
+
+    sub leave {
+	my $self = shift;
+	my ($depth, $index, $array) = @_;
+	print STDERR "leave: $depth, $index, $array\n";
+	print STDERR join(", ", map {"$_"} @$array), "\n";
+    }
+
+    sub found {
+	my $self = shift;
+	my ($depth, $array) = @_;
+	print STDERR "found: $depth, $array\n";
+	print STDERR join(", ", map {"$_"} @$array), "\n";
+	return 1;
+    }
     
     package main;
     my $obj = TestObj->new;
     my $sn = $iz->create_search_notify($obj);
     print STDERR "perl obj = $obj, sn = $sn\n";
     my $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_MIN_TO_MAX);
-
-    # cannot solve by MaxFail
     $iz->save_context;
-    my $rc1 = $iz->search([$s, $e, $n, $d, $m, $o, $r, $y],
+    my $rc1 = $iz->search([$d, $e, $n, $y, $m, $o, $r, $s],
 			  {
 			      ValueSelectors =>
 				  [map { $vs } 1..8],
-				  MaxFail => 1000,
+				  MaxFail => 100,
 			      Notify => $sn,
 			  });
     is($rc1, 1);
+    print STDERR "********* fail = ", $iz->get_nb_fails, "\n";
     $iz->restore_context;
     
 }
