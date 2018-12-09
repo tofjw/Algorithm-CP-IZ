@@ -156,6 +156,32 @@ sub restore_context_until {
     Algorithm::CP::IZ::cs_restoreContextUntil($label);
 }
 
+sub forget_save_context {
+    my $self = shift;
+
+    my $cxt = $self->{_cxt};
+    if (@$cxt == 0) {
+	_report_error("forget_save_context: bottom of context stack");
+    }
+
+    Algorithm::CP::IZ::cs_forgetSaveContext();
+}
+
+sub forget_save_context_until {
+    my $self = shift;
+    my $label = shift;
+
+    validate([$label], ["I"],
+	     "Usage: forget_save_context_until(int_label)");
+
+    my $cxt = $self->{_cxt};
+    if (@$cxt == 0) {
+	_report_error("forget_save_context_until: invalid label");
+    }
+
+    Algorithm::CP::IZ::cs_forgetSaveContextUntil($label);
+}
+
 sub restore_all {
     my $self = shift;
 
@@ -1743,6 +1769,18 @@ VARIABLES will occur only when upper or lower bound is changed.
 
 VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 
+=item Cumulative(START_VARS, DURATION_VARS, RESOUCE_VARS, LIMIT_VAR)
+
+Constraint variables as "Cumulative".
+
+START_VARS, DURATION_VARS and RESOUCE_VARS are an arrayref contains instances of
+Algorithm::CP::IZ::Int and LIMIT_VAR is an instance of Algorithm::CP::IZ::Int.
+
+=item Disjunctive(START_VARS, DURATION_VARS)
+
+Constraint variables as "Disjunctive".
+
+START_VARS and DURATION_VARS are an arrayref contains instances of Algorithm::CP::IZ::Int.
 
 =item ReifEq(VAR1, VAR2)
 

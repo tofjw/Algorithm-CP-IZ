@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 91;
+use Test::More tests => 101;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -593,6 +593,7 @@ SKIP: {
     is($btindex, 123);
 }
 
+# save context
 {
     my $iz = Algorithm::CP::IZ->new();
     my $v1 = $iz->create_int(1, 3);
@@ -605,6 +606,48 @@ SKIP: {
     $iz->restore_context_until($label);
     is($v1->nb_elements, 3);
 
+}
+
+# forget save context
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $v1 = $iz->create_int(0, 10);
+
+    $iz->save_context(); # restored here
+    ok($v1->Ge(1));
+
+    $iz->save_context(); # forgotton
+    ok($v1->Ge(2));
+
+    $iz->forget_save_context();
+    is($v1->min, 2);
+
+    $iz->restore_context;
+    is($v1->min, 0);
+}
+
+# forget save context until
+{
+    my $iz = Algorithm::CP::IZ->new();
+    my $v1 = $iz->create_int(0, 10);
+
+    $iz->save_context();
+    ok($v1->Ge(1));
+
+    $iz->save_context(); # restore here
+    ok($v1->Ge(2));
+
+    my $label = $iz->save_context(); # forgotton
+    ok($v1->Ge(3));
+
+    $iz->save_context();
+    ok($v1->Ge(4));
+
+    $iz->forget_save_context_until($label);
+    is($v1->min, 4);
+
+    $iz->restore_context;
+    is($v1->min, 1);
 }
 
 # cancel (call only)

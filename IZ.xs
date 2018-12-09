@@ -782,6 +782,17 @@ CODE:
 OUTPUT:
     RETVAL
 
+void
+cs_forgetSaveContext()
+CODE:
+    cs_forgetSaveContext();
+
+void
+cs_forgetSaveContextUntil(label)
+    int label
+CODE:
+    cs_forgetSaveContextUntil(label);
+
 int get_nb_choice_points(iz)
     void* iz
 CODE:
