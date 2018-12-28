@@ -6,7 +6,7 @@ use strict;
 use warnings;
 
 use Carp;
-use Scalar::Util qw(weaken);
+use Scalar::Util qw(weaken blessed);
 
 require Exporter;
 use AutoLoader;
@@ -328,7 +328,7 @@ sub create_int {
 }
 
 sub _validate_search_params {
-    my $params = shift;
+    my ($var_array, $params) = @_;
     return 1 unless (defined($params));
     return 0 unless (ref $params eq 'HASH');
 
@@ -352,7 +352,18 @@ sub _validate_search_params {
 	    validate([$x], ["I"], "search: MaxFail must be an integer");
 	},
 	ValueSelectors => sub {
-	    1;
+	    my $x = shift;
+	    validate([$x], [
+			 sub {
+			     my $vs = shift;
+			     return unless (ref $vs eq 'ARRAY'
+					    && scalar @$vs == scalar @$var_array);
+			     for my $obj (@$vs) {
+				 return unless (blessed($obj)
+						&& $obj->isa("Algorithm::CP::IZ::ValueSelector"));
+			     }
+			     1;
+			 }], "search: ValueSelectos must be a arrayref of Algorithm::CP::IZ::ValueSelector instance for each variables");
 	},
 	MaxFailFunc => sub {
 	    my $x = shift;
@@ -360,11 +371,19 @@ sub _validate_search_params {
 	},
 	NoGoodSet => sub {
 	    my $x = shift;
-	    validate([$x], [sub{1}], "search: NoGoodSet must be a NoGoodSet object");
+	    validate([$x], [
+			 sub {
+			     my $ngs = shift;
+			     return blessed($ngs) && $ngs->isa("Algorithm::CP::IZ::NoGoodSet");
+			 }], "search: NoGoodSet must be a instance of Algorithm::CP::IZ::NoGoodSet");
 	},
 	Notify => sub {
 	    my $x = shift;
-	    validate([$x], [sub{1}], "search: Notify must be a SearchNotify object");
+	    validate([$x], [
+			 sub {
+			     my $notify = shift;
+			     return blessed($notify) && $notify->isa("Algorithm::CP::IZ::SearchNotify");
+			 }], "search: Notify must be an instance of Algorithm::CP::IZ::SearchNotify");
 	},
     );
 
@@ -388,7 +407,7 @@ sub search {
     my $var_array = shift;
     my $params = shift;
 
-    validate([$var_array, $params], ["vA0", \&_validate_search_params],
+    validate([$var_array, $params], ["vA0", sub {_validate_search_params($var_array, @_)}],
 	     "Usage: search([variables], {key=>value,...}");
 
     my $array = [map { $$_ } @$var_array];
@@ -1434,6 +1453,20 @@ Specify your own function as coderef here.
 
 Upper limit of fail count while searching solutions.
 
+=item ValueSelectors
+
+Arrayref of Algorithm::CP::IZ::ValueSelector instances.
+
+=item MaxFailFunc
+
+CodeRef of subroutine which returns maxfail for restart.
+
+=item NoGoodSet
+
+A Algorithm::CP::IZ::NoGoodSet instance which collects NoGoods.
+
+
+
 =back
 
 Returns 1 (success) or 0 (fail).
@@ -1464,11 +1497,11 @@ Returns 1 (success) or 0 (fail).
 
 =item get_nb_fails
 
-Returns fail count while search solution.
+Returns fail count while searching solution.
 
 =item get_nb_choice_points
 
-Returns choice count while search solution.
+Returns choice count while searching solution.
 
 =item save_context
 
@@ -1495,6 +1528,14 @@ which 'save_context' returns.
 
 Restore status of variables and constraints to point of first
 'save_context' call.
+
+=item forget_save_context
+
+Last save_context point is forgotten by calling this function.
+
+=item forgest_save_context_until(LABEL)
+
+save_context points until LABEL are forgotten by calling this function.
 
 =item cancel_search
 
@@ -1762,9 +1803,8 @@ VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
 Create an instance of Algorithm::CP::IZ::Int represents a value at VAR in VARIABLES. This relation is:
 
   Created_instance = VARIABLES[VAR]
-    ok($elem->is_in(4))
 
-Contrast to VarElement, constraint propagation for variables in
+In contrast to VarElement, constraint propagation for variables in
 VARIABLES will occur only when upper or lower bound is changed.
 
 VARIABLES is an arrayref contains instances of Algorithm::CP::IZ::Int.
