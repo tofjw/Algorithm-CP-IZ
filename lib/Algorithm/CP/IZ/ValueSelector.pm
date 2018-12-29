@@ -3,9 +3,6 @@ package Algorithm::CP::IZ::ValueSelector;
 use strict;
 use warnings;
 
-use Exporter;
-our @ISA = qw(Exporter);
-
 use Scalar::Util qw(looks_like_number);
 
 use Algorithm::CP::IZ;
