@@ -83,7 +83,6 @@ sub _filter {
     my $r = &$FILTER($self, $_[0],
 		     $self->{_var_array}, $self->{_ext});
 
-    print STDERR "here r = $r\n";
     return $r ? 1: 0;
 }
 

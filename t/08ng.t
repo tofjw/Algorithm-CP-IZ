@@ -5,7 +5,7 @@ use Test::More tests => 23;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 BEGIN { use_ok('Algorithm::CP::IZ::NoGoodSet') };
 
-# test NoGoodSet uinsg send more money
+# test NoGoodSet using send more money
 SKIP: {
     my $iz = Algorithm::CP::IZ->new();
 
@@ -109,7 +109,7 @@ SKIP: {
     is($nOk, scalar(@ng_set));
 }
 
-# test NoGoodSet uinsg send more money
+# test NoGoodSet using send more money
 SKIP: {
     my $iz = Algorithm::CP::IZ->new();
 
@@ -193,7 +193,6 @@ SKIP: {
 
     use Data::Dumper;
     $ngs->filter_no_good(sub {
-	# print STDERR Dumper(\@_);
 	return 1;
 			 }); # use this NG
     is($ngs->nb_no_goods, $nng);
