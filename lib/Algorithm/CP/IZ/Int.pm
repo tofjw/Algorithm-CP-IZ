@@ -51,8 +51,7 @@ sub stringify {
 sub key {
     my $self = shift;
 
-    # reference to element of hash
-    # (pointer is hidden from usr)
+    # get pointer value dereferencing $self
     my $ret = $$self;
 
     return "$ret";
