@@ -1668,6 +1668,36 @@ undef will be returned if getVersion() is not supported in iZ-C (old version).
 
 =back
 
+=item get_value_selector(ID)
+
+Get built-in value selector (instance of Algorithm::CP::IZ::ValueSelector) specifed by ID.
+ID must be selected from following constants defined in package Algorithm::CP::IZ.
+
+Returned object will be used as parameter ValueSelectors when calling "search" method.
+
+=over
+
+=item CS_VALUE_SELECTOR_MIN_TO_MAX
+
+=item CS_VALUE_SELECTOR_MAX_TO_MIN
+
+=item CS_VALUE_SELECTOR_LOWER_AND_UPPER
+
+=item CS_VALUE_SELECTOR_UPPER_AND_LOWER
+
+=item CS_VALUE_SELECTOR_MEDIAN_AND_REST
+
+=back
+
+These values are exported by Algorithm::CP::IZ and can be imported using tag 'value_selector'.
+
+  use Algorithm::CP::IZ qw(:value_selector);
+  my $vs = $iz->get_value_selector(CS_VALUE_SELECTOR_MIN_TO_MAX);
+
+=back
+
+
+
 =head1 METHODS (Constraints)
 
 =over 2
