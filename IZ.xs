@@ -401,8 +401,14 @@ static IZBOOL vsSimpleNext(CSvalueSelection* r, int index, CSint** vars, int siz
     SPAGAIN;
 
     if (count >= 2) {
-      r->value = POPi;
-      r->method = POPi;
+      SV *v = POPs;
+      SV *m = POPs;
+      if (!(SvIOK(v) && SvIOK(m))) {
+	croak("ValueSelecor::next returns bad value for var[%d]", index);
+      }
+
+      r->value = (int)SvIV(v);
+      r->method = (int)SvIV(m);
       ret = TRUE;
     }
     else {

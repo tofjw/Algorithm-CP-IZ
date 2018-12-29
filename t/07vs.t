@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 39;
+use Test::More tests => 41;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 BEGIN { use_ok('Algorithm::CP::IZ::ValueSelector') };
 
@@ -91,7 +91,7 @@ SKIP: {
 		&& $iz->IZ_VERSION_MAJOR >= 3
 		&& $iz->IZ_VERSION_MINOR >= 6);
 
-    package TestVS;
+    package TestVS1;
     sub new {
 	my $class = shift;
 	my ($v, $index) = @_;
@@ -130,7 +130,7 @@ SKIP: {
 		&& $iz->IZ_VERSION_MAJOR >= 3
 		&& $iz->IZ_VERSION_MINOR >= 6);
 
-    my $obj = $iz->create_value_selector_simple("TestVS");
+    my $obj = $iz->create_value_selector_simple("TestVS1");
     
     my $v = $iz->create_int(0, 2);
     # my $vsi = $obj->init(0, [$v]);
@@ -146,7 +146,7 @@ SKIP: {
 		&& $iz->IZ_VERSION_MAJOR >= 3
 		&& $iz->IZ_VERSION_MINOR >= 6);
 
-    my $vs = $iz->create_value_selector_simple("TestVS");
+    my $vs = $iz->create_value_selector_simple("TestVS1");
     my $v1 = $iz->create_int(-2, 1);
     my $v2 = $iz->create_int(3);
 
@@ -188,7 +188,7 @@ SKIP: {
     my $v2 = $iz->create_int(0, 5);
     $iz->AllNeq([$v1, $v2]);
 
-    my $vs = $iz->create_value_selector_simple("TestVS");
+    my $vs = $iz->create_value_selector_simple("TestVS1");
     my $label = $iz->save_context();
     my $rc = $iz->search([$v1, $v2],
 			 { ValueSelectors
@@ -198,4 +198,112 @@ SKIP: {
     is($rc, 1);
     is($v1->value, 0);
     is($v2->value, 1);
+}
+
+# bad value 1
+SKIP: {
+    my $iz = Algorithm::CP::IZ->new;
+
+    skip "old iZ", 0
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
+    package TestVS2;
+    sub new {
+	my $class = shift;
+	my ($v, $index) = @_;
+
+	my $self = {
+	    _pos => 0,
+	};
+	bless $self, $class;
+    }
+
+    sub next {
+	my $self = shift;
+	my ($v, $index) = @_;
+
+	my $pos = $self->{_pos};
+	my $domain = $v->domain;
+	return if ($pos >= @$domain);
+
+	my @ret = (Algorithm::CP::IZ::CS_VALUE_SELECTION_EQ, undef);
+	$self->{_pos} = ++$pos;
+
+	return @ret;
+    }
+
+    sub DESTROY {
+    }
+
+    package main;
+
+    my $v1 = $iz->create_int(0, 10);
+    my $v2 = $iz->create_int(0, 5);
+    my $vs = $iz->create_value_selector_simple("TestVS");
+
+    eval {
+	my $rc = $iz->search([$v1, $v2],
+			     { ValueSelectors
+				   => [$vs, $vs], }
+	    );
+    };
+
+    # error
+    ok($@);
+}
+
+# bad value 2
+SKIP: {
+    my $iz = Algorithm::CP::IZ->new;
+
+    skip "old iZ", 0
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
+    package TestVS3;
+    sub new {
+	my $class = shift;
+	my ($v, $index) = @_;
+
+	my $self = {
+	    _pos => 0,
+	};
+	bless $self, $class;
+    }
+
+    sub next {
+	my $self = shift;
+	my ($v, $index) = @_;
+
+	my $pos = $self->{_pos};
+	my $domain = $v->domain;
+	return if ($pos >= @$domain);
+
+	my @ret = ("*", 3);
+	$self->{_pos} = ++$pos;
+
+	return @ret;
+    }
+
+    sub DESTROY {
+    }
+
+    package main;
+
+    my $v1 = $iz->create_int(0, 10);
+    my $v2 = $iz->create_int(0, 5);
+    my $vs = $iz->create_value_selector_simple("TestVS");
+
+    eval {
+	my $rc = $iz->search([$v1, $v2],
+			     { ValueSelectors
+				   => [$vs, $vs], }
+	    );
+    };
+
+    # error
+    ok($@);
 }
