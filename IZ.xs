@@ -194,7 +194,7 @@ static IZBOOL eventAllKnownPerlWrapper(CSint **tint, int size, void *ext)
   if (count == 0) {
     croak("eventAllKnownPerlWrapper: error");
   }
-  ret = POPi;
+  ret = sv_true(POPs);
 
   FREETMPS;
   LEAVE;
@@ -223,7 +223,7 @@ static IZBOOL eventKnownPerlWrapper(int val, int index, CSint **tint, int size, 
   if (count == 0) {
     croak("eventKnownPerlWrapper: error");
   }
-  ret = POPi;
+  ret = sv_true(POPs);
 
   FREETMPS;
   LEAVE;
@@ -252,7 +252,7 @@ static IZBOOL eventNewMinMaxNeqPerlWrapper(CSint* vint, int index, int oldValue,
   if (count == 0) {
     croak("eventNewMinMaxNeqPerlWrapper: error");
   }
-  ret = POPi;
+  ret = sv_true(POPs);
 
   FREETMPS;
   LEAVE;
@@ -511,7 +511,7 @@ static IZBOOL noGoodSetFilterMethod(const char* meth,
       int count = call_method(meth, G_ARRAY);
       SPAGAIN;
       if (count > 0) {
-	ret = POPi;
+	ret = sv_true(POPs);
       }
     }
 
@@ -673,7 +673,7 @@ static IZBOOL searchNotify_Found(int depth, CSint** allvars, int nbVars, void* e
 
   ret = 0;
   if (count > 0) {
-    ret = POPi;
+    ret = sv_true(POPs);
   }
 
   FREETMPS;
