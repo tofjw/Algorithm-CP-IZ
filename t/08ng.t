@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 21;
+use Test::More tests => 23;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 BEGIN { use_ok('Algorithm::CP::IZ::NoGoodSet') };
 
@@ -200,4 +200,19 @@ SKIP: {
 
     $ngs->filter_no_good(sub {0}); # don't use this NG
     is($ngs->nb_no_goods, 0);
+}
+
+# direct call of NoGoodSet->new
+{
+    eval {
+	my $ng = Algorithm::CP::IZ::NoGoodSet->new([]);
+	$ng->nb_no_goods;
+    };
+    ok($@);
+
+    eval {
+	my $ng = Algorithm::CP::IZ::NoGoodSet->new([]);
+	$ng->filter_no_good(sub {1});
+    };
+    ok($@);
 }

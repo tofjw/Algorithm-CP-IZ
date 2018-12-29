@@ -1487,12 +1487,16 @@ void
 cs_filterNoGood(ngs)
     void* ngs
 CODE:
+    if (!ngs)
+	croak("cs_filterNoGood: not initialized.");
     cs_filterNoGood(ngs, noGoodSetFilterPerlWrapper);
 
 int
 cs_getNbNoGoods(ngs)
     void* ngs
 CODE:
+    if (!ngs)
+	croak("cs_getNbNoGoods: not initialized.");
     RETVAL = cs_getNbNoGoods(ngs);
 OUTPUT:
     RETVAL
