@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 101;
+use Test::More tests => 115;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -663,3 +663,143 @@ SKIP: {
     ok(1);
 }
 
+# FindFreeVar error
+{
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $rc = -1234;
+    my $v = $iz->create_int(0, 9);
+    my $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_MIN_TO_MAX);
+
+    my $label = $iz->save_context;
+
+    # nothing returned
+    eval {
+	$rc = $iz->search([$v],
+		      {
+			  FindFreeVar => sub {
+			      return;
+			  },
+		      });
+    };
+    # error
+    ok($@);
+    is($rc, -1234);
+
+    $iz->restore_context_until($label);
+    $label = $iz->save_context;
+    
+    # bad value
+    eval {
+	$rc = $iz->search([$v],
+		      {
+			  FindFreeVar => sub {
+			      return "x";
+			  },
+		      });
+    };
+    # error
+    ok($@);
+    is($rc, -1234);
+
+    $iz->restore_context_until($label);
+    $label = $iz->save_context;
+    
+    # out of range
+    eval {
+	$rc = $iz->search([$v],
+		      {
+			  FindFreeVar => sub {
+			      return 1; # must be 0;
+			  },
+		      });
+    };
+    ok($@);
+    is($rc, -1234);
+}
+
+# Criteria error
+{
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $v1 = $iz->create_int(0, 10);
+    my $v2 = $iz->create_int(0, 10);
+    $iz->AllNeq([$v1, $v2]);
+
+    my $label = $iz->save_context;
+
+    # nothing returned
+    my $rc = -1234;
+
+    eval {
+	$rc = $iz->search([$v1, $v2],
+			  {
+			      Criteria => sub {
+				  return;
+			      },
+			  });
+    };
+    ok($@);
+    is($rc, -1234);
+
+    $iz->restore_context_until($label);
+    $label = $iz->save_context;
+
+    eval {
+	$rc = $iz->search([$v1, $v2],
+			  {
+			      Criteria => sub {
+				  return "x";
+			      },
+			  });
+    };
+    ok($@);
+    is($rc, -1234);
+}
+
+# MaxFailFunc error
+SKIP: {
+    my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 1
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
+    my $rc = -1234;
+    my $v = $iz->create_int(0, 9);
+    my $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_MIN_TO_MAX);
+
+    my $label = $iz->save_context;
+
+    # nothing returned
+    eval {
+	$rc = $iz->search([$v],
+		      {
+			  ValueSelectors => [$vs],
+			  MaxFailFunc => sub {
+			      return;
+			  }
+		      });
+    };
+    # error
+    ok($@);
+    is($rc, -1234);
+
+    $iz->restore_context_until($label);
+    $label = $iz->save_context;
+
+    # not a integer
+    eval {
+	$rc = $iz->search([$v],
+		      {
+			  ValueSelectors => [$vs],
+			  MaxFailFunc => sub {
+			      return "x";
+			  }
+		      });
+    };
+    # error
+    ok($@);
+    is($rc, -1234);
+}

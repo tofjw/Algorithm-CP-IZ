@@ -45,10 +45,19 @@ static int findFreeVarPerlWrapper(CSint **allVars, int nbVars)
   SPAGAIN;
   ret = -1;
 
-  if (count == 0) {
-    croak("findFreeVarPerlWrapper: error");
+  if (count <= 0) {
+    croak("search: FindFreeVar returns nothing");
   }
-  ret = POPi;
+  {
+    SV* v = POPs;
+    if (!SvIOK(v)) {
+      croak("search: FindFreeVar returns bad value");
+    }
+    ret = (int)SvIV(v);
+  }
+  if (ret >= nbVars) {
+      croak("search: FindFreeVar returns out of range value");
+  }
 
   FREETMPS;
   LEAVE;
@@ -112,9 +121,15 @@ static int criteriaPerlWrapper(int index, int val)
   ret = -1;
 
   if (count == 0) {
-    croak("criteriaPerlWrapper: error");
+    croak("search: Criteria returnes nothing");
   }
-  ret = POPi;
+  {
+    SV* v = POPs;
+    if (!SvIOK(v)) {
+      croak("search: Criteria returns bad value");
+    }
+    ret = (int)SvIV(v);
+  }
 
   FREETMPS;
   LEAVE;
@@ -452,10 +467,16 @@ static int maxFailFuncPerlWrapper(void* dummy)
   SPAGAIN;
   ret = -1;
 
-  if (count < 0) {
-    croak("maxFailFuncPerlWrapper: error");
+  if (count <= 0) {
+    croak("search: MaxFailFunc returns nothing");
   }
-  ret = POPi;
+  {
+    SV* v = POPs;
+    if (!SvIOK(v)) {
+      croak("search: MaxFailFunc returns bad value");
+    }
+    ret = (int)SvIV(v);
+  }
 
   FREETMPS;
   LEAVE;

@@ -512,10 +512,10 @@ sub _validate_find_all_params {
 	FindFreeVar => sub {
 	    my $x = shift;
 	    if (ref $x) {
-		validate([$x], ["C"], "find_all: FindFreeVar must be number or coderef");
+		validate([$x], ["C"], "find_all: FindFreeVar must be a number or coderef");
 	    }
 	    else {
-		validate([$x], ["I"], "search: FindFreeVar must be number or coderef");
+		validate([$x], ["I"], "search: FindFreeVar must be a number or coderef");
 	    }
 	},
     );
