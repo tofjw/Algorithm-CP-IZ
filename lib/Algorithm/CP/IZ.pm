@@ -1455,7 +1455,9 @@ Upper limit of fail count while searching solutions.
 
 =item ValueSelectors
 
-Arrayref of Algorithm::CP::IZ::ValueSelector instances.
+Arrayref of Algorithm::CP::IZ::ValueSelector instances created via
+get_value_selector or create_value_selector_simple method.
+
 
 =item MaxFailFunc
 
@@ -1673,8 +1675,6 @@ undef will be returned if getVersion() is not supported in iZ-C (old version).
 Get built-in value selector (instance of Algorithm::CP::IZ::ValueSelector) specifed by ID.
 ID must be selected from following constants defined in package Algorithm::CP::IZ.
 
-Returned object will be used as parameter ValueSelectors when calling "search" method.
-
 =over
 
 =item CS_VALUE_SELECTOR_MIN_TO_MAX
@@ -1689,10 +1689,69 @@ Returned object will be used as parameter ValueSelectors when calling "search" m
 
 =back
 
-These values are exported by Algorithm::CP::IZ and can be imported using tag 'value_selector'.
+(These values are exported by Algorithm::CP::IZ and can be imported using tag 'value_selector')
+
+Returned object will be used as a parameter ValueSelectors when calling "search" method.
 
   use Algorithm::CP::IZ qw(:value_selector);
   my $vs = $iz->get_value_selector(CS_VALUE_SELECTOR_MIN_TO_MAX);
+
+  my $v1 = $iz->create_int(1, 9);
+  my $v2 = $iz->create_int(1, 9);
+  $iz->Add($v1, $v2)->Eq(12);
+  my $rc = $iz->search([$v1, $v2], {
+      ValueSelectors => [ $vs, $vs ],
+  });
+
+
+=item create_value_selector_simple(CLASS_NAME)
+
+Create user defined value-seelctor defined by class named CLASS_NAME.
+This class must have constructor named "new" and method namaed "next".
+
+  use Algorithm::CP::IZ qw(:value_selector);
+  
+  package VSSample1;
+  sub new {
+    my $class = shift;
+    my ($v, $index) = @_;
+
+    my $self = {
+      _pos => 0,
+    };
+    bless $self, $class;
+  }
+
+  sub next {
+    my $self = shift;
+    my ($v, $index) = @_;
+
+    my $pos = $self->{_pos};
+    my $domain = $v->domain;
+
+    # return empty after enumerate all values
+    return if ($pos >= @$domain);
+
+    my @ret = (CS_VALUE_SELECTION_EQ, $domain->[$pos]);
+    $self->{_pos} = ++$pos;
+
+    # return pair of (CS_VALUE_SELECTION_*, value)
+    return @ret;
+  }
+
+  my $v1 = $iz->create_int(1, 9);
+  my $v2 = $iz->create_int(1, 9);
+  $iz->Add($v1, $v2)->Eq(12);
+  my $vs = $iz->create_value_selector_simple("VSSample1");
+  my $rc = $iz->search([$v1, $v2], {
+      ValueSelectors => [ $vs, $vs ],
+  });
+
+=item create_no_good_set(VARIABLES, PRE_FILTER, MAX_NO_GOOD, EXT)
+
+Create an instance of Algorithm::CP::IZ::NoGoodSet. Returned object will be used as a
+parameter NoGoodSet when calling "search" method.
+
 
 =back
 
