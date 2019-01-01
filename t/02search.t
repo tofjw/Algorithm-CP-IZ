@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 115;
+use Test::More tests => 122;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 {
@@ -802,4 +802,64 @@ SKIP: {
     # error
     ok($@);
     is($rc, -1234);
+}
+
+# MaxFailFunc only
+SKIP: {
+    my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 1
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+
+    my $v = $iz->create_int(0, 9);
+    my $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_MIN_TO_MAX);
+
+    my $rc = $iz->search([$v],
+			 {
+			     MaxFailFunc => sub {
+				 return 1;
+			     }
+			 });
+    is($rc, 1);
+    is($v->value, 0);
+}
+
+# search with CriteriaEmulation
+{
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $criteria_used = 0;
+    my $max_fail_used = 0;
+
+    my $func = sub {
+      my ($index, $val) = @_;
+      $criteria_used = 1;
+      if ($index == 0) {
+	return $val ==4 ? 0 : 100;
+      }
+      if ($index == 1) {
+	return $val ==5 ? 0 : 100;
+      }
+      return 0;
+    };
+
+    my $v1 = $iz->create_int(0, 10);
+    my $v2 = $iz->create_int(0, 10);
+    $iz->AllNeq([$v1, $v2]);
+    my $rc = $iz->search([$v1, $v2],
+			 { Criteria => $func,
+			   MaxFailFunc => sub {
+			       $max_fail_used = 1;
+			       return 1;
+			   }
+			 }
+			);
+
+    is($rc, 1);
+    is($criteria_used, 1);
+    is($max_fail_used, 1);
+    is($v1->value, 4);
+    is($v2->value, 5);
 }

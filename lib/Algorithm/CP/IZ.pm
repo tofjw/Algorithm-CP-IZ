@@ -16,6 +16,7 @@ use Algorithm::CP::IZ::RefVarArray;
 use Algorithm::CP::IZ::RefIntArray;
 use Algorithm::CP::IZ::ParamValidator qw(validate);
 use Algorithm::CP::IZ::ValueSelector;
+use Algorithm::CP::IZ::CriteriaValueSelector;
 use Algorithm::CP::IZ::NoGoodSet;
 use Algorithm::CP::IZ::SearchNotify;
 
@@ -459,14 +460,26 @@ sub search {
 	$notify->set_var_array($var_array);
     }
 
-    if ($criteria_func) {
-	return Algorithm::CP::IZ::cs_searchCriteria($array,
-						    $find_free_var_id,
-						    $find_free_var_func,
-						    $criteria_func,
-						    $max_fail);
-    }
-    elsif ($value_selectors) {
+    my $is_search35 = $value_selectors || $max_fail_func;
+
+    if ($is_search35) {
+	unless ($value_selectors) {
+	    if ($criteria_func) {
+		$Algorithm::CP::IZ::CriteriaValueSelector::CriteriaFunction = $criteria_func;
+		
+		$value_selectors = [
+		    map {
+			$self->create_value_selector_simple("Algorithm::CP::IZ::CriteriaValueSelector")
+		    } (0..scalar(@$var_array)-1)];
+	    }
+	    else {
+		$value_selectors = [
+		    map {
+			$self->get_value_selector(&CS_VALUE_SELECTOR_MIN_TO_MAX)
+		    } (0..scalar(@$var_array)-1)];
+	    }
+	}
+	
 	my $i = 0;
 	for my $v (@$array) {
 	    my $vs = $value_selectors->[$i];
@@ -494,6 +507,29 @@ sub search {
 		$max_fail,
 		defined($notify) ? $notify->{_ptr} : 0);
 	}
+    }
+    else {
+	if ($criteria_func) {
+	    return Algorithm::CP::IZ::cs_searchCriteria($array,
+							$find_free_var_id,
+							$find_free_var_func,
+							$criteria_func,
+							$max_fail);
+	}
+	else {
+	    return Algorithm::CP::IZ::cs_search($array,
+						$find_free_var_id,
+						$find_free_var_func,
+						$max_fail);
+	}
+    }
+	
+    if ($criteria_func) {
+	return Algorithm::CP::IZ::cs_searchCriteria($array,
+						    $find_free_var_id,
+						    $find_free_var_func,
+						    $criteria_func,
+						    $max_fail);
     }
     else {
  	return Algorithm::CP::IZ::cs_search($array,
