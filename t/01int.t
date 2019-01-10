@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 76;
+use Test::More tests => 77;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # create(min, max)
@@ -238,4 +238,16 @@ SKIP: {
     is($v->max, 10);
 
     ok(!$v->select_value(&Algorithm::CP::IZ::CS_VALUE_SELECTION_EQ, 1));
+}
+
+# memory leak
+SKIP: {
+    eval "use Test::LeakTrace";
+    my $leak_test_enabled = !$@;
+    skip "Test::LeakTrace is not installed", 1
+        unless ($leak_test_enabled);
+
+    my $v = $iz->create_int(0, 1);
+
+    eval 'use Test::LeakTrace; no_leaks_ok { my $d = $v->domain;  };';
 }

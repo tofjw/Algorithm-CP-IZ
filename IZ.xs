@@ -1936,7 +1936,7 @@ PREINIT:
 CODE:
     vint = INT2PTR(CSint*, SvIV(SvRV(rv)));
 
-    RETVAL = newAV();
+    RETVAL = (AV*)sv_2mortal((SV*)newAV());
     av_extend(RETVAL, cs_getNbElements(vint));
 
     maxVal = cs_getMax(vint);
