@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 23;
+use Test::More tests => 24;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 BEGIN { use_ok('Algorithm::CP::IZ::NoGoodSet') };
 
@@ -97,6 +97,7 @@ SKIP: {
 	my $is_fail;
 
 	for my $nge (@$ng) {
+            print "$nge\n";
 	    my $v = $array->[$nge->index];
 	    if (!$v->select_value($nge->method, $nge->value)) {
 		$is_fail = 1;
@@ -202,7 +203,14 @@ SKIP: {
 }
 
 # direct call of NoGoodSet->new
-{
+SKIP: {
+    my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 2
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 6);
+     
     eval {
 	my $ng = Algorithm::CP::IZ::NoGoodSet->new([]);
 	$ng->nb_no_goods;
@@ -214,4 +222,42 @@ SKIP: {
 	$ng->filter_no_good(sub {1});
     };
     ok($@);
+}
+
+sub ng_leak_test {
+    my $iz = Algorithm::CP::IZ->new();
+
+    my $N = 7;
+    my @a;
+    for (my $i = 0; $i < $N; $i++) {
+        push(@a, $iz->create_int(0, $N - 2));
+    }
+    for (my $i = 0; $i < $N - 1; $i++) {
+        for (my $j = $i + 1; $j < $N; $j++) {
+            $a[$i]->Neq($a[$j]);
+        }
+    }
+
+    my $ngs = $iz->create_no_good_set(\@a,
+				      sub { 1 },
+				      100, undef);
+    my $rc = $iz->search(\@a,
+			 {
+			     MaxFailFunc => sub {
+                                 return 1;
+			     },
+                             MaxFail => 3,
+			     NoGoodSet => $ngs,
+			 });
+    
+}
+
+# memory leak
+SKIP: {
+    eval "use Test::LeakTrace";
+    my $leak_test_enabled = !$@;
+    skip "Test::LeakTrace is not installed", 1
+        unless ($leak_test_enabled);
+
+    eval 'use Test::LeakTrace; no_leaks_ok { ng_leak_test  };';
 }

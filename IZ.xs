@@ -525,7 +525,7 @@ static IZBOOL noGoodSetFilterMethod(const char* meth,
     }
 
     r = newRV_noinc((SV*)elements);
-    XPUSHs((SV*)r);
+    XPUSHs(sv_2mortal((SV*)r));
 
     PUTBACK;
     {
