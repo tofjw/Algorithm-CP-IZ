@@ -318,7 +318,7 @@ static IZBOOL prepareSimpleVS(int index) {
       vsSimpleArray[i].end = NULL;
     }
   }
-  else {
+  else if (index >= vsSimpleArraySize) {
     size_t newSize = vsSimpleArraySize + 1000;
     size_t i;
 
