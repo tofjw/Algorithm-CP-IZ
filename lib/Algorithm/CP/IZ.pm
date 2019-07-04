@@ -1788,6 +1788,23 @@ This class must have constructor named "new" and method namaed "next".
 Create an instance of Algorithm::CP::IZ::NoGoodSet. Returned object will be used as a
 parameter NoGoodSet when calling "search" method.
 
+=item create_search_notify(OBJECT)
+
+Create a notify object receives following notification by search function.
+
+    search_start
+    search_end
+    before_value_selection
+    after_value_selection
+    enter
+    leave
+    found
+
+if OBJECT is a object, method having notification name will be called.
+
+if OBJECT is a hashref, notification name must be a key of hash and
+value must be a coderef.
+
 
 =back
 

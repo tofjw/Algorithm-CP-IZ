@@ -1,13 +1,13 @@
 use strict;
 use warnings;
 
-use Test::More tests => 2;
+use Test::More tests => 4;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 SKIP: {
     my $iz = Algorithm::CP::IZ->new();
 
-    skip "old iZ", 1
+    skip "old iZ", 3
 	unless (defined($iz->get_version)
 		&& $iz->IZ_VERSION_MAJOR >= 3
 		&& $iz->IZ_VERSION_MINOR >= 6);
@@ -99,6 +99,30 @@ SKIP: {
 			      Notify => $sn,
 			  });
     is($rc1, 1);
+    print STDERR "********* fail = ", $iz->get_nb_fails, "\n";
+    $iz->restore_context;
+
+
+    # notify by hash
+    my $search_start = 0;
+    my $sn2 = $iz->create_search_notify(
+	{
+	    search_start => sub {
+		$search_start++;
+	    }
+	});
+    print STDERR "perl obj = $obj, sn = $sn2\n";
+    $iz->save_context;
+    my $rc2 = $iz->search([$d, $e, $n, $y, $m, $o, $r, $s],
+			  {
+			      ValueSelectors =>
+				  [map { $vs } 1..8],
+				  MaxFail => 100,
+			      Notify => $sn2,
+			  });
+    is($search_start, 1);
+    is($rc2, 1);
+	
     print STDERR "********* fail = ", $iz->get_nb_fails, "\n";
     $iz->restore_context;
     

@@ -3,6 +3,8 @@ package Algorithm::CP::IZ::SearchNotify;
 use strict;
 use warnings;
 
+use Carp qw(croak);
+
 my @method_names = qw(
     search_start
     search_end
@@ -16,9 +18,8 @@ my @method_names = qw(
 sub new {
     my $class = shift;
     my $obj = shift;
-    
+
     my $self = {
-	_obj => $obj,
     };
 
     bless $self, $class;
@@ -27,12 +28,29 @@ sub new {
     $self->{_ptr} = $ptr;
 
     my %methods;
-    for my $m (@method_names) {
-	if ($obj->can($m)) {
-	    $methods{$m} = sub { $obj->$m(@_) };
-	    my $xs_sub = "Algorithm::CP::IZ::searchNotify_set_$m";
-	    no strict "refs";
-	    &$xs_sub($ptr);
+    if (ref $obj eq 'HASH') {
+	for my $m (@method_names) {
+	    if (exists $obj->{$m}) {
+		my $s = $obj->{$m};
+		unless (ref $s eq 'CODE') {
+		    croak __PACKAGE__ . ": $m must be a code reference";
+		}
+		
+		$methods{$m} = $s;
+		my $xs_sub = "Algorithm::CP::IZ::searchNotify_set_$m";
+		no strict "refs";
+		&$xs_sub($ptr);
+	    }
+	}
+    }
+    else {
+	for my $m (@method_names) {
+	    if ($obj->can($m)) {
+		$methods{$m} = sub { $obj->$m(@_) };
+		my $xs_sub = "Algorithm::CP::IZ::searchNotify_set_$m";
+		no strict "refs";
+		&$xs_sub($ptr);
+	    }
 	}
     }
     
