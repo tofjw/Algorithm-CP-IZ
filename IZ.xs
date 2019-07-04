@@ -1674,7 +1674,6 @@ void
 searchNotify_set_search_start(notify)
     SV* notify
 CODE:
-    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
     cs_searchNotifySetSearchStart(INT2PTR(void*, SvIV(notify)),
 				  searchNotify_searchStart);
 
@@ -1682,7 +1681,6 @@ void
 searchNotify_set_search_end(notify)
     SV* notify
 CODE:
-    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
     cs_searchNotifySetSearchEnd(INT2PTR(void*, SvIV(notify)),
 				searchNotify_searchEnd);
 
@@ -1690,7 +1688,6 @@ void
 searchNotify_set_before_value_selection(notify)
     SV* notify
 CODE:
-    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
     cs_searchNotifySetBeforeValueSelection(INT2PTR(void*, SvIV(notify)),
 					   searchNotify_BeforeValueSelection);
 
@@ -1698,7 +1695,6 @@ void
 searchNotify_set_after_value_selection(notify)
     SV* notify
 CODE:
-    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
     cs_searchNotifySetAfterValueSelection(INT2PTR(void*, SvIV(notify)),
 					  searchNotify_AfterValueSelection);
 
@@ -1706,7 +1702,6 @@ void
 searchNotify_set_enter(notify)
     SV* notify
 CODE:
-    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
     cs_searchNotifySetEnter(INT2PTR(void*, SvIV(notify)),
 			    searchNotify_Enter);
 
@@ -1714,7 +1709,6 @@ void
 searchNotify_set_leave(notify)
     SV* notify
 CODE:
-    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
     cs_searchNotifySetLeave(INT2PTR(void*, SvIV(notify)),
 			    searchNotify_Leave);
 
@@ -1722,7 +1716,6 @@ void
 searchNotify_set_found(notify)
     SV* notify
 CODE:
-    fprintf(stderr, "obj = %p\n", INT2PTR(void*, SvIV(notify)));
     cs_searchNotifySetFound(INT2PTR(void*, SvIV(notify)),
 			    searchNotify_Found);
 
@@ -1741,6 +1734,14 @@ nb_elements(rv)
     SV* rv;
 CODE:
     RETVAL = cs_getNbElements(INT2PTR(CSint*, SvIV(SvRV(rv))));
+OUTPUT:
+    RETVAL
+
+int
+nb_constraints(rv)
+    SV* rv;
+CODE:
+    RETVAL = cs_getNbConstraints(INT2PTR(CSint*, SvIV(SvRV(rv))));
 OUTPUT:
     RETVAL
 
