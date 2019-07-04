@@ -460,7 +460,7 @@ sub search {
 	$notify->set_var_array($var_array);
     }
 
-    my $is_search35 = $value_selectors || $max_fail_func;
+    my $is_search35 = $value_selectors || $max_fail_func || $ngs || $notify;
 
     if ($is_search35) {
 	unless ($value_selectors) {
