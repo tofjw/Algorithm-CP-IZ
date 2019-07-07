@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 4;
+use Test::More tests => 8;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 SKIP: {
@@ -35,60 +35,73 @@ SKIP: {
 	bless {}, $class;
     }
 
+    my %called;
+    
     sub search_start {
 	my $self = shift;
 	my $array = shift;
-	print STDERR "search start!: $array\n";
+	$called{search_start}++;
     }
 
     sub search_end {
 	my $self = shift;
 	my $array = shift;
-	print STDERR "search end!: $array\n";
+
+	$called{search_end}++;
+
+	# 9567 + 1085 = 10652
+	# SEND   MORE   MONEY
+	# 95671082
+	$called{search_end_solution} = join("", ($s, $e, $n, $d, $m, $o, $r, $y));
     }
 
     sub before_value_selection {
 	my $self = shift;
 	my ($depth, $index, $vs, $array) = @_;
-	print STDERR "value selection: $depth, $index, $array\n";
-	print STDERR "  ", $vs->[0], ", ", $vs->[1], "\n";
-	print STDERR join(", ", map {$_->min} @$array), "\n";
+	# debug
+	# print STDERR "value selection: $depth, $index, $array\n";
+	# print STDERR "  ", $vs->[0], ", ", $vs->[1], "\n";
+	# print STDERR join(", ", map {$_->min} @$array), "\n";
     }
 
     sub after_value_selection {
 	my $self = shift;
 	my ($result, $depth, $index, $vs, $array) = @_;
-	print STDERR "after value selection: $result, $depth, $index, $array\n";
-	print STDERR "  ", $vs->[0], ", ", $vs->[1], "\n";
-	print STDERR join(", ", map {$_->min} @$array), "\n";
+	# debug
+	# print STDERR "after value selection: $result, $depth, $index, $array\n";
+	# print STDERR "  ", $vs->[0], ", ", $vs->[1], "\n";
+	# print STDERR join(", ", map {$_->min} @$array), "\n";
     }
 
     sub enter {
 	my $self = shift;
 	my ($depth, $index, $array) = @_;
-	print STDERR "enter: $depth, $index, $array\n";
-	print STDERR join(", ", map {"$_"} @$array), "\n";
+	# debug
+	# print STDERR "enter: $depth, $index, $array\n";
+	# print STDERR join(", ", map {"$_"} @$array), "\n";
     }
 
     sub leave {
 	my $self = shift;
 	my ($depth, $index, $array) = @_;
-	print STDERR "leave: $depth, $index, $array\n";
-	print STDERR join(", ", map {"$_"} @$array), "\n";
+	# debug
+	# print STDERR "leave: $depth, $index, $array\n";
+	# print STDERR join(", ", map {"$_"} @$array), "\n";
     }
 
     sub found {
 	my $self = shift;
 	my ($depth, $array) = @_;
-	print STDERR "found: $depth, $array\n";
-	print STDERR join(", ", map {"$_"} @$array), "\n";
+	# debug
+	# print STDERR "found: $depth, $array\n";
+	# print STDERR join(", ", map {"$_"} @$array), "\n";
 	return 1;
     }
     
     package main;
     my $obj = TestObj->new;
     my $sn = $iz->create_search_notify($obj);
-    print STDERR "perl obj = $obj, sn = $sn\n";
+    # print STDERR "perl obj = $obj, sn = $sn\n";
     my $vs = $iz->get_value_selector(&Algorithm::CP::IZ::CS_VALUE_SELECTOR_MIN_TO_MAX);
     $iz->save_context;
     my $rc1 = $iz->search([$d, $e, $n, $y, $m, $o, $r, $s],
@@ -99,31 +112,53 @@ SKIP: {
 			      Notify => $sn,
 			  });
     is($rc1, 1);
-    print STDERR "********* fail = ", $iz->get_nb_fails, "\n";
+
+    is($called{search_start}, 1);
+    is($called{search_end}, 1);
+    is($called{search_end_solution}, "95671082");
+    
     $iz->restore_context;
 
 
     # notify by hash
-    my $search_start = 0;
+    my $search_start2 = 0;
     my $sn2 = $iz->create_search_notify(
 	{
 	    search_start => sub {
-		$search_start++;
+		$search_start2++;
 	    }
 	});
-    print STDERR "perl obj = $obj, sn = $sn2\n";
+
     $iz->save_context;
     my $rc2 = $iz->search([$d, $e, $n, $y, $m, $o, $r, $s],
 			  {
 			      ValueSelectors =>
 				  [map { $vs } 1..8],
-				  MaxFail => 100,
 			      Notify => $sn2,
 			  });
-    is($search_start, 1);
+    
+    is($search_start2, 1);
     is($rc2, 1);
 	
-    print STDERR "********* fail = ", $iz->get_nb_fails, "\n";
+    $iz->restore_context;
+
+
+    # fail by found
+    my $sn3 = $iz->create_search_notify(
+	{
+	    found => sub {
+		return 0;
+	    }
+	});
+
+    $iz->save_context;
+    my $rc3 = $iz->search([$d, $e, $n, $y, $m, $o, $r, $s],
+			  {
+			      Notify => $sn3,
+			  });
+    
+    is($rc3, 0);
+	
     $iz->restore_context;
     
 }
