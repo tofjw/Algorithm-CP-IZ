@@ -1484,6 +1484,7 @@ Specify your own function as coderef here.
       return $val;
     };
 
+(If ValueSelector is specified, this parameter is ignored.)
 
 =item MaxFail
 
@@ -1494,6 +1495,7 @@ Upper limit of fail count while searching solutions.
 Arrayref of Algorithm::CP::IZ::ValueSelector instances created via
 get_value_selector or create_value_selector_simple method.
 
+(If ValueSelector is specified, this parameter is ignored.)
 
 =item MaxFailFunc
 
@@ -1503,7 +1505,10 @@ CodeRef of subroutine which returns maxfail for restart.
 
 A Algorithm::CP::IZ::NoGoodSet instance which collects NoGoods.
 
+=Item Notify
 
+Instance Of Algorithm::Cp::Iz::Searchnotify.　
+Specifed method(subroutine, coderef,..) will be called in corresponding phase in search.
 
 =back
 
