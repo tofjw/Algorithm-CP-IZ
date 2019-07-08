@@ -383,8 +383,10 @@ sub _validate_search_params {
 	    validate([$x], [
 			 sub {
 			     my $notify = shift;
-			     return blessed($notify) && $notify->isa("Algorithm::CP::IZ::SearchNotify");
-			 }], "search: Notify must be an instance of Algorithm::CP::IZ::SearchNotify");
+			     return 1 if (ref $notify eq 'HASH');
+			     return 1 if (blessed($notify));
+			     return 0;
+			 }], "search: Notify must be an hashref or object");
 	},
     );
 
@@ -457,6 +459,10 @@ sub search {
 
     if ($params->{Notify}) {
 	$notify = $params->{Notify};
+	unless (ref $notify eq 'Algorithm::CP::IZ::SearchNotify') {
+	    $notify = Algorithm::CP::IZ::SearchNotify->new($notify);
+	}
+
 	$notify->set_var_array($var_array);
     }
 
@@ -1507,8 +1513,20 @@ A Algorithm::CP::IZ::NoGoodSet instance which collects NoGoods.
 
 =Item Notify
 
-Instance Of Algorithm::Cp::Iz::Searchnotify.　
-Specifed method(subroutine, coderef,..) will be called in corresponding phase in search.
+Specify a notify object receives following notification by search function.
+
+    search_start
+    search_end
+    before_value_selection
+    after_value_selection
+    enter
+    leave
+    found
+
+if OBJECT is a object, method having notification name will be called.
+
+if OBJECT is a hashref, notification name must be a key of hash and
+value must be a coderef.
 
 =back
 
@@ -1793,26 +1811,7 @@ This class must have constructor named "new" and method namaed "next".
 Create an instance of Algorithm::CP::IZ::NoGoodSet. Returned object will be used as a
 parameter NoGoodSet when calling "search" method.
 
-=item create_search_notify(OBJECT)
-
-Create a notify object receives following notification by search function.
-
-    search_start
-    search_end
-    before_value_selection
-    after_value_selection
-    enter
-    leave
-    found
-
-if OBJECT is a object, method having notification name will be called.
-
-if OBJECT is a hashref, notification name must be a key of hash and
-value must be a coderef.
-
-
 =back
-
 
 
 =head1 METHODS (Constraints)

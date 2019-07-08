@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 8;
+use Test::More tests => 9;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 SKIP: {
@@ -158,6 +158,19 @@ SKIP: {
 			  });
     
     is($rc3, 0);
+	
+    $iz->restore_context;
+
+    # fail by found (specify hashref directly)
+    $iz->save_context;
+    my $rc4 = $iz->search([$d, $e, $n, $y, $m, $o, $r, $s],
+			  {
+			      Notify => {
+				  found => sub { return 0; },
+			      }
+			  });
+    
+    is($rc4, 0);
 	
     $iz->restore_context;
     
