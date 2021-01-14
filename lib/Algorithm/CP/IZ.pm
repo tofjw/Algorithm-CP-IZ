@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Carp;
-use Scalar::Util qw(weaken blessed);
+use Scalar::Util qw(weaken blessed looks_like_number);
 
 require Exporter;
 use AutoLoader;
@@ -1305,12 +1305,32 @@ sub Disjunctive {
 sub Regular {
     my $self = shift;
     my ($x, $d, $q0, $F) = @_;
+    
+    validate([scalar(@_), $x,
+	      $d,
+	      $q0, $F
+	     ],
+	     [sub { shift == 4 }, "vA0",
+	      sub {
+		  # array of array of integer
+		  return 0 unless (ref $d eq "ARRAY");
+		  for my $row (@$d) {
+		      return 0 unless (ref $row eq "ARRAY");
+		      for my $i (@$row) {
+			  return 0 unless (looks_like_number($i));
+		      }
+		  }
+		  return 1;
+	      },
+	      "I","iA0"
+	     ],
+	     "Usage: Regular([vars], [table(QxS)], q0, [F])");
 
-#    validate([$starts, $durations, 1],
-#	     ["vA0", "vA0",  sub {
-#		 @$starts == @$durations
-#	      }],
-#	     "Usage: Disjunctive([starts], [durations])");
+    # $q0 must be in valid states
+    return unless (0 <= $q0 && $q0 < scalar(@$d));
+
+    # need acceptable states
+    return unless (grep { 0 <= $_ && $_ < scalar(@$d) } @$F);
 
     my @xv = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$x;
 
