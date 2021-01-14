@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 253;
+use Test::More tests => 261;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 # Add
@@ -995,4 +995,52 @@ SKIP: {
     is($r1->value, 0);
     is($r2->value, 1);
     $iz->restore_context;
+}
+
+# Regular
+SKIP: {
+    my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 2
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 7);
+
+    # accept 1, 2, 3
+    my @x = map { $iz->create_int(0, 3) } (0..2);
+    #          0  1  2  3
+    my $d = [[-1, 1,-1, -1],
+	     [-1,-1, 2, -1],
+	     [-1,-1,-1,  3],
+	     [-1,-1,-1, -1]];
+    ok($iz->Regular(\@x, $d, 0, [3]));
+    is($x[0]->value, 1);
+    is($x[1]->value, 2);
+    is($x[2]->value, 3);
+}
+
+# Regular (constant)
+SKIP: {
+    my $iz = Algorithm::CP::IZ->new();
+
+    skip "old iZ", 2
+	unless (defined($iz->get_version)
+		&& $iz->IZ_VERSION_MAJOR >= 3
+		&& $iz->IZ_VERSION_MINOR >= 7);
+
+    # accept 1, 2, 3
+    my @x;
+    $x[0] = $iz->create_int(0, 3);
+    $x[1] = 2;
+    $x[2] = $iz->create_int(0, 3);
+
+    #          0  1  2  3
+    my $d = [[-1, 1,-1, -1],
+	     [-1,-1, 2, -1],
+	     [-1,-1,-1,  3],
+	     [-1,-1,-1, -1]];
+    ok($iz->Regular(\@x, $d, 0, [3]));
+    is($x[0]->value, 1);
+    is($x[1], 2);
+    is($x[2]->value, 3);
 }

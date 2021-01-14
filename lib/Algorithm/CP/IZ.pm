@@ -1302,6 +1302,52 @@ sub Disjunctive {
     return $ret;
 }
 
+sub Regular {
+    my $self = shift;
+    my ($x, $d, $q0, $F) = @_;
+
+#    validate([$starts, $durations, 1],
+#	     ["vA0", "vA0",  sub {
+#		 @$starts == @$durations
+#	      }],
+#	     "Usage: Disjunctive([starts], [durations])");
+
+    my @xv = map { ref $_ ? $_ : $self->_const_var(int($_)) } @$x;
+
+    my $px = $self->_create_registered_var_array(\@xv);
+    my $pfarray = $self->_create_registered_int_array($F);
+
+    # get S for Regular (input alphabet size)
+    # Q is size saclar(@$d)
+    my $max_s = 0;
+    for my $row (@$d) {
+	my $s = scalar(@$row);
+	$max_s = $s if ($max_s < $s)
+    }
+
+    # no acceptable alphabet
+    if ($max_s == 0) {
+	# accept empty set only
+	return scalar(@$x) == 0;
+    }
+
+    # create d as 1d array
+    my @darray = (-1) x (scalar(@$d) * $max_s);
+    for (my $qi = 0; $qi < scalar(@$d); $qi++) {
+	my $row = $d->[$qi];
+	my $idx0 = $max_s * $qi;
+	my $idx1 = $idx0 + scalar(@$row)-1;
+	@darray[$idx0..$idx1] = @$row;
+    }
+    
+    my $pdarray = $self->_create_registered_int_array(\@darray);
+    
+    my $ret = Algorithm::CP::IZ::cs_Regular($$px, scalar(@$x), $$pdarray,
+					    scalar(@$d), $max_s, $q0,
+					    $$pfarray, scalar(@$F));
+    return $ret;
+}
+
 #
 # Create Reif* Methods
 #
