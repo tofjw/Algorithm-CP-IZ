@@ -2032,6 +2032,17 @@ Constraint variables as "Disjunctive".
 
 START_VARS and DURATION_VARS are an arrayref contains instances of Algorithm::CP::IZ::Int.
 
+=item Regular(VARIABLES, TRANSITION_TABLE, Q0, F_VALUES)
+
+Constraint VARIABLES to be input sequence accepted by DFA defined by TRANSITION_TABLE, Q0 and F_VALUES.
+
+TRANSITION_TABLE is an arrayref of arrayref, and each value TRANSITION_TABLE->[q]->[s] defines
+next state (index of TRANSITION_TABLE) at input s (index of TRANSITION_TABLE->[q]).
+
+Q0 is initial state of DFA.
+
+F_VALUES is an arrayref of acceptable states of DFA.
+
 =item ReifEq(VAR1, VAR2)
 
 Create an instance of Algorithm::CP::IZ::Int represents state of VAR1 == VAR2.
