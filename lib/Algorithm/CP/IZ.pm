@@ -110,7 +110,7 @@ sub DESTROY {
 
     for my $v (@$vars) {
 	# we must check existence of variable for global destruction.
-	$v->_invalidate($v) if ($v);
+	$v->_invalidate if (defined $v);
     }
 
     Algorithm::CP::IZ::cs_end();
@@ -321,8 +321,7 @@ sub create_int {
 	$ret->name($name);
     }
 
-    my $vars = $self->{_vars};
-    push(@$vars, $ret);
+    $self->_register_variable($ret);
 
     return $ret;
 }
