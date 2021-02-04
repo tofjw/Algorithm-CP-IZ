@@ -836,7 +836,13 @@ sub _register_variable {
     my ($self, $var) = @_;
 
     my $vars = $self->{_vars};
-    push(@$vars, $var);
+    if (scalar @$vars == 0 || defined($vars->[scalar(@$vars)-1])) {
+	push(@$vars, $var);
+    }
+    else {
+	$vars->[scalar(@$vars)-1] = $var;
+    }
+    weaken($vars->[scalar(@$vars)-1]);
 }
 
 sub _argv_func {
