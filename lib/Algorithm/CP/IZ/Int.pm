@@ -6,6 +6,7 @@ use warnings;
 use UNIVERSAL;
 
 use overload '""' => \&stringify;
+use overload 'bool' => sub { $_[0] };
 
 use Algorithm::CP::IZ::ParamValidator qw(validate);
 
