@@ -112,6 +112,7 @@ sub DESTROY {
 	# we must check existence of variable for global destruction.
 	$v->_invalidate if (defined $v);
     }
+    Algorithm::CP::IZ::Int->_clear_internal_data;
 
     Algorithm::CP::IZ::cs_end();
     $Instances--;

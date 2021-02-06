@@ -78,6 +78,10 @@ sub name {
     $Names{$key} = $_[1];
 }
 
+sub _clear_internal_data {
+    %Names = ();
+}
+
 sub InArray {
     my $self = shift;
     my $int_array = shift;
