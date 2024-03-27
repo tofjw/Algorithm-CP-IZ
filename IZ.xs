@@ -1967,3 +1967,28 @@ CODE:
     }
 OUTPUT:
     RETVAL
+
+void
+set_name(rv, s)
+    SV* rv;
+    const char* s
+PREINIT:
+    CSint* vint;
+CODE:
+    vint = INT2PTR(CSint*, SvIV(SvRV(rv)));
+    cs_setName(vint, (char*)s);
+
+SV*
+get_name(rv)
+    SV* rv;
+PREINIT:
+    CSint* vint;
+CODE:
+    const char* cstr = NULL;
+    vint = INT2PTR(CSint*, SvIV(SvRV(rv)));
+    cstr = cs_getName(vint);
+    if (!cstr) XSRETURN_UNDEF;
+    RETVAL = newSVpv(cstr, strlen(cstr));
+    SvUTF8_on(RETVAL);
+OUTPUT:
+    RETVAL

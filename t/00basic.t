@@ -1,7 +1,8 @@
 use strict;
 use warnings;
+use utf8;
 
-use Test::More tests => 24;
+use Test::More tests => 26;
 BEGIN { use_ok('Algorithm::CP::IZ') };
 
 my $iz = Algorithm::CP::IZ->new();
@@ -165,6 +166,15 @@ my $v1 = $iz->create_int(0, 10);
     };
 
     is($err, 1);
+}
+
+# name
+{
+    my $v1 = $iz->create_int(0, 2);
+    $v1->name("abc");
+    is($v1->name, "abc");
+    $v1->name("日本語");
+    is($v1->name, "日本語");
 }
 
 # destroy and invalidated

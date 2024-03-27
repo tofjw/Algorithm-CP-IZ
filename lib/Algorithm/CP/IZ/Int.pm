@@ -65,17 +65,15 @@ sub new {
     bless \$ptr, $class;
 }
 
-my %Names;
-
 sub name {
     my $self = $_[0];
     my $key = $self->key;
 
     if (@_ == 1) {
-	return $Names{$key};
+	return $self->get_name;
     }
 
-    $Names{$key} = $_[1];
+    $self->set_name($_[1]);
 }
 
 sub InArray {
@@ -129,7 +127,6 @@ sub NotInInterval {
 sub _invalidate {
     my $self = shift;
 
-    delete $Names{$self->key};
     bless $self, __PACKAGE__ . "::InvalidInt";
 }
 
@@ -144,7 +141,6 @@ sub select_value {
 
 sub DESTROY {
     my $self = shift;
-    delete $Names{$self->key};
 }
 
 
