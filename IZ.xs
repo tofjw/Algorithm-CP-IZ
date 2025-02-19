@@ -319,7 +319,7 @@ static IZBOOL prepareSimpleVS(int index) {
     }
   }
   else if (index >= vsSimpleArraySize) {
-    size_t newSize = vsSimpleArraySize + 1000;
+    size_t newSize = index + 1000;
     size_t i;
 
     vsSimple* newArray;
