@@ -44,7 +44,7 @@ our %EXPORT_TAGS = ( 'value_selector' => [ qw(
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'value_selector'} } );
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()
